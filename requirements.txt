@@ -1,0 +1,5 @@
+numpy
+json5
+pytest
+scipy
+openmc
