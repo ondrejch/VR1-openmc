@@ -1,5 +1,5 @@
 """
-python ./ESAR.py | awk ' /RectangularPrism/ {print "\""$1"\": {\"widthheight\": "$3", \"corner_r\": "$6" },"}'
+python ./ESAR.py | awk ' /RectangularPrism/ {print "\""$1"\": {\"wh\": "$3", \"corner_r\": "$6" },"}'
 python ./ESAR.py | awk ' /cylz/ {print "\""$1"\": "$3}'
 """
 

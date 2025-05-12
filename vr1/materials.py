@@ -26,19 +26,19 @@ cladding_dict = {'Al27': 0.9807392,
 
 class VR1Material(object):
     def __init__(self):
-        self.fuel = openmc.Material()
+        self.fuel = openmc.Material(name='fuel')
         self.fuel.add_components(fuel_dict, 'wo')
         self.fuel.set_density('g/cm3', 5.53)
         self.fuel.temperature = 293.15
         self.fuel.depletable = True
 
-        self.water = openmc.Material()
+        self.water = openmc.Material(name='water')
         self.water.add_components(water_dict, 'ao')
         self.water.set_density('g/cm3', 0.9982)
         self.water.temperature = 293.15
         self.water.add_s_alpha_beta('c_H_in_H2O')
 
-        self.cladding = openmc.Material()
+        self.cladding = openmc.Material(name='cladding')
         self.cladding.add_components(cladding_dict, 'wo')
         self.cladding.set_density('g/cm3', 2.7)
         self.cladding.temperature = 293.15
