@@ -1,3 +1,5 @@
+""" Materials used in VR1 """
+
 import openmc
 
 fuel_dict = {'U235': 0.09976,

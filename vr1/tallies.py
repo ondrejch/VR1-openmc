@@ -1,3 +1,5 @@
+""" Tally definitions VR1 """
+
 import openmc
 from materials import VR1Material
 
@@ -11,17 +13,26 @@ tally_types: list[str] = [
 # TODO: more tallies
 
 
-class FluxTally:
+class VR1Tally:
+    def __init__(self):
+        self.flux_tally = openmc.Tally()
+
+    def get(self):
+        return self.flux_tally
+
+
+class FluxTally(VR1Tally):
     """ Returns flux tally """
     def __init__(self, material: VR1Material, tally_type: str) -> None:
         if tally_type not in tally_types:
             raise ValueError(f'Tally type {tally_type} is not valid')
         self.tally_type = tally_type
         self.material = material
+        super().__init__()
 
         energy_bins = scale_252_energy_bins
         energy_filter = openmc.EnergyFilter(energy_bins)
-        self.flux_tally = openmc.Tally(name=tally_type)
+        self.flux_tally.name = tally_type
         cell_filter = None
         if self.tally_type == 'fuel flux':
             cell_filter = openmc.MaterialFilter(material.fuel)
@@ -31,9 +42,6 @@ class FluxTally:
             self.flux_tally.filters = [cell_filter, energy_filter]
         else:
             self.flux_tally.filters = [energy_filter]
-
-    def get(self):
-        return self.flux_tally
 
 
 """ SCALE 252 group energy structure """

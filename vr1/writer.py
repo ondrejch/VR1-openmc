@@ -1,50 +1,50 @@
+""" OpenMC model writer for VR1 """
 
 import openmc
 import os
-from dataclasses import dataclass
 
 from vr1.core import VR1core
-from vr1.settings import OpenMCSettings
-
-
-@dataclass
-class RectangularPrismBoundaryTypes():
-    xmin: str
-    xmax: str
-    ymin: str
-    ymax: str
-    zmin: str
-    zmax: str
+from vr1.settings import SettingsOpenMC
 
 
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
-    def __init__(self, settings: OpenMCSettings, core: VR1core) -> None:
+    def __init__(self, settings: SettingsOpenMC, core: VR1core) -> None:
         self.output_dir: str = 'vr1'
         self.core = core
         self.settings = settings
+        openmc.config['cross_sections'] = self.settings.xs_xml
         self.openmc_materials = openmc.Materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
         self.openmc_model = openmc.Model()
 
-    def _xs_lib_paths(self) -> str:
-        openmc.config['cross_sections'] = self.settings.xs_xml
-        return "Cross-section library path set."
+    def set_settings(self) -> openmc.Settings:
+        """ Creates OpenMC settings object """
+        settings = openmc.Settings()
+        settings.batches = self.settings.parm['gen']
+        settings.particles = self.settings.parm['npg']
+        settings.generations_per_batch = self.settings.generations_per_batch
+        settings.inactive = self.settings.parm['nsk']
+        if self.settings.parm['sig']:
+            settings.keff_trigger = {
+            'type': 'std_dev',
+            'threshold': self.settings.parm['sig']  # Ensure k-effective converges to this precision
+        }
+        settings.temperature = {'method': 'interpolation'}
+        settings.source = openmc.IndependentSource(
+            # space=openmc.stats.Box([-pitch / 2, -pitch / 2, -1], [pitch / 2, pitch / 2, 1]), # TODO size based on core
+            constraints={'fissionable': True}
+        )
+        return settings
 
-    def _header(self) -> str:
-        """
-        Outputs the header string for the OpenMC deck
-        gives:  the run parameters
-                the name of the file
-                the cross-section library
-        """
-        header_output: str = f'set title "{self.model.name} {self.settings.my_time_now}"\n\n'
-        return header_output
-
-    def _comp(self) -> openmc.Materials:
-        pass
+    def set_tallies(self) -> openmc.tallies:
+        """ Creates OpenMC tallies object """
+        my_tallies: list = []
+        for t in self.settings.tallies:
+            my_tallies.append(t.get())
+        return openmc.Tallies(my_tallies)
 
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """
@@ -68,8 +68,8 @@ class WriterOpenMC:
         # else:
         #     raise ValueError(f'Geometry mode {self.settings.geom_mode} not implemented')
 
-        self.openmc_settings = self._settings()
-        self.openmc_tallies = self._tallies()
+        self.openmc_settings = self.set_settings()
+        self.openmc_tallies = self.set_tallies()
 
         """ Build the model object """
         self.openmc_model.materials = self.openmc_materials
