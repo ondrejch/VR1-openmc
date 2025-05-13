@@ -85,6 +85,8 @@ class IRT4M:
         self.boundary: str = boundary
         self.known_fuel_assemblies: list[str] = list(lattice_unit_names.keys())
         if fa_type not in self.known_fuel_assemblies:
+            raise ValueError(f'{fa_type} is not a known lattice unit type!')
+        if 'FA' not in lattice_unit_names[fa_type]:
             raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type: str = fa_type
         self.material = material
