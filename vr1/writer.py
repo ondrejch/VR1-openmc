@@ -34,7 +34,7 @@ class WriterOpenMC:
         }
         settings.temperature = {'method': 'interpolation'}
         settings.source = openmc.IndependentSource(
-            # space=openmc.stats.Box([-pitch / 2, -pitch / 2, -1], [pitch / 2, pitch / 2, 1]), # TODO size based on core
+            space=openmc.stats.Box(self.core.source_lower_left, self.core.source_upper_right),
             constraints={'fissionable': True}
         )
         return settings

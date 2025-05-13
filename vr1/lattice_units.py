@@ -3,7 +3,7 @@
 import openmc
 from materials import VR1Material
 
-lattice_wh: float = 9.5
+lattice_wh: float = 9.5  # Lattice width and height (X-Y)
 
 rounded_rectangles: dict = {
     "1FT.1": {"wh": 6.964, "corner_r": 0.932},  # 1st tube outer cladding
@@ -43,14 +43,6 @@ cyl_zs: dict = {
     "8FT.4": 0.903, # 8th tube inner cladding
 }
 
-# surf_FAZ1 = srp_to_omc('surf FAZ.1 pz 84.7 % top edge of fuel header').omc_surface()
-# surf_FAZ2 = openmc.ZPlane(z0=73, boundary_type='vacuum')
-# # surf_FAZ2 = srp_to_omc('surf FAZ.2 pz 73.0000 % top edge of fuel elements').omc_surface()
-# surf_FAZ3 = srp_to_omc('surf FAZ.3 pz 66.4025 % top edge of active fuel elements').omc_surface()
-# surf_FAZ4 = srp_to_omc('surf FAZ.4 pz 7.5975 % bottom edge of active fuel elements').omc_surface()
-# # surf_FAZ5 = srp_to_omc('surf FAZ.5 pz 1.0 % bottom edge of fuel elements').omc_surface()
-# surf_FAZ5 = openmc.ZPlane(z0=1, boundary_type='vacuum')
-# surf_FAZ6 = srp_to_omc('surf FAZ.6 pz -3.5 % bottom edge of fuel header').omc_surface()
 plane_zs: dict = {
     "FAZ.1": 84.7,      # top edge of fuel header
     "FAZ.2": 73.0,      # top edge of fuel elements
@@ -60,20 +52,29 @@ plane_zs: dict = {
     "FAZ.6": -3.5       # bottom edge of fuel header
 }
 
-
 lattice_unit_names: dict[str:str] = {
     '8': '8-tube FA',
     '6': '6-tube FA',
     '4': '4-tube FA',
     # 'O': '6-tube FA with a fully withdrawn control rod',
     # 'X': '6-tube FA with a fully inserted control rod',
-    # 'C': '6-tube FA with control rod',
+    # 'R1': '6-tube FA with regulatory control rod 1',
+    # 'R2': '6-tube FA with regulatory control rod 2',
+    # 'E1': '6-tube FA with experimental shim rod 2',
+    # 'E2': '6-tube FA with experimental shim rod 2',
+    # 'E3': '6-tube FA with experimental shim rod 2',
+    # 'd': 'Empty fuel dummy',
+    # 'w': 'Empty water cell',
 }
 
 lattice_unit_boundaries: list[str] = [
     'reflective',  # Reflective
     'water'        # Surrounded by water
 ]
+
+# Lattice active fuel boundary for source definition
+lattice_lower_left: list[float] = [-lattice_wh / 2.0, -lattice_wh / 2.0, plane_zs['FAZ.4']]
+lattice_upper_right: list[float] = [lattice_wh / 2.0, lattice_wh / 2.0, plane_zs['FAZ.3']]
 
 
 class IRT4M:
@@ -104,8 +105,8 @@ class IRT4M:
             self.surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
         if self.boundary == 'reflective':
             self.surfaces['boundary_XY'].boundary_type = 'reflective'
-            self.surfaces['FAZ2'].boundary_type = 'reflective'  # TODO - change to FAZ 1 an 6
-            self.surfaces['FAZ6'].boundary_type = 'reflective'  # once these are implemented.
+            self.surfaces['FAZ2'].boundary_type = 'reflective'  # TODO - change to FAZ 1 an 6 once these are implemented.
+            self.surfaces['FAZ6'].boundary_type = 'reflective'  #
         for sqc, v in rounded_rectangles.items():
             if int(sqc[0]) <= n_plates:
                 self.surfaces[sqc] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
