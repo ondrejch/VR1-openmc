@@ -3,6 +3,10 @@ import openmc
 import os
 from dataclasses import dataclass
 
+from vr1.core import VR1core
+from vr1.settings import OpenMCSettings
+
+
 @dataclass
 class RectangularPrismBoundaryTypes():
     xmin: str
@@ -15,9 +19,9 @@ class RectangularPrismBoundaryTypes():
 
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
-    def __init__(self, settings: OpenMCSettings = OpenMCSettings()) -> None:
-        self.output_dir: str = 'output'
-        self.model = model
+    def __init__(self, settings: OpenMCSettings, core: VR1core) -> None:
+        self.output_dir: str = 'vr1'
+        self.core = core
         self.settings = settings
         self.openmc_materials = openmc.Materials()
         self.openmc_geometry = openmc.Geometry()
@@ -40,37 +44,7 @@ class WriterOpenMC:
         return header_output
 
     def _comp(self) -> openmc.Materials:
-
-    def _pincell(self) -> openmc.Geometry:
-        if self.settings.geom_mode == 'inf_pincell':
-            boundary_condition = RectangularPrismBoundaryTypes(
-            xmin="reflective",
-            xmax="reflective",
-            ymin="reflective",
-            ymax="reflective",
-            zmin="reflective",
-            zmax="reflective"
-        )
-        elif self.settings.geom_mode == 'inf_slab_pincell':
-            boundary_condition = RectangularPrismBoundaryTypes(
-            xmin="reflective",
-            xmax="reflective",
-            ymin="reflective",
-            ymax="reflective",
-            zmin="vacuum",
-            zmax="vacuum"
-        )
-        elif self.settings.geom_mode == 'inf_long_pincell':
-            boundary_condition = RectangularPrismBoundaryTypes(
-            xmin="vacuum",
-            xmax="vacuum",
-            ymin="vacuum",
-            ymax="vacuum",
-            zmin="reflective",
-            zmax="reflective"
-        )
-        else:
-            raise ValueError(f"Unknown geom_mode for pincell: {self.settings.geom_mode}")
+        pass
 
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """
@@ -78,21 +52,21 @@ class WriterOpenMC:
             raise ValueError(f'Output directory {self.output_dir} does not exist')
         if not os.access(self.output_dir, os.W_OK):
             raise ValueError(f'Output directory {self.output_dir} does not have write access')
-
-        if '3d' in self.settings.geom_mode.lower():
-            raise ValueError('Not implemented yet')
-        elif '2.5d' in self.settings.geom_mode.lower():
-            raise ValueError('Not implemented yet')
-        elif 'pincell' in self.settings.geom_mode.lower():
-            for material in self._comp():
-                if material.name in ['graphite', 'fuel']:
-                    self.openmc_materials.append(material)
-            self.openmc_geometry = self._pincell()
-
-        elif 'lattice' in self.settings.geom_mode.lower():
-            raise ValueError('Not implemented yet')
-        else:
-            raise ValueError(f'Geometry mode {self.settings.geom_mode} not implemented')
+        #
+        # if '3d' in self.settings.geom_mode.lower():
+        #     raise ValueError('Not implemented yet')
+        # elif '2.5d' in self.settings.geom_mode.lower():
+        #     raise ValueError('Not implemented yet')
+        # elif 'pincell' in self.settings.geom_mode.lower():
+        #     for material in self._comp():
+        #         if material.name in ['graphite', 'fuel']:
+        #             self.openmc_materials.append(material)
+        #     self.openmc_geometry = self._pincell()
+        #
+        # elif 'lattice' in self.settings.geom_mode.lower():
+        #     raise ValueError('Not implemented yet')
+        # else:
+        #     raise ValueError(f'Geometry mode {self.settings.geom_mode} not implemented')
 
         self.openmc_settings = self._settings()
         self.openmc_tallies = self._tallies()

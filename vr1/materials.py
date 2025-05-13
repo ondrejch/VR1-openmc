@@ -25,6 +25,8 @@ cladding_dict = {'Al27': 0.9807392,
 
 
 class VR1Material(object):
+    """ Materials used in the model. TODO: graphite, air, control rod materials
+    """
     def __init__(self):
         self.fuel = openmc.Material(name='fuel')
         self.fuel.add_components(fuel_dict, 'wo')
@@ -45,4 +47,3 @@ class VR1Material(object):
 
     def get_materials(self):
         return openmc.Materials([self.fuel, self.water, self.cladding])
-

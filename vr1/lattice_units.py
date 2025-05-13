@@ -4,10 +4,10 @@ from materials import VR1Material
 lattice_wh: float = 9.5
 
 rounded_rectangles: dict = {
-    "1FT.1": {"wh": 6.964, "corner_r": 0.932},
-    "1FT.2": {"wh": 6.87, "corner_r": 0.885},
-    "1FT.3": {"wh": 6.73, "corner_r": 0.815},
-    "1FT.4": {"wh": 6.636, "corner_r": 0.768},
+    "1FT.1": {"wh": 6.964, "corner_r": 0.932},  # 1st tube outer cladding
+    "1FT.2": {"wh": 6.87, "corner_r": 0.885},   # 1st tube outer fuel
+    "1FT.3": {"wh": 6.73, "corner_r": 0.815},   # 1st tube inner fuel
+    "1FT.4": {"wh": 6.636, "corner_r": 0.768},  # 1st tube outer cladding
     "2FT.1": {"wh": 6.274, "corner_r": 0.852},
     "2FT.2": {"wh": 6.18, "corner_r": 0.805},
     "2FT.3": {"wh": 6.04, "corner_r": 0.735},
@@ -35,10 +35,10 @@ rounded_rectangles: dict = {
 }
 
 cyl_zs: dict = {
-    "8FT.1": 1.067,
-    "8FT.2": 1.02,
-    "8FT.3": 0.95,
-    "8FT.4": 0.903,
+    "8FT.1": 1.067, # 8th tube outer cladding
+    "8FT.2": 1.02,  # 8th tube outer fuel
+    "8FT.3": 0.95,  # 8th tube inner fuel
+    "8FT.4": 0.903, # 8th tube inner cladding
 }
 
 # surf_FAZ1 = srp_to_omc('surf FAZ.1 pz 84.7 % top edge of fuel header').omc_surface()
@@ -59,43 +59,85 @@ plane_zs: dict = {
 }
 
 
-lattice_unit_names: dict = {
+lattice_unit_names: dict[str:str] = {
     '8': '8-tube FA',
     '6': '6-tube FA',
-    'C': '6-tube FA with control rod',
-    '4': '4-tube FA'
+    '4': '4-tube FA',
+    # 'O': '6-tube FA with a fully withdrawn control rod',
+    # 'X': '6-tube FA with a fully inserted control rod',
+    # 'C': '6-tube FA with control rod',
 }
+
+lattice_unit_boundaries: list[str] = [
+    'reflective',  # Reflective
+    'water'        # Surrounded by water
+]
 
 
 class IRT4M:
     """ Class that returns IRT4M fuel units """
-    def __init__(self, material: VR1Material):
+    def __init__(self, material: VR1Material, fa_type: str, boundary: str) -> None:
+        if boundary not in lattice_unit_boundaries:
+            raise ValueError(f'boundary {boundary} is not valid')
+        self.boundary: str = boundary
+        self.known_fuel_assemblies: list[str] = list(lattice_unit_names.keys())
+        if fa_type not in self.known_fuel_assemblies:
+            raise ValueError(f'{fa_type} is not a known fuel assembly type!')
+        self.fa_type: str = fa_type
         self.material = material
-        self.known_fuel_assemblies: list[str] = ['8', '6', 'C', '4']
         self.surfaces: dict = {}
-        self.fa_type: str = ''
+        self.cells: dict = {}
 
-    def name(self):
+    def name(self) -> str:
+        """ Returns the name of the FA lattice """
         return lattice_unit_names[self.fa_type]
 
-    def lattice(self, fa_type: str):
-        if fa_type in self.known_fuel_assemblies:
-            raise ValueError(f'{fa_type} is not a known fuel assembly type!')
-        self.fa_type = fa_type
-        """ Common FA surfaces """
-        self.surfaces['boundaryXY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
+    def build(self) -> openmc.Universe:
+        """ Builds an IRT4M fuel assembly lattice until. TODO: control rod lattices
+        """
+        n_plates: int = int(lattice_unit_names[self.fa_type][0])  # How many plates in the FA
+        """ FA surfaces """
+        self.surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         for plane, z in plane_zs.items():
             self.surfaces[plane] = openmc.ZPlane(z0=z)
+        if self.boundary == 'reflective':
+            self.surfaces['boundary_XY'].boundary_type = 'reflective'
+            self.surfaces['FAZ2'].boundary_type = 'reflective'  # TODO - change to FAZ 1 an 6
+            self.surfaces['FAZ6'].boundary_type = 'reflective'  # once these are implemented.
         for sqc, v in rounded_rectangles.items():
-            self.surfaces[sqc] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'],
-                                                               corner_radius=sqc['corner_r'])
+            if int(sqc[0]) <= n_plates:
+                self.surfaces[sqc] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
+        if n_plates == 8:
+            for cylz, r in cyl_zs.items():
+                self.surfaces[cylz] = openmc.ZCylinder(r=r)
 
+        """ Common FA cells """
+        self.cells['out_top_c'] = openmc.Cell(fill=self.material.water, region=-self.surfaces['boundary_XY'] & +self.surfaces['1FT1'] & -self.surfaces['FAZ2'] & +self.surfaces['FAZ3'])
+        self.cells['out_mid_f'] = openmc.Cell(fill=self.material.water, region=-self.surfaces['boundary_XY'] & +self.surfaces['1FT1'] & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+        self.cells['out_bot_c'] = openmc.Cell(fill=self.material.water, region=-self.surfaces['boundary_XY'] & +self.surfaces['1FT1'] & -self.surfaces['FAZ4'] & +self.surfaces['FAZ5'])
 
-cell_0819 = openmc.Cell(fill=cladding, region=-surf_6FT1 & +surf_6FT4 & -surf_FAZ2 & +surf_FAZ3)
-cell_0820 = openmc.Cell(fill=water, region=-surf_6FT4 & +surf_7FT1 & -surf_FAZ2 & +surf_FAZ3)
-cell_0821 = openmc.Cell(fill=cladding, region=-surf_7FT1 & +surf_7FT4 & -surf_FAZ2 & +surf_FAZ3)
-cell_0822 = openmc.Cell(fill=water, region=-surf_7FT4 & +surf_8FT1 & -surf_FAZ2 & +surf_FAZ3)
-cell_0823 = openmc.Cell(fill=cladding, region=-surf_8FT1 & +surf_8FT4 & -surf_FAZ2 & +surf_FAZ3)
-cell_0824 = openmc.Cell(fill=water, region=-surf_8FT4 & -surf_FAZ2 & +surf_FAZ3)
+        for i in range(1, n_plates-1):
+            self.cells[f'top_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ2'] & +self.surfaces['FAZ3'])
+            self.cells[f'top_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4'] & +self.surfaces[f'{i+1}FT1'] & -self.surfaces['FAZ2'] & +self.surfaces['FAZ3'])
 
+            self.cells[f'mid_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT2']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+            self.cells[f'mid_f_{i}'] = openmc.Cell(fill=self.material.fuel,     region=-self.surfaces[f'{i}FT2'] & +self.surfaces[f'{i}FT3']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+            self.cells[f'mid_w_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT3'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+            self.cells[f'mid_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4'] & +self.surfaces[f'{i+1}FT1'] & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
 
+            self.cells[f'bot_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ4'] & +self.surfaces['FAZ5'])
+            self.cells[f'bot_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4'] & +self.surfaces[f'{i+1}FT1'] & -self.surfaces['FAZ4'] & +self.surfaces['FAZ5'])
+
+        i = n_plates
+        self.cells[f'top_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ2'] & +self.surfaces['FAZ3'])
+        self.cells[f'top_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4']                               & -self.surfaces['FAZ2'] & +self.surfaces['FAZ3'])
+
+        self.cells[f'mid_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT2']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+        self.cells[f'mid_f_{i}'] = openmc.Cell(fill=self.material.fuel,     region=-self.surfaces[f'{i}FT2'] & +self.surfaces[f'{i}FT3']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+        self.cells[f'mid_w_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT3'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+        self.cells[f'mid_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4'] &                               -self.surfaces['FAZ3'] & +self.surfaces['FAZ4'])
+
+        self.cells[f'bot_c_{i}'] = openmc.Cell(fill=self.material.cladding, region=-self.surfaces[f'{i}FT1'] & +self.surfaces[f'{i}FT4']   & -self.surfaces['FAZ4'] & +self.surfaces['FAZ5'])
+        self.cells[f'bot_w_{i}'] = openmc.Cell(fill=self.material.water,    region=-self.surfaces[f'{i}FT4']                               & -self.surfaces['FAZ4'] & +self.surfaces['FAZ5'])
+
+        return openmc.Universe(self.cells)
