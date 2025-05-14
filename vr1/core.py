@@ -1,16 +1,19 @@
 """ Core design for VR1 """
 import openmc
-from vr1.lattice_units import IRT4M
-from vr1.lattice_units import lattice_unit_names
+from vr1.lattice_units import IRT4M, surfaces, lattice_unit_names, lattice_lower_left, lattice_upper_right
 from vr1.materials import VR1Materials
 # Write an FA lattice, or teh core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
 # Different core designs.
-core_designs: dict[str, dict] = {
-
+core_designs: dict[str, list[list[str]]] = {
+    'small_test':  [
+        ['8', '4', '8'],
+        ['6', 'w', '6'],
+        ['4', '8', '4'],
+    ]
 }
 
-EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
+VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
     ['0', '1', '2', '3', '4', '5', '6', '7'],
     ['1', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
     ['2', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
@@ -23,13 +26,13 @@ EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
 
 
 class VR1core:
-    """ TODO: lattice structure, geometry of the overall reactor, pool, channels
-    """
+    """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
     def __init__(self, materials: VR1Materials):
-        self.materials: openmc.Materials = materials
+        self.materials: VR1Materials = materials
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
         self.fa_type: (None, str) = None
+        self.lattice = (None, openmc.RectLattice)
         self.model = openmc.Universe
 
     def fuel_assembly(self, fa_type, boundaries='reflective'):
@@ -40,3 +43,15 @@ class VR1core:
             raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type = fa_type
         self.model = IRT4M(self.materials, self.fa_type, boundaries)
+        self.source_lower_left = lattice_lower_left
+        self.source_upper_right = lattice_upper_right
+
+    def test_lattice(self, lattice_str=(None, list[list[str]])):
+        if lattice_str is None:
+            lattice_str = core_designs['small_test']
+        n: int = len(lattice_str)
+        assert n > 0
+        for row in lattice_str:
+            if len(row) != n:
+                raise ValueError(f'{lattice_str} is not square')
+        self.lattice = openmc.RectLattice()

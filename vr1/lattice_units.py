@@ -199,9 +199,36 @@ lattice_lower_left: list[float] = [-lattice_wh / 2.0, -lattice_wh / 2.0, plane_z
 lattice_upper_right: list[float] = [lattice_wh / 2.0, lattice_wh / 2.0, plane_zs['FAZ.3']]
 
 
-class IRT4M:
+class LatticeUnitVR1:
+    """ Virtual base class """
+    def __init__(self, materials: VR1Materials):
+        self.materials: VR1Materials = materials
+        self.cells: dict = {}
+
+    def name(self) -> str:
+        return "Lattice Unit VR1 base class"
+
+    def build(self):
+        raise NotImplementedError
+
+
+class Water(LatticeUnitVR1):
+    """ Water lattice unit """
+    def __init__(self, materials: VR1Materials):
+        super().__init__(materials)
+
+    def name(self) -> str:
+        return "Water filling the lattice"
+
+    def build(self) -> openmc.Universe:
+        self.cells['water'] = openmc.Cell(name='water', fill=self.materials.water, region=-surfaces['ELE.1'])  # & -surfaces['ELE.zp'] & surfaces['GRD.zt'])
+        return openmc.Universe(self.cells)
+
+
+class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
     def __init__(self, materials: VR1Materials, fa_type: str, boundary: str) -> None:
+        super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary
@@ -211,8 +238,6 @@ class IRT4M:
         if 'FA' not in lattice_unit_names[fa_type]:
             raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type: str = fa_type
-        self.materials = materials
-        self.cells: dict = {}
 
     def name(self) -> str:
         """ Returns the name of the FA lattice """
@@ -258,7 +283,6 @@ class IRT4M:
         self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
 
         return openmc.Universe(self.cells)
-
 
 
 """ Shell scripts to extract surfaces from the Serpent model 
