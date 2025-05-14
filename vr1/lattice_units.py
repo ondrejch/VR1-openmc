@@ -6,6 +6,10 @@ from vr1.materials import VR1Materials
 lattice_wh: float = 9.5  # Lattice unit width and height (X-Y) [cm]
 lattice_pitch: float = 7.15  # Actual lattice pitch [cm]orca versus cura slicers
 
+rects: dict = {
+    "CORE.rec": [-28.6, 28.6, -28.6, 28.6],     # core limit
+    "BOX.rec":  [-130, 130, -215, 130],         # concrete shielding
+}
 
 fuel_sqc: dict = {
     "1FT.1": {"wh": 6.964, "corner_r": 0.932},  # 1st tube outer cladding
@@ -39,39 +43,41 @@ fuel_sqc: dict = {
 }
 
 cyl_zs: dict = {
-    "8FT.1": 1.067, # 8th tube outer cladding
-    "8FT.2": 1.02,  # 8th tube outer fuel
-    "8FT.3": 0.95,  # 8th tube inner fuel
-    "8FT.4": 0.903, # 8th tube inner cladding
-    "H01.1": 115,  # inner side H01
-    "DIS.1":  0.705, # water displacer outer side
-    "DIS.2":  0.605, # water displacer inner side
-    "ABS.2":  1.300, # inner radius guide tube
-    "ABS.3":  1.225, # outer radius abs. tube
-    "ABS.4":  1.000, # outer radius Cd sheet
-    "ABS.5":  0.900, # outer radius Al core
-    "DMP.1":  1.265, # inner radius damper
-    "C12.1":  0.700, # outer radius channel 12 mm
-    "C12.2":  0.600, # inner radius channel 12 mm
-    "C25.1":  1.250, # outer radius channel 25 mm
-    "C25.2":  1.150, # inner radius channel 25 mm
-    "C30.1":  1.500, # outer radius channel 30 mm
-    "C30.2":  1.400, # inner radius channel 30 mm
-    "C56.1":  3.500, # outer radius channel 56 mm
-    "C56.2":  3.000, # inner radius channel 56 mm
-    "C90.1":  5.500, # outer radius channel 90 mm
-    "C90.2":  5.000, # inner radius channel 90 mm
-    "RT.2":  1.2505, # inner radius guide RT
-    "RT.3":  1.1, # outer radius channel RT
-    "RT.4":  0.95, # inner radius channel RT
+    "H01.2": 116.5,     # outer H01 vessel radius
+    "H01.3": 120,       # inner H01 vessel shielding radius
+    "8FT.1": 1.067,     # 8th tube outer cladding
+    "8FT.2": 1.02,      # 8th tube outer fuel
+    "8FT.3": 0.95,      # 8th tube inner fuel
+    "8FT.4": 0.903,     # 8th tube inner cladding
+    "H01.1": 115,       # inner side H01
+    "DIS.1":  0.705,    # water displacer outer side
+    "DIS.2":  0.605,    # water displacer inner side
+    "ABS.2":  1.300,    # inner radius guide tube
+    "ABS.3":  1.225,    # outer radius abs. tube
+    "ABS.4":  1.000,    # outer radius Cd sheet
+    "ABS.5":  0.900,    # outer radius Al core
+    "DMP.1":  1.265,    # inner radius damper
+    "C12.1":  0.700,    # outer radius channel 12 mm
+    "C12.2":  0.600,    # inner radius channel 12 mm
+    "C25.1":  1.250,    # outer radius channel 25 mm
+    "C25.2":  1.150,    # inner radius channel 25 mm
+    "C30.1":  1.500,    # outer radius channel 30 mm
+    "C30.2":  1.400,    # inner radius channel 30 mm
+    "C56.1":  3.500,    # outer radius channel 56 mm
+    "C56.2":  3.000,    # inner radius channel 56 mm
+    "C90.1":  5.500,    # outer radius channel 90 mm
+    "C90.2":  5.000,    # inner radius channel 90 mm
+    "RT.2":  1.2505,    # inner radius guide RT
+    "RT.3":  1.1,       # outer radius channel RT
+    "RT.4":  0.95,      # inner radius channel RT
     # "Gr1.1":  1.8840 1.9275 1.5770, # upper right corner
     # "Gr2.1":  -1.8840 1.9275 1.5770, # upper left corner
     # "Gr1.2":  1.8840 1.9275 1.3070, # upper right corner
     # "Gr2.2":  -1.8840 1.9275 1.3070, # upper left corner
     # "Gr1.3":  1.8840 1.9275 1.2000, # upper right corner
     # "Gr2.3":  -1.8840 1.9275 1.2000, # upper left corner
-    "GRD.1":  2.2, # outer radius of core grid
-    "GRD.2":  1.7, # inner radius of core grid
+    "GRD.1":  2.2,      # outer radius of core grid
+    "GRD.2":  1.7,      # inner radius of core grid
     # "RCcz.1":  0 -138 4 35.3 372, # inside vertical channel in radial channel inner radius (estimation)
     # "RCcz.2":  0 -138 5 35.3 372, # inside vertical channel in radial channel outer radius (estimation)
     # "RCcz.3":  0 -200 4 35.3 372, # outside vertical channel in radial channel inner radius (estimation)
@@ -163,7 +169,7 @@ dummy_sqcs: dict = {
 surfaces: dict = {}
 for plane, z in plane_zs.items():
     surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
-for sqc, v in fuel_sqc.items():
+for sqc, v in (fuel_sqc | dummy_sqcs).items():
     surfaces[sqc] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
 for cylz, r in cyl_zs.items():
     surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
@@ -252,3 +258,14 @@ class IRT4M:
         self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
 
         return openmc.Universe(self.cells)
+
+
+
+""" Shell scripts to extract surfaces from the Serpent model 
+grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
+grep ' py ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ py/":\ /g' -e s/\ %/,\ #/g
+grep ' pz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ pz/":\ /g' -e s/\ %/,\ #/g
+grep ' cyl ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cyl/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
+grep ' rect ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ rect/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
+grep ' cylz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cylz/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
+"""
