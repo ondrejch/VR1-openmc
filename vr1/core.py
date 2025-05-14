@@ -1,6 +1,8 @@
 """ Core design for VR1 """
+import numpy as np
 import openmc
-from vr1.lattice_units import IRT4M, surfaces, lattice_unit_names, lattice_lower_left, lattice_upper_right
+from vr1.lattice_units import (surfaces, lattice_unit_names, lattice_lower_left, lattice_upper_right, IRT4M,
+                               lattice_pitch, LatticeUnitVR1)
 from vr1.materials import VR1Materials
 # Write an FA lattice, or teh core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -35,6 +37,14 @@ class VR1core:
         self.lattice = (None, openmc.RectLattice)
         self.model = openmc.Universe
 
+    # def build_lattice_universes(self, lattice_str=(None, list[list[str]])):
+    #     """ Loops over lattice """
+    #     if self.lattice is None:
+    #         raise ValueError('Lattice not defined')
+    #     for row in lattice_str:
+    #         for u in row:
+    #             pass
+    #
     def fuel_assembly(self, fa_type, boundaries='reflective'):
         """ Returns a fuel assembly """
         if fa_type not in list(lattice_unit_names.keys()):
@@ -55,3 +65,13 @@ class VR1core:
             if len(row) != n:
                 raise ValueError(f'{lattice_str} is not square')
         self.lattice = openmc.RectLattice()
+        xy_corner: float = float(n) * lattice_pitch / 2.0
+        self.lattice.lower_left = (-xy_corner, -xy_corner)
+        self.lattice.pitch = lattice_pitch
+        self.lattice.universes = np.empty((n, n), dtype=openmc.Universe)
+        lattice_builder = LatticeUnitVR1(self.materials)
+        for i in range(n):
+            for j in range(n):
+                u: str = lattice_str[i][j]
+                self.lattice.universes[i][j] = lattice_builder.get(u)
+

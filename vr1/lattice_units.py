@@ -208,8 +208,22 @@ class LatticeUnitVR1:
     def name(self) -> str:
         return "Lattice Unit VR1 base class"
 
-    def build(self):
-        raise NotImplementedError
+    def get(self, lattice_code:str = 'w') -> openmc.Universe():
+        lattice_unit_builders: dict = {
+            '8': IRT4M(self.materials, fa_type='8'),
+            '6': IRT4M(self.materials, fa_type='6'),
+            '4': IRT4M(self.materials, fa_type='4'),
+        # 'O': '6-tube FA with a fully withdrawn control rod',
+        # 'X': '6-tube FA with a fully inserted control rod',
+        # 'R1': '6-tube FA with regulatory control rod 1',
+        # 'R2': '6-tube FA with regulatory control rod 2',
+        # 'E1': '6-tube FA with experimental shim rod 2',
+        # 'E2': '6-tube FA with experimental shim rod 2',
+        # 'E3': '6-tube FA with experimental shim rod 2',
+        # 'd': 'Empty fuel dummy',
+            'w': Water(self.materials),
+        }
+        return lattice_unit_builders[lattice_code].build()
 
 
 class Water(LatticeUnitVR1):
@@ -227,7 +241,7 @@ class Water(LatticeUnitVR1):
 
 class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
-    def __init__(self, materials: VR1Materials, fa_type: str, boundary: str) -> None:
+    def __init__(self, materials: VR1Materials, fa_type: str, boundary: str = 'water') -> None:
         super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
