@@ -1,7 +1,7 @@
 """ Tally definitions VR1 """
 
 import openmc
-from materials import VR1Material
+from vr1.materials import VR1Materials
 
 tally_types: list[str] = [
     'fuel flux',
@@ -23,7 +23,7 @@ class VR1Tally:
 
 class FluxTally(VR1Tally):
     """ Returns flux tally """
-    def __init__(self, material: VR1Material, tally_type: str) -> None:
+    def __init__(self, material: VR1Materials, tally_type: str) -> None:
         if tally_type not in tally_types:
             raise ValueError(f'Tally type {tally_type} is not valid')
         self.tally_type = tally_type

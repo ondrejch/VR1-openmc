@@ -77,5 +77,5 @@ class WriterOpenMC:
         self.openmc_model.settings = self.openmc_settings
         self.openmc_model.tallies = self.openmc_tallies
 
-        self.openmc_model.export_to_model_xml(self.output_dir)
+        self.openmc_model.export_to_model_xml(self.output_dir, remove_surfs=True)
         return 0
