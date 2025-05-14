@@ -1,8 +1,8 @@
 """ Core design for VR1 """
 import numpy as np
 import openmc
-from vr1.lattice_units import (surfaces, lattice_unit_names, lattice_lower_left, lattice_upper_right, IRT4M,
-                               lattice_pitch, LatticeUnitVR1)
+from vr1.lattice_units import (surfaces, rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
+                               IRT4M, lattice_pitch, LatticeUnitVR1)
 from vr1.materials import VR1Materials
 # Write an FA lattice, or teh core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -74,4 +74,10 @@ class VR1core:
             for j in range(n):
                 u: str = lattice_str[i][j]
                 self.lattice.universes[i][j] = lattice_builder.get(u)
-
+        x0: float = rects['CORE.rec'][0]
+        x1: float = rects['CORE.rec'][1]
+        y0: float = rects['CORE.rec'][2]
+        y1: float = rects['CORE.rec'][3]
+        z0: float = plane_zs['FAZ2']
+        z0: float = plane_zs['FAZ6']
+        core_box = openmc.model.RectangularParallelepiped()
