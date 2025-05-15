@@ -74,10 +74,18 @@ class VR1core:
             for j in range(n):
                 u: str = lattice_str[i][j]
                 self.lattice.universes[i][j] = lattice_builder.get(u)
+        """ Lattice box """
+        z0: float = plane_zs['FAZ2']
+        z1: float = plane_zs['FAZ5']
+        lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
+        lattice_cell = openmc.Cell(fill=self.lattice, region= -lattice_box)
+        """ Water box around the lattice """
         x0: float = rects['CORE.rec'][0]
         x1: float = rects['CORE.rec'][1]
         y0: float = rects['CORE.rec'][2]
         y1: float = rects['CORE.rec'][3]
-        z0: float = plane_zs['FAZ2']
-        z0: float = plane_zs['FAZ6']
-        core_box = openmc.model.RectangularParallelepiped()
+        z0: float = plane_zs['FAZ1']
+        z1: float = plane_zs['FAZ6']
+        core_box = openmc.model.RectangularParallelepiped(x0, x1, y0, y1, z0, z1)
+        core_box.boundary_type = 'vacuum'
+        self.model = openmc.Cell(fill=self.materials.water, region= -core_box & +lattice_box)

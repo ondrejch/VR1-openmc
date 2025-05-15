@@ -264,8 +264,8 @@ class IRT4M(LatticeUnitVR1):
         surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
-            surfaces['FAZ2'].boundary_type = 'reflective'  # TODO - change to FAZ 1 an 6 once these are implemented.
-            surfaces['FAZ6'].boundary_type = 'reflective'  #
+            surfaces['FAZ2'].boundary_type = 'reflective'
+            surfaces['FAZ5'].boundary_type = 'reflective'
 
         """ Common FA cells """
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT1'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
