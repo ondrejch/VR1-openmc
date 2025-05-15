@@ -25,12 +25,13 @@ grid_dict = {"Al27": 0.9353353, "Mn55": 0.002999189, "Mg24": 0.03894506, "Mg25":
     "Zn66": 0.000278866, "Zn67": 4.09805e-05, "Zn68": 0.00018791, "Zn70": 5.99714e-06, "Ti46": 7.91718e-05,
     "Ti47": 7.29506e-05, "Ti48": 0.000738218, "Ti49": 5.53035e-05, "Ti50": 5.4033e-05, }
 big_channel_dict = grid_dict
-abstube_dict = {}
-# TODO - add more materials from serpent deck
+abs_tube_dict = {}
+# TODO - add more materials from the serpent deck
 
 
 class VR1Materials(object):
     """ Materials used in the model. TODO: graphite, air, control rod materials """
+    # TODO - make materials into a singleton class
     def __init__(self):
         self.fuel = openmc.Material(name='fuel meat')
         self.fuel.add_components(fuel_dict, 'wo')

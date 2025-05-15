@@ -5,16 +5,17 @@ import os
 
 from vr1.core import VR1core
 from vr1.settings import SettingsOpenMC
+from vr1.materials import VR1Materials
 
 
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
     def __init__(self, settings: SettingsOpenMC, core: VR1core) -> None:
         self.output_dir: str = 'vr1'
-        self.core = core
+        self.core: VR1core = core
         self.settings = settings
         openmc.config['cross_sections'] = self.settings.xs_xml
-        self.openmc_materials = openmc.Materials()
+        self.openmc_materials = VR1Materials.get_materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
@@ -45,6 +46,12 @@ class WriterOpenMC:
         for t in self.settings.tallies:
             my_tallies.append(t.get())
         return openmc.Tallies(my_tallies)
+
+    def set_geometry(self) -> openmc.geometry:
+        """ Creates OpenMC geometry object """
+        # Todo figure out how to do this
+        pass
+
 
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """
