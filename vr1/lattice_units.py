@@ -170,7 +170,6 @@ surfaces: dict = {}
 for plane, z in plane_zs.items():
     surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
 for k, sqc in (fuel_sqc | dummy_sqcs).items():
-    print (k, sqc)
     surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
 for cylz, r in cyl_zs.items():
     surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)

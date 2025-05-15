@@ -56,7 +56,7 @@ class FuelAssembly(VR1core):
 
 
 class TestLattice(VR1core):
-    def __init__(self, lattice_str=(None, list[list[str]])):
+    def __init__(self, lattice_str: (None, list[list[str]]) = None):
         super().__init__()
         if lattice_str is None:
             lattice_str = core_designs['small_test']
