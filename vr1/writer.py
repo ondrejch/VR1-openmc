@@ -49,9 +49,10 @@ class WriterOpenMC:
 
     def set_geometry(self) -> openmc.geometry:
         """ Creates OpenMC geometry object """
-        # Todo figure out how to do this
-        pass
-
+        if self.core:
+            return openmc.Geometry(self.core.model)
+        else:
+            raise ValueError(f'Cannot create geometry for {self.core}')
 
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """

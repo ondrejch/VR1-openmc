@@ -1,9 +1,12 @@
 """ Core design for VR1 """
 import numpy as np
 import openmc
+from vr1.materials import VR1Materials
 from vr1.lattice_units import (surfaces, rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
-from vr1.materials import VR1Materials
+materials = VR1Materials()
+
+
 # Write an FA lattice, or teh core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
 # Different core designs.
@@ -29,7 +32,7 @@ VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
 
 class VR1core:
     """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
-    def __init__(self, materials: VR1Materials):
+    def __init__(self):
         self.materials: VR1Materials = materials
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
@@ -37,16 +40,11 @@ class VR1core:
         self.lattice = (None, openmc.RectLattice)
         self.model = openmc.Universe
 
-    # def build_lattice_universes(self, lattice_str=(None, list[list[str]])):
-    #     """ Loops over lattice """
-    #     if self.lattice is None:
-    #         raise ValueError('Lattice not defined')
-    #     for row in lattice_str:
-    #         for u in row:
-    #             pass
-    #
-    def fuel_assembly(self, fa_type, boundaries='reflective'):
-        """ Returns a fuel assembly """
+
+class FuelAssembly(VR1core):
+    """ Returns a fuel assembly """
+    def __init__(self, fa_type, boundaries='reflective'):
+        super().__init__()
         if fa_type not in list(lattice_unit_names.keys()):
             raise ValueError(f'{fa_type} is not a known lattice unit type!')
         if 'FA' not in lattice_unit_names[fa_type]:
@@ -56,7 +54,10 @@ class VR1core:
         self.source_lower_left = lattice_lower_left
         self.source_upper_right = lattice_upper_right
 
-    def test_lattice(self, lattice_str=(None, list[list[str]])):
+
+class TestLattice(VR1core):
+    def __init__(self, lattice_str=(None, list[list[str]])):
+        super().__init__()
         if lattice_str is None:
             lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
