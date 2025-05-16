@@ -44,13 +44,20 @@ class WriterOpenMC:
         my_tallies: list = []
         if self.settings.tallies:
             for t in self.settings.tallies:
-                my_tallies.append(t.get())
+                my_tallies.append(t)
         return openmc.Tallies(my_tallies)
+
+    def set_plots(self) -> openmc.Plots:
+        my_plots: list = []
+        if self.settings.plots:
+            for p in self.settings.plots:
+                my_plots.append(p)
+        return openmc.Plots(my_plots)
 
     def set_geometry(self) -> openmc.geometry:
         """ Creates OpenMC geometry object """
         if self.core:
-            return openmc.Geometry(self.core.model)
+            return openmc.Geometry(root=self.core.model)
         else:
             raise ValueError(f'Cannot create geometry for {self.core}')
 
@@ -81,12 +88,17 @@ class WriterOpenMC:
         self.openmc_tallies = self.set_tallies()
         self.openmc_geometry = self.set_geometry()
         self.openmc_geometry.merge_surfaces = True
+        self.openmc_materials.cross_section_library = self.settings.xs_lib
+        self.openmc_materials.cross_sections = self.settings.xs_xml
+        print(self.settings.xs_xml)
 
         """ Build the model object """
         self.openmc_model.materials = self.openmc_materials
         self.openmc_model.geometry = self.openmc_geometry
         self.openmc_model.settings = self.openmc_settings
         self.openmc_model.tallies = self.openmc_tallies
+        self.openmc_model.plots = self.set_plots()
+
 
         self.openmc_model.export_to_model_xml(self.output_dir)
         return 0

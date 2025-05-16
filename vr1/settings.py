@@ -7,8 +7,8 @@ MY_TIME_NOW: str = datetime.isoformat(datetime.now(), "#", "seconds")
 
 class SettingsOpenMC:
     def __init__(self, name: str = 'openmc deck', xs_lib: str = 'endf7.1', xs_xml_root_path: str = '/opt/OpenMC_DATA',
-                 tally: (list, None) = None,  parm: (dict, None) = None, rotation: float = 0.0,
-                 sources: (None, list) = None, power: (None, float) = None):
+                 tallies: (list, None) = None, plots: (list, None) = None, parm: (dict, None) = None,
+                 rotation: float = 0.0, sources: (None, list) = None, power: (None, float) = None):
         self.supported_code: str = "OpenMC"
         self.name = name
         self.my_time_now = MY_TIME_NOW
@@ -22,7 +22,8 @@ class SettingsOpenMC:
             assert ValueError('xs_lib must be endf8.0 or endf7.1')
         self.hostname = os.uname()[1]
         self.power = power  # [W_th]
-        self.tallies = tally
+        self.tallies = tallies
+        self.plots = plots
         self.sources = sources
         self.rotation = rotation
 

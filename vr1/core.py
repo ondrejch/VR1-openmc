@@ -83,7 +83,7 @@ class TestLattice(VR1core):
         z0: float = plane_zs['FAZ.5']
         z1: float = plane_zs['FAZ.2']
         lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
-        lattice_cell = openmc.Cell(fill=self.lattice, region= -lattice_box)
+        lattice_cell = openmc.Cell(fill=self.lattice, region=-lattice_box)
         """ Water box around the lattice """
         x0: float = rects['CORE.rec'][0]
         x1: float = rects['CORE.rec'][1]
@@ -93,4 +93,7 @@ class TestLattice(VR1core):
         z1: float = plane_zs['FAZ.1']
         core_box = openmc.model.RectangularParallelepiped(x0, x1, y0, y1, z0, z1)
         core_box.boundary_type = 'vacuum'
-        self.model = openmc.Cell(fill=self.materials.water, region= -core_box & +lattice_box)
+        core_cell = openmc.Cell(fill=self.materials.water, region=-core_box & +lattice_box)
+        self.model = openmc.Universe(cells=[lattice_cell, core_cell])
+        self.source_lower_left = (-xy_corner, -xy_corner, lattice_lower_left[2])
+        self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])
