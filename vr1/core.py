@@ -61,23 +61,27 @@ class TestLattice(VR1core):
         if lattice_str is None:
             lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
+        print(f'Lattice size {n}')
         assert n > 0
         for row in lattice_str:
             if len(row) != n:
                 raise ValueError(f'{lattice_str} is not square')
-        self.lattice = openmc.RectLattice()
+        self.lattice = openmc.RectLattice(name='test_lattice')
         xy_corner: float = float(n) * lattice_pitch / 2.0
         self.lattice.lower_left = (-xy_corner, -xy_corner)
-        self.lattice.pitch = lattice_pitch
-        self.lattice.universes = np.empty((n, n), dtype=openmc.Universe)
+        self.lattice.pitch = (lattice_pitch, lattice_pitch)
+        # self.lattice.universes = np.zeros((n, n), dtype=openmc.UniverseBase)  # TODO why is this not working?
         lattice_builder = LatticeUnitVR1(self.materials)
+        lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
         for i in range(n):
+            _l: list[openmc.UniverseBase] = []
             for j in range(n):
-                u: str = lattice_str[i][j]
-                self.lattice.universes[i][j] = lattice_builder.get(u)
+                _l.append(lattice_builder.get(lattice_str[i][j]))
+            lattice_array.append(_l)
+        self.lattice.universes = lattice_array
         """ Lattice box """
-        z0: float = plane_zs['FAZ2']
-        z1: float = plane_zs['FAZ5']
+        z0: float = plane_zs['FAZ.5']
+        z1: float = plane_zs['FAZ.2']
         lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
         lattice_cell = openmc.Cell(fill=self.lattice, region= -lattice_box)
         """ Water box around the lattice """
@@ -85,8 +89,8 @@ class TestLattice(VR1core):
         x1: float = rects['CORE.rec'][1]
         y0: float = rects['CORE.rec'][2]
         y1: float = rects['CORE.rec'][3]
-        z0: float = plane_zs['FAZ1']
-        z1: float = plane_zs['FAZ6']
+        z0: float = plane_zs['FAZ.6']
+        z1: float = plane_zs['FAZ.1']
         core_box = openmc.model.RectangularParallelepiped(x0, x1, y0, y1, z0, z1)
         core_box.boundary_type = 'vacuum'
         self.model = openmc.Cell(fill=self.materials.water, region= -core_box & +lattice_box)

@@ -3,9 +3,8 @@
 import openmc
 import os
 
-from vr1.core import VR1core
+from vr1.core import VR1core, materials
 from vr1.settings import SettingsOpenMC
-from vr1.materials import VR1Materials
 
 
 class WriterOpenMC:
@@ -15,7 +14,7 @@ class WriterOpenMC:
         self.core: VR1core = core
         self.settings = settings
         openmc.config['cross_sections'] = self.settings.xs_xml
-        self.openmc_materials = VR1Materials.get_materials()
+        self.openmc_materials = materials.get_materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
@@ -28,7 +27,7 @@ class WriterOpenMC:
         settings.particles = self.settings.parm['npg']
         settings.generations_per_batch = self.settings.generations_per_batch
         settings.inactive = self.settings.parm['nsk']
-        if self.settings.parm['sig']:
+        if 'sig' in self.settings.parm:
             settings.keff_trigger = {
             'type': 'std_dev',
             'threshold': self.settings.parm['sig']  # Ensure k-effective converges to this precision
@@ -43,8 +42,9 @@ class WriterOpenMC:
     def set_tallies(self) -> openmc.tallies:
         """ Creates OpenMC tallies object """
         my_tallies: list = []
-        for t in self.settings.tallies:
-            my_tallies.append(t.get())
+        if self.settings.tallies:
+            for t in self.settings.tallies:
+                my_tallies.append(t.get())
         return openmc.Tallies(my_tallies)
 
     def set_geometry(self) -> openmc.geometry:
@@ -57,7 +57,8 @@ class WriterOpenMC:
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """
         if not os.path.isdir(self.output_dir):
-            raise ValueError(f'Output directory {self.output_dir} does not exist')
+            os.makedirs(self.output_dir)
+            # raise ValueError(f'Output directory {self.output_dir} does not exist')
         if not os.access(self.output_dir, os.W_OK):
             raise ValueError(f'Output directory {self.output_dir} does not have write access')
         #
@@ -78,6 +79,8 @@ class WriterOpenMC:
 
         self.openmc_settings = self.set_settings()
         self.openmc_tallies = self.set_tallies()
+        self.openmc_geometry = self.set_geometry()
+        self.openmc_geometry.merge_surfaces = True
 
         """ Build the model object """
         self.openmc_model.materials = self.openmc_materials
@@ -85,5 +88,5 @@ class WriterOpenMC:
         self.openmc_model.settings = self.openmc_settings
         self.openmc_model.tallies = self.openmc_tallies
 
-        self.openmc_model.export_to_model_xml(self.output_dir, remove_surfs=True)
+        self.openmc_model.export_to_model_xml(self.output_dir)
         return 0

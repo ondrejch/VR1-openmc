@@ -11,7 +11,7 @@ rects: dict = {
     "BOX.rec":  [-130, 130, -215, 130],         # concrete shielding
 }
 
-fuel_sqc: dict = {
+sqcs: dict = {
     "1FT.1": {"wh": 6.964, "corner_r": 0.932},  # 1st tube outer cladding
     "1FT.2": {"wh": 6.87, "corner_r": 0.885},   # 1st tube outer fuel
     "1FT.3": {"wh": 6.73, "corner_r": 0.815},   # 1st tube inner fuel
@@ -40,6 +40,9 @@ fuel_sqc: dict = {
     "7FT.2": {"wh": 2.73, "corner_r": 0.405},
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
+    "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
+    "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
+    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
 }
 
 cyl_zs: dict = {
@@ -159,17 +162,11 @@ plane_zs: dict = {
     "GRD.zd": -7.51,    # lower edge of core grid
 }
 
-dummy_sqcs: dict = {
-    "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
-    "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
-}
-
 # ALL SURFACES ARE HERE
 surfaces: dict = {}
 for plane, z in plane_zs.items():
     surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
-for k, sqc in (fuel_sqc | dummy_sqcs).items():
+for k, sqc in sqcs.items():
     surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
 for cylz, r in cyl_zs.items():
     surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
@@ -208,7 +205,7 @@ class LatticeUnitVR1:
     def name(self) -> str:
         return "Lattice Unit VR1 base class"
 
-    def get(self, lattice_code:str = 'w') -> openmc.Universe():
+    def get(self, lattice_code: str = 'w') -> openmc.Universe():
         lattice_unit_builders: dict = {
             '8': IRT4M(self.materials, fa_type='8'),
             '6': IRT4M(self.materials, fa_type='6'),
@@ -236,7 +233,7 @@ class Water(LatticeUnitVR1):
 
     def build(self) -> openmc.Universe:
         self.cells['water'] = openmc.Cell(name='water', fill=self.materials.water, region=-surfaces['ELE.1'])  # & -surfaces['ELE.zp'] & surfaces['GRD.zt'])
-        return openmc.Universe(self.cells)
+        return openmc.Universe(name='water', cells=list(self.cells.values()))
 
 
 class IRT4M(LatticeUnitVR1):
@@ -264,46 +261,45 @@ class IRT4M(LatticeUnitVR1):
         surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
-            surfaces['FAZ2'].boundary_type = 'reflective'
-            surfaces['FAZ5'].boundary_type = 'reflective'
+            surfaces['FAZ.2'].boundary_type = 'reflective'
+            surfaces['FAZ.4'].boundary_type = 'reflective'
 
         """ Common FA cells """
-        self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT1'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
-        self.cells['out_mid'] = openmc.Cell(name='out_mid', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT1'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-        self.cells['out_bot'] = openmc.Cell(name='out_bot', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT1'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
+        self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
+        self.cells['out_mid'] = openmc.Cell(name='out_mid', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+        self.cells['out_bot'] = openmc.Cell(name='out_bot', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.4'])
 
         for i in range(1, n_plates-1):
-            self.cells[f'top_c_{i}'] = openmc.Cell(name=f'top_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
-            self.cells[f'top_w_{i}'] = openmc.Cell(name=f'top_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & +surfaces[f'{i + 1}FT1'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
+            self.cells[f'top_c_{i}'] = openmc.Cell(name=f'top_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
+            self.cells[f'top_w_{i}'] = openmc.Cell(name=f'top_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & +surfaces[f'{i + 1}FT.1'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
 
-            self.cells[f'mid_c_{i}'] = openmc.Cell(name=f'mid_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT2'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-            self.cells[f'mid_f_{i}'] = openmc.Cell(name=f'mid_f_{i}', fill=self.materials.fuel, region=-surfaces[f'{i}FT2'] & +surfaces[f'{i}FT3'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-            self.cells[f'mid_i_{i}'] = openmc.Cell(name=f'mid_i_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT3'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-            self.cells[f'mid_w_{i}'] = openmc.Cell(name=f'mid_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & +surfaces[f'{i + 1}FT1'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
+            self.cells[f'mid_c_{i}'] = openmc.Cell(name=f'mid_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.2'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+            self.cells[f'mid_f_{i}'] = openmc.Cell(name=f'mid_f_{i}', fill=self.materials.fuel, region=-surfaces[f'{i}FT.2'] & +surfaces[f'{i}FT.3'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+            self.cells[f'mid_i_{i}'] = openmc.Cell(name=f'mid_i_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.3'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+            self.cells[f'mid_w_{i}'] = openmc.Cell(name=f'mid_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & +surfaces[f'{i + 1}FT.1'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
 
-            self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
-            self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & +surfaces[f'{i + 1}FT1'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
+            self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.4'])
+            self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & +surfaces[f'{i + 1}FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.4'])
 
         i = n_plates
-        self.cells[f'top_c_{i}'] = openmc.Cell(name=f'top_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
-        self.cells[f'top_w_{i}'] = openmc.Cell(name=f'top_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & -surfaces['FAZ2'] & +surfaces['FAZ3'])
+        self.cells[f'top_c_{i}'] = openmc.Cell(name=f'top_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
+        self.cells[f'top_w_{i}'] = openmc.Cell(name=f'top_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
 
-        self.cells[f'mid_c_{i}'] = openmc.Cell(name=f'mid_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT2'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-        self.cells[f'mid_f_{i}'] = openmc.Cell(name=f'mid_f_{i}', fill=self.materials.fuel, region=-surfaces[f'{i}FT2'] & +surfaces[f'{i}FT3'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-        self.cells[f'mid_i_{i}'] = openmc.Cell(name=f'mid_i_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT3'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
-        self.cells[f'mid_w_{i}'] = openmc.Cell(name=f'mid_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & -surfaces['FAZ3'] & +surfaces['FAZ4'])
+        self.cells[f'mid_c_{i}'] = openmc.Cell(name=f'mid_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.2'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+        self.cells[f'mid_f_{i}'] = openmc.Cell(name=f'mid_f_{i}', fill=self.materials.fuel, region=-surfaces[f'{i}FT.2'] & +surfaces[f'{i}FT.3'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+        self.cells[f'mid_i_{i}'] = openmc.Cell(name=f'mid_i_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.3'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
+        self.cells[f'mid_w_{i}'] = openmc.Cell(name=f'mid_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
 
-        self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT1'] & +surfaces[f'{i}FT4'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
-        self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT4'] & -surfaces['FAZ4'] & +surfaces['FAZ5'])
+        self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.4'])
+        self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.4'])
 
-        return openmc.Universe(self.cells)
+        return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
 
-""" Shell scripts to extract surfaces from the Serpent model 
-grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
-grep ' py ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ py/":\ /g' -e s/\ %/,\ #/g
-grep ' pz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ pz/":\ /g' -e s/\ %/,\ #/g
-grep ' cyl ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cyl/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
-grep ' rect ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ rect/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
-grep ' cylz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cylz/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
-"""
+""" Shell scripts to extract surfaces from the Serpent model """
+# grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
+# grep ' py ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ py/":\ /g' -e s/\ %/,\ #/g
+# grep ' pz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ pz/":\ /g' -e s/\ %/,\ #/g
+# grep ' cyl ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cyl/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
+# grep ' rect ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ rect/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
+# grep ' cylz ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ cylz/":\ /g' -e s/\ %/,\ #/g -e s/0\ 0\ //g
