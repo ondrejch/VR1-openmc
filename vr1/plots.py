@@ -1,14 +1,14 @@
 """ TODO - this should be a regular class with some intelligent functionality """
 import openmc
-from vr1.materials import VR1Materials
+from vr1.materials import vr1_materials
 
 resolution: int = 5000
-materials = VR1Materials()
+materials = vr1_materials
 
-material_colors: dict = {  # TODO this does not work, no idea why
-    materials.water: 'aquamarine',
+material_colors: dict = {
+    materials.water: 'royalblue',
     materials.cladding: 'silver',
-    materials.fuel: 'orangered',
+    materials.fuel: 'lightcoral',
     materials.dummy: 'slategrey'
 }
 

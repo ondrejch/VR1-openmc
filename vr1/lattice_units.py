@@ -1,7 +1,7 @@
 """ Lattice designs for VR1 """
 
 import openmc
-from vr1.materials import VR1Materials
+from vr1.materials import vr1_materials
 
 lattice_wh: float = 9.5  # Lattice unit width and height (X-Y) [cm]
 lattice_pitch: float = 7.15  # Actual lattice pitch [cm]orca versus cura slicers
@@ -198,8 +198,8 @@ lattice_upper_right: list[float] = [lattice_wh / 2.0, lattice_wh / 2.0, plane_zs
 
 class LatticeUnitVR1:
     """ Virtual base class """
-    def __init__(self, materials: VR1Materials):
-        self.materials: VR1Materials = materials
+    def __init__(self):
+        self.materials = vr1_materials
         self.cells: dict = {}
 
     def name(self) -> str:
@@ -207,9 +207,9 @@ class LatticeUnitVR1:
 
     def get(self, lattice_code: str = 'w') -> openmc.Universe():
         lattice_unit_builders: dict = {
-            '8': IRT4M(self.materials, fa_type='8'),
-            '6': IRT4M(self.materials, fa_type='6'),
-            '4': IRT4M(self.materials, fa_type='4'),
+            '8': IRT4M(fa_type='8'),
+            '6': IRT4M(fa_type='6'),
+            '4': IRT4M(fa_type='4'),
         # 'O': '6-tube FA with a fully withdrawn control rod',
         # 'X': '6-tube FA with a fully inserted control rod',
         # 'R1': '6-tube FA with regulatory control rod 1',
@@ -218,15 +218,15 @@ class LatticeUnitVR1:
         # 'E2': '6-tube FA with experimental shim rod 2',
         # 'E3': '6-tube FA with experimental shim rod 2',
         # 'd': 'Empty fuel dummy',
-            'w': Water(self.materials),
+            'w': Water(),
         }
         return lattice_unit_builders[lattice_code].build()
 
 
 class Water(LatticeUnitVR1):
     """ Water lattice unit """
-    def __init__(self, materials: VR1Materials):
-        super().__init__(materials)
+    def __init__(self):
+        super().__init__()
 
     def name(self) -> str:
         return "Water filling the lattice"
@@ -238,8 +238,8 @@ class Water(LatticeUnitVR1):
 
 class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
-    def __init__(self, materials: VR1Materials, fa_type: str, boundary: str = 'water') -> None:
-        super().__init__(materials)
+    def __init__(self, fa_type: str, boundary: str = 'water') -> None:
+        super().__init__()
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary

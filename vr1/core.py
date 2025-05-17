@@ -1,11 +1,9 @@
 """ Core design for VR1 """
 import numpy as np
 import openmc
-from vr1.materials import VR1Materials
+from vr1.materials import vr1_materials
 from vr1.lattice_units import (surfaces, rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
-materials = VR1Materials()
-
 
 # Write an FA lattice, or teh core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -33,11 +31,9 @@ VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
 class VR1core:
     """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
     def __init__(self):
-        self.materials: VR1Materials = materials
+        self.materials = vr1_materials
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
-        self.fa_type: (None, str) = None
-        self.lattice = (None, openmc.RectLattice)
         self.model = openmc.Universe
 
 
@@ -50,7 +46,7 @@ class FuelAssembly(VR1core):
         if 'FA' not in lattice_unit_names[fa_type]:
             raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type = fa_type
-        self.model = IRT4M(self.materials, self.fa_type, boundaries)
+        self.model = IRT4M(self.fa_type, boundaries)
         self.source_lower_left = lattice_lower_left
         self.source_upper_right = lattice_upper_right
 
@@ -71,7 +67,7 @@ class TestLattice(VR1core):
         self.lattice.lower_left = (-xy_corner, -xy_corner)
         self.lattice.pitch = (lattice_pitch, lattice_pitch)
         # self.lattice.universes = np.zeros((n, n), dtype=openmc.UniverseBase)  # TODO why is this not working?
-        lattice_builder = LatticeUnitVR1(self.materials)
+        lattice_builder = LatticeUnitVR1()
         lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
         for i in range(n):
             _l: list[openmc.UniverseBase] = []

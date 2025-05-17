@@ -25,24 +25,18 @@ grid_dict = {"Al27": 0.9353353, "Mn55": 0.002999189, "Mg24": 0.03894506, "Mg25":
     "Zn66": 0.000278866, "Zn67": 4.09805e-05, "Zn68": 0.00018791, "Zn70": 5.99714e-06, "Ti46": 7.91718e-05,
     "Ti47": 7.29506e-05, "Ti48": 0.000738218, "Ti49": 5.53035e-05, "Ti50": 5.4033e-05, }
 big_channel_dict = grid_dict
-abs_tube_dict = {}
-
-
 # TODO - add more materials from the serpent deck
-
-#
-# class Singleton:
-#     _instances = {}
-#
-#     def __call__(cls, *args, **kwargs):
-#         if cls not in cls._instances:
-#             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-#         return cls._instances[cls]
+abs_tube_dict = {}
 
 
 class VR1Materials:
     """ Materials used in the model. TODO: graphite, air, control rod materials """
-
+    # def __new__(cls):
+    #     if not hasattr(cls, 'instance'):
+    #         cls.instance = super(VR1Materials, cls).__new__(cls)
+    #     return cls.instance
+    # NOTE: Singleton does not help, it has to be the same identical instance or OpenMC's internal numbering breaks.
+    # This is why I create vr1_materials below, and use it though out the code.
     def __init__(self, *args, **kwargs):
         self.fuel = openmc.Material(name='fuel meat')
         self.fuel.add_components(fuel_dict, 'wo')
@@ -68,3 +62,6 @@ class VR1Materials:
 
     def get_materials(self):
         return openmc.Materials([self.fuel, self.water, self.cladding, self.dummy])
+
+
+vr1_materials = VR1Materials()  # Use only this instance

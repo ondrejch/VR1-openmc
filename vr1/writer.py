@@ -2,8 +2,8 @@
 
 import openmc
 import os
-
-from vr1.core import VR1core, materials
+from vr1.core import VR1core
+from vr1.materials import vr1_materials
 from vr1.settings import SettingsOpenMC
 
 
@@ -13,8 +13,7 @@ class WriterOpenMC:
         self.output_dir: str = 'vr1'
         self.core: VR1core = core
         self.settings = settings
-        openmc.config['cross_sections'] = self.settings.xs_xml
-        self.openmc_materials = materials.get_materials()
+        self.openmc_materials = vr1_materials.get_materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
@@ -68,21 +67,6 @@ class WriterOpenMC:
             # raise ValueError(f'Output directory {self.output_dir} does not exist')
         if not os.access(self.output_dir, os.W_OK):
             raise ValueError(f'Output directory {self.output_dir} does not have write access')
-        #
-        # if '3d' in self.settings.geom_mode.lower():
-        #     raise ValueError('Not implemented yet')
-        # elif '2.5d' in self.settings.geom_mode.lower():
-        #     raise ValueError('Not implemented yet')
-        # elif 'pincell' in self.settings.geom_mode.lower():
-        #     for material in self._comp():
-        #         if material.name in ['graphite', 'fuel']:
-        #             self.openmc_materials.append(material)
-        #     self.openmc_geometry = self._pincell()
-        #
-        # elif 'lattice' in self.settings.geom_mode.lower():
-        #     raise ValueError('Not implemented yet')
-        # else:
-        #     raise ValueError(f'Geometry mode {self.settings.geom_mode} not implemented')
 
         self.openmc_settings = self.set_settings()
         self.openmc_tallies = self.set_tallies()
@@ -90,7 +74,6 @@ class WriterOpenMC:
         self.openmc_geometry.merge_surfaces = True
         self.openmc_materials.cross_section_library = self.settings.xs_lib
         self.openmc_materials.cross_sections = self.settings.xs_xml
-        print(self.settings.xs_xml)
 
         """ Build the model object """
         self.openmc_model.materials = self.openmc_materials
@@ -98,7 +81,5 @@ class WriterOpenMC:
         self.openmc_model.settings = self.openmc_settings
         self.openmc_model.tallies = self.openmc_tallies
         self.openmc_model.plots = self.set_plots()
-
-
         self.openmc_model.export_to_model_xml(self.output_dir)
         return 0
