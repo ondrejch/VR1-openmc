@@ -48,6 +48,7 @@ abs_head_dict = {"C12": 0.613229215, "C13": 0.007187085, "Al27": 22.34264, "Si28
                  "Ni58": 5.211166, "Ni60": 2.076471, "Ni61": 0.09176879, "Ni62": 0.2973895, "Ni64": 0.07818203,
                  "Cu63": 0.003843418, "Cu65": 0.001767457, "Zn64": 2.726370e-03, "Zn66": 1.565140e-03,
                  "Zn67": 2.300020e-04, "Zn68": 1.054640e-03, "Zn70": 3.365880e-05}
+air_dict = {"N14": 0.7551, "O16": 0.2449}
 
 # TODO - add more materials from the serpent deck
 
@@ -76,6 +77,11 @@ class VR1Materials:
         self.water.set_density('g/cm3', 0.9982)
         self.water.temperature = 293.15
         self.water.add_s_alpha_beta('c_H_in_H2O')
+
+        self.air = openmc.Material(name='air')
+        self.air.add_components(air_dict,'wo')
+        self.air.set_density('g/cm3',0.001161)
+        self.air.temperature=293.15
 
         self.cladding = openmc.Material(name='fuel cladding')
         self.cladding.add_components(cladding_dict, 'wo')

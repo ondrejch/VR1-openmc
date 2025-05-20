@@ -314,7 +314,7 @@ class AbsRod(LatticeUnitVR1):
         """ Absorption rod surfaces """
         surfaces['boundary_XY'] = surfaces['ABS.1']
         lower_bound = openmc.ZPlane(z0= plane_zs['GRD.zd'] + rod_height) #adjusting control rod from listed position
-
+        
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
             surfaces['ELE.zp'].boundary_type = 'reflective'
@@ -336,6 +336,8 @@ class AbsRod(LatticeUnitVR1):
 
         universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4,cell_0Absrod_5])
         self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound) 
+
+        self.cells['Plenum'] = openmc.Cell(fill=self.materials.air, region=-surfaces['ABS.3'] & -lower_bound & + surfaces['GRD.zt'])
 
         return openmc.Universe(name="abs_rod", cells=list(self.cells.values()))
 
