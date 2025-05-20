@@ -168,7 +168,7 @@ surfaces: dict = {}
 for plane, z in plane_zs.items():
     surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
 for k, sqc in sqcs.items():
-    surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
+    surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh']*2, height=sqc['wh']*2, corner_radius=sqc['corner_r'])
 for cylz, r in cyl_zs.items():
     surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
 
@@ -322,20 +322,20 @@ class AbsRod(LatticeUnitVR1):
 
         """ Building Absorber Rod """
 
-        cell_0Guidetube_1 = openmc.Cell(fill=self.materials.water, region=-surfaces['ABS.1'] & surfaces['ABS.2'])
-        cell_0Guidetube_2 = openmc.Cell(fill=self.materials.guidetube, region=-surfaces['ABS.2'] & surfaces['ABS.3'])
-        
-        universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1,cell_0Guidetube_2])
-        self.cells['Guidetube'] = openmc.Cell(fill=universe_0Guidetube,region=-surfaces['ABS.1'] & surfaces['ABS.3'] & -surfaces['ELE.zp'] & surfaces['GRD.zt'])
+        cell_0Guidetube_1 = openmc.Cell(fill=self.materials.water,     region= -surfaces['ABS.1'] & +surfaces['ABS.2'])
+        cell_0Guidetube_2 = openmc.Cell(fill=self.materials.guidetube, region=-surfaces['ABS.2'] & +surfaces['ABS.3'])
 
-        cell_0Absrod_1 = openmc.Cell(fill=self.materials.abstube,               region=-surfaces['ABS.3'] & surfaces['ABS.4'])
-        cell_0Absrod_2 = openmc.Cell(fill=self.materials.cdlayer,   region=-surfaces['ABS.4'] & surfaces['ABS.5'])
-        cell_0Absrod_3 = openmc.Cell(fill=self.materials.abscenter,   region=-surfaces['ABS.5'] & surfaces['RB1.cd'])
-        cell_0Absrod_4 = openmc.Cell(fill=self.materials.abshead, region=-surfaces['ABS.3'] & -surfaces['RB1.cd'])
-        cell_0Absrod_5 = openmc.Cell(fill=self.materials.water,   region=-surfaces['ABS.3'] & -surfaces['RB1.hd'])
+        universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1,cell_0Guidetube_2])
+        self.cells['Guidetube'] = openmc.Cell(fill=universe_0Guidetube,region=-surfaces['ABS.1'] & +surfaces['ABS.3'] & -surfaces['ELE.zp'] & +surfaces['GRD.zt'])
+
+        cell_0Absrod_1 = openmc.Cell(fill=self.materials.abstube,   region=-surfaces['ABS.3'] & +surfaces['ABS.4']  & +surfaces['RB1.cd'])
+        cell_0Absrod_2 = openmc.Cell(fill=self.materials.cdlayer,   region=-surfaces['ABS.4'] & +surfaces['ABS.5']  & +surfaces['RB1.cd'])
+        cell_0Absrod_3 = openmc.Cell(fill=self.materials.abscenter, region=-surfaces['ABS.5'] & +surfaces['RB1.cd'])
+        cell_0Absrod_4 = openmc.Cell(fill=self.materials.abshead,   region=-surfaces['ABS.3'] & -surfaces['RB1.cd'] & +surfaces['RB1.hd'])
+        cell_0Absrod_5 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.3'] & -surfaces['RB1.hd'])
 
         universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4,cell_0Absrod_5])
-        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ELE.zp'] & lower_bound) 
+        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound) 
 
         return openmc.Universe(name="abs_rod", cells=list(self.cells.values()))
 
