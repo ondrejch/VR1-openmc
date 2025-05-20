@@ -40,7 +40,7 @@ sqcs: dict = {
     "7FT.2": {"wh": 2.73, "corner_r": 0.405},
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
-    "ABS.1": {"wh": 1.400, "corner_r": 0.800},
+    "ABS.1": {"wh": 2.800, "corner_r": 0.800},
     "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
     "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
     "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
@@ -168,7 +168,7 @@ surfaces: dict = {}
 for plane, z in plane_zs.items():
     surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
 for k, sqc in sqcs.items():
-    surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh']*2, height=sqc['wh']*2, corner_radius=sqc['corner_r'])
+    surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
 for cylz, r in cyl_zs.items():
     surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
 
@@ -296,7 +296,7 @@ class IRT4M(LatticeUnitVR1):
 
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
     
-#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$#$
+
 class AbsRod(LatticeUnitVR1):
     """ Class that returns absorption rod units """
     def __init__(self, materials: VR1Materials, boundary: str = 'water') -> None:
