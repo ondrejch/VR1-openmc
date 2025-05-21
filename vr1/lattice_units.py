@@ -40,9 +40,10 @@ sqcs: dict = {
     "7FT.2": {"wh": 2.73, "corner_r": 0.405},
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
-    "DMY.1": {"wh": 2.0*3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
-    "DMY.2": {"wh": 2.0*3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 2.0*3.575, "corner_r": 0.0},    # boundary 1 position
+    "ABS.1": {"wh": 2.800, "corner_r": 0.800},
+    "DMY.1": {"wh": 3.500 * 2.0, "corner_r": 1.750},  # outer dim. fuel dummy rounding
+    "DMY.2": {"wh": 3.350 * 2.0, "corner_r": 1.600},  # inner dim. fuel dummy rounding
+    "ELE.1": {"wh": 3.575 * 2.0, "corner_r": 0.0},    # boundary 1 position
 }
 
 cyl_zs: dict = {
@@ -295,6 +296,50 @@ class IRT4M(LatticeUnitVR1):
 
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
+
+class AbsRod(LatticeUnitVR1):
+    """ Class that returns absorption rod units """
+    def __init__(self,  boundary: str = 'water') -> None:
+        super().__init__()
+        if boundary not in lattice_unit_boundaries:
+            raise ValueError(f'boundary {boundary} is not valid')
+        self.boundary: str = boundary
+
+    def name(self) -> str:
+        """ Returns the name of the rod """
+        return 'Cadmium absorption rod'
+
+    def build(self, rod_height: float = 0.0) -> openmc.Universe:
+        """ Builds a absorption rod """
+        """ Absorption rod surfaces """
+        surfaces['boundary_XY'] = surfaces['ABS.1']
+        lower_bound = openmc.ZPlane(z0=plane_zs['GRD.zd'] + rod_height) #adjusting control rod from listed position
+
+        if self.boundary == 'reflective':
+            surfaces['boundary_XY'].boundary_type = 'reflective'
+            surfaces['ELE.zp'].boundary_type = 'reflective'
+            surfaces['GRD.zt'].boundary_type = 'reflective'
+
+        """ Building Absorber Rod """
+
+        cell_0Guidetube_1 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.1'] & +surfaces['ABS.2'])
+        cell_0Guidetube_2 = openmc.Cell(fill=self.materials.guidetube, region=-surfaces['ABS.2'] & +surfaces['ABS.3'])
+
+        universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1, cell_0Guidetube_2])
+        self.cells['Guidetube'] = openmc.Cell(fill=universe_0Guidetube, region=-surfaces['ABS.1'] & +surfaces['ABS.3'] & -surfaces['ELE.zp'] & +surfaces['GRD.zt'])
+
+        cell_0Absrod_1 = openmc.Cell(fill=self.materials.abstube,   region=-surfaces['ABS.3'] & +surfaces['ABS.4'] & +surfaces['RB1.cd'])
+        cell_0Absrod_2 = openmc.Cell(fill=self.materials.cdlayer,   region=-surfaces['ABS.4'] & +surfaces['ABS.5'] & +surfaces['RB1.cd'])
+        cell_0Absrod_3 = openmc.Cell(fill=self.materials.abscenter, region=-surfaces['ABS.5'] & +surfaces['RB1.cd'])
+        cell_0Absrod_4 = openmc.Cell(fill=self.materials.abshead,   region=-surfaces['ABS.3'] & -surfaces['RB1.cd'] & +surfaces['RB1.hd'])
+        cell_0Absrod_5 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.3'] & -surfaces['RB1.hd'])
+
+        universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4,cell_0Absrod_5])
+        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound)
+
+        self.cells['Plenum'] = openmc.Cell(fill=self.materials.air, region=-surfaces['ABS.3'] & -lower_bound & + surfaces['GRD.zt'])
+
+        return openmc.Universe(name="abs_rod", cells=list(self.cells.values()))
 
 """ Shell scripts to extract surfaces from the Serpent model """
 # grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
