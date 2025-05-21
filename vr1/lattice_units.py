@@ -41,9 +41,9 @@ sqcs: dict = {
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
     "ABS.1": {"wh": 2.800, "corner_r": 0.800},
-    "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
-    "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
+    "DMY.1": {"wh": 3.500 * 2.0, "corner_r": 1.750},  # outer dim. fuel dummy rounding
+    "DMY.2": {"wh": 3.350 * 2.0, "corner_r": 1.600},  # inner dim. fuel dummy rounding
+    "ELE.1": {"wh": 3.575 * 2.0, "corner_r": 0.0},    # boundary 1 position
 }
 
 cyl_zs: dict = {
@@ -295,7 +295,7 @@ class IRT4M(LatticeUnitVR1):
         self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water,    region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.4']    & +surfaces['FAZ.4'])
 
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
-    
+
 
 class AbsRod(LatticeUnitVR1):
     """ Class that returns absorption rod units """
@@ -314,7 +314,7 @@ class AbsRod(LatticeUnitVR1):
         """ Absorption rod surfaces """
         surfaces['boundary_XY'] = surfaces['ABS.1']
         lower_bound = openmc.ZPlane(z0= plane_zs['GRD.zd'] + rod_height) #adjusting control rod from listed position
-        
+
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
             surfaces['ELE.zp'].boundary_type = 'reflective'
@@ -335,7 +335,7 @@ class AbsRod(LatticeUnitVR1):
         cell_0Absrod_5 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.3'] & -surfaces['RB1.hd'])
 
         universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4,cell_0Absrod_5])
-        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound) 
+        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound)
 
         self.cells['Plenum'] = openmc.Cell(fill=self.materials.air, region=-surfaces['ABS.3'] & -lower_bound & + surfaces['GRD.zt'])
 
