@@ -49,10 +49,7 @@ abs_head_dict = {"C12": 0.613229215, "C13": 0.007187085, "Al27": 22.34264, "Si28
                  "Cu63": 0.003843418, "Cu65": 0.001767457, "Zn64": 2.726370e-03, "Zn66": 1.565140e-03,
                  "Zn67": 2.300020e-04, "Zn68": 1.054640e-03, "Zn70": 3.365880e-05}
 grafit_dict = {} #not sure how to parse this from serpent
-algraflayer_dict = {"Al27": 0.9952163, "Cu63": 0.000171273, "Cu65": 7.87622E-05, "Fe54": 0.000112928, "Fe56":0.00183839,
-                    "Fe57": 4.32146E-05, "Fe58": 5.85197E-06, "S32": 0.002161122, "S33": 1.78424E-05, "S34": 0.000103768,
-                    "S36": 5.12223E-07, "Zn64": 0.000121493, "Zn66": 6.97462E-05, "Zn67": 1.02494E-05, "Zn68": 4.69974E-05,
-                    "Zn70": 1.49992E-06}
+algraflayer_dict = guide_tube_dict
 displacer_dict = {"Al27": 1.0}
 steelrc_dict = {"Fe54": 3.91068E-02, "Fe56": 6.13893E-01, "Fe57": 1.41775E-02, "Fe58": 1.88676E-03, "C12": 8.95626E-03,
                 "C13": 9.68685E-05, "Si28": 1.78536E-02, "Si29": 9.06563E-04, "Si30": 5.97613E-04, "Mn55": 1.97922E-02,
@@ -140,9 +137,9 @@ class VR1Materials:
         self.grid.temperature=293.15
 
         self.bigchannel = openmc.Material(name='bigchannel')
-        self.grid.add_components(big_channel_dict,'wo')
-        self.grid.set_density('g/cm3',2.63)
-        self.grid.temperature=293.15
+        self.bigchannel.add_components(big_channel_dict,'wo')
+        self.bigchannel.set_density('g/cm3',2.63)
+        self.bigchannel.temperature=293.15
 
         self.abstube = openmc.Material(name='abstube')
         self.abstube.add_components(abs_tube_dict,'ao')
@@ -166,8 +163,13 @@ class VR1Materials:
 
         self.algraflayer = openmc.Material(name='algraflayer')
         self.algraflayer.add_components(algraflayer_dict,'wo')
-        self.algraflayer.set_density('g/cm3',5.2.7)
+        self.algraflayer.set_density('g/cm3',2.7)
         self.algraflayer.temperature = 293.15
+
+        self.displacer = openmc.Material(name='displacer')
+        self.displacer.add_components(displacer_dict,'ao')
+        self.displacer.set_density('g/cm3',2.7)
+        self.displacer.temperature = 293.15
 
         self.steelrc = openmc.Material(name='steelrc')
         self.steelrc.add_components(abs_head_dict,'ao')
