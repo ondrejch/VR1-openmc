@@ -1,8 +1,7 @@
 """ Core design for VR1 """
-import numpy as np
 import openmc
 from vr1.materials import vr1_materials
-from vr1.lattice_units import (surfaces, rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
+from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
 
 # Write an FA lattice, or teh core lattice, or the whole reactor

@@ -310,7 +310,7 @@ class AbsRod(LatticeUnitVR1):
         return 'Cadmium absorption rod'
 
     def build(self, rod_height: float = 0.0) -> openmc.Universe:
-        """ Builds a absorption rod """
+        """ Builds an absorption rod """
         """ Absorption rod surfaces """
         surfaces['boundary_XY'] = surfaces['ABS.1']
         lower_bound = openmc.ZPlane(z0=plane_zs['GRD.zd'] + rod_height) #adjusting control rod from listed position

@@ -4,3 +4,4 @@ pytest
 scipy
 openmc
 matplotlib~=3.9
+setuptools
