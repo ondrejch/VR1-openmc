@@ -3,3 +3,4 @@ json5
 pytest
 scipy
 openmc
+matplotlib~=3.9
