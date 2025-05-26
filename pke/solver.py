@@ -58,12 +58,10 @@ class PointKineticsEquationSolver:
             delayed = np.dot(lambda_, C)
 
             dndt = n * prompt + delayed + Q
-            dCdt = (beta[i] / Lambda * n - lambda_[i] * C[i] for i in range(len(C)))
-
-            return [dndt, *dCdt]
+            dCdt = [beta[i] / Lambda * n - lambda_[i] * C[i] for i in range(len(C))]
+            return [dndt] + dCdt
 
         self.solution = solve_ivp(equations, t_span, y0, method='RK45', t_eval=t_eval, rtol=1e-6, atol=1e-8)
-
         return self.solution.t, self.solution.y[0], self.solution.y[1:]
 
     def plot_neutron_density(self, figsize=(8, 4), logscale=True, **plot_kwargs):
@@ -79,7 +77,7 @@ class PointKineticsEquationSolver:
         else:
             ax.plot(self.solution.t, self.solution.y[0], **plot_kwargs)
 
-        ax.set(xlabel='Time (s)', ylabel='Relative Neutron Density', title='Point Kinetics Neutron Density')
+        ax.set(xlabel='Time [s]', ylabel='Relative Neutron Density', title='Point Kinetics Neutron Density')
         ax.grid(True, which='both' if logscale else 'major', alpha=0.4)
         return fig, ax
 
@@ -100,7 +98,7 @@ class PointKineticsEquationSolver:
         ax.grid(True, alpha=0.4)
         return fig, ax
 
-    def plot_source_contribution(self, figsize=(8, 4)):
+    def plot_source_contribution(self, figsize=(8, 4), **plot_kwargs):
         """Plot the external source function over time"""
         if not self.solution:
             raise RuntimeError("Call solve() before plotting")
@@ -108,14 +106,14 @@ class PointKineticsEquationSolver:
         fig, ax = plt.subplots(figsize=figsize)
         source_values = [self.source_func(t) for t in self.solution.t]
 
-        ax.plot(self.solution.t, source_values, 'r--', linewidth=2)
+        ax.plot(self.solution.t, source_values, 'r--', linewidth=2, **plot_kwargs)
         ax.set(
             xlabel='Time (s)',
             ylabel='Source Strength [neutrons/s]',
             title='External Neutron Source Function'
         )
         ax.grid(True, alpha=0.4)
-        plt.show()
+        # plt.show()
         return fig, ax
 
     def plot(self, figsize=(12, 6), logscale=False, **plot_kwargs):
