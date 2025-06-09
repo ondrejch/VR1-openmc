@@ -1,7 +1,14 @@
 # VR1 OpenMC Model
 ## Overview
 
-This repository contains an **OpenMC model of the VR1 research reactor**. The VR1 is a pool-type, light-water moderated research reactor located at the Czech Technical University in Prague.  Designed between 1985–1989 and achieving first criticality on 3~December~1990, the unit operates at a rated thermal power of 1~kW (with authorized excursions to 5~kW for short periods). The purpose of this github repo is to replicate the VR-1 geometry, materials, and operating conditions in OpenMC and benchmarking our results with the Czech **Serpent** simulation results.
+This repository contains an **OpenMC model of the VR1 research reactor**. The VR1 is a pool-type, light-water moderated research reactor located at the Czech Technical University in Prague.  Designed between 1985–1989 and achieving first criticality on 3 December 1990, the unit operates at a rated thermal power of 1 kW (with authorized excursions to 5 kW for short periods). The purpose of this github repo is to replicate the VR-1 geometry, materials, and operating conditions in OpenMC and benchmarking our results with the Czech Serpent simulation results.
+
+<div align="center">
+  <img width="450" alt="Cross-section view of the VR1 reactor." src="https://github.com/user-attachments/assets/bf684307-44a0-48e8-93e5-52fa0b335b61" />
+  <div style="margin-top: 8px; font-style: italic; color: #555;">
+    <b>Figure 1:</b> Cross-section view of the VR-1 reactor.
+  </div>
+</div>
 
 ## Project Goals
 
