@@ -1,3 +1,8 @@
+""" Point Kinetics Equations solver in Python
+Ondrej Chvala <ochvala@utexas.edu>
+MIT license
+For a similar PKE implementations in MATLAB/Octave, see: https://github.com/ondrejch/PointKineticsOctave """
+
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt

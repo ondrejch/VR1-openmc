@@ -20,7 +20,7 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 
 - `/vr1`: Main source code for geometry, materials, tallies, plotting, and settings
 - `/tests`: Automated tests for code correctness
-- `/pke`: (Purpose TBD; possibly kinetics or standalone tools)
+- `/pke`: Point kinetics solver
 - `/scratch`: Experimental or prototype scripts
 - `requirements.txt`: Dependencies for running the code
 - `setup.py`: For package installation
