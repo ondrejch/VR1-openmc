@@ -4,8 +4,9 @@ from vr1.materials import vr1_materials
 from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
 
-# Write an FA lattice, or teh core lattice, or the whole reactor
+# Write an FA lattice, or the core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
+
 # Different core designs.
 core_designs: dict[str, list[list[str]]] = {
     'small_test':  [

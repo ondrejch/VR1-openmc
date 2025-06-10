@@ -1,25 +1,24 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='VR1 in OpenMC',
+    name='vr1-openmc',
     version='0.01',
-    packages=[
-        'vr1',
-        'pke'
-    ],
-    url='https://github.com/ondrejch/VR1-openmc',
-    license='MIT',
-    author='Ondrej Chvala, Alex Macris',
-    author_email='ochvala@utexas.edu',
     description='OpenMC model of VR-1 reactor Vrabec',
+    author='Ondrej Chvala, Alex Macris, Soha Aslam',
+    author_email='ochvala@utexas.edu',
+    url='https://github.com/ondrejch/VR1-openmc',
+    packages=find_packages(),
+    license='MIT',
     install_requires=[
         'numpy',
         'json5',
         'pytest',
         'scipy',
         'openmc',
-        'matplotlib~=3.9'
+        'matplotlib~=3.9',
         'uncertainties',
         'setuptools',
-    ]
+    ],
+    python_requires=">=3.8",
+    include_package_data=True   
 )
