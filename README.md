@@ -32,6 +32,8 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 4. 6_with_abs_rod – 6-tube assembly with an inserted absorber rod
 
 ## Installation Guide 
+These steps show you how to install the VR1-openmc package using conda. 
+
 1. Make sure you have conda installed.
 2. Create a new conda environment with Python 3.11 and activate it:
 ```
