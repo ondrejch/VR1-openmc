@@ -31,7 +31,7 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 3. 8 – 8-tube IRT-4M fuel assembly
 4. 6_with_abs_rod – 6-tube assembly with an inserted absorber rod
 
-## Installation Guide 
+## Installation Guide - Conda
 These steps show you how to install the VR1-openmc package using conda. 
 
 1. Make sure you have conda installed.
@@ -40,7 +40,7 @@ These steps show you how to install the VR1-openmc package using conda.
 conda create -n vr1 python=3.11 openmc -c conda-forge
 conda activate vr1
 ```
-3. Install the VR1 package from github
+3. Install the VR1 package from GitHub
 ```
 pip install git+https://github.com/ondrejch/VR1-openmc.git
 ```
@@ -51,3 +51,23 @@ git clone https://github.com/ondrejch/VR1-openmc.git
 cd VR1-openmc
 pip install -e .
 ```
+
+## Installation Guide - venv
+
+1. Make and activate a virtual environment.
+```
+python -m venv vr1-venv
+source vr1-venv/bin/activate
+```
+2. Install OpenMC into the virtual environment. This assumes you have cloned and build OpenMC already.  
+```
+pip install <path to>/openmc/
+```
+3. Install vr-1 package from GitHub
+```
+git clone git@github.com:ondrejch/VR1-openmc.git
+cd VR1-openmc
+pip install -r requirements.txt
+pip install .
+```
+Likely there is a more elegant way, but this works. 
