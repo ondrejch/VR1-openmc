@@ -31,7 +31,21 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 3. 8 – 8-tube IRT-4M fuel assembly
 4. 6_with_abs_rod – 6-tube assembly with an inserted absorber rod
 
-## Usage
-
-1. **Install dependencies:** ```pip install -r requirements.txt```
-2. ... Add more information here. 
+## Installation Guide 
+1. Make sure you have conda installed.
+2. Create a new conda environment with Python 3.11 and activate it:
+```
+conda create -n vr1 python=3.11 openmc -c conda-forge
+conda activate vr1
+```
+3. Install the VR1 package from github
+```
+pip install git+https://github.com/ondrejch/VR1-openmc.git
+```
+4. You can now use the VR1 digital twin tools in your Python scripts or Jupyter notebooks. Try doing `import vr1` and it should work.
+5. You can also clone the repo using
+```
+git clone https://github.com/ondrejch/VR1-openmc.git
+cd VR1-openmc
+pip install -e .
+```
