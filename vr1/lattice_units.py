@@ -7,8 +7,14 @@ lattice_wh: float = 9.5  # Lattice unit width and height (X-Y) [cm]
 lattice_pitch: float = 7.15  # Actual lattice pitch [cm]orca versus cura slicers
 
 rects: dict = {
-    "CORE.rec": [-28.6, 28.6, -28.6, 28.6],     # core limit
-    "BOX.rec":  [-130, 130, -215, 130],         # concrete shielding
+    "CORE.rec": {'width': 28.6- -28.6, 'height': 28.6- -28.6, 'axis': 'z', 
+                'origin': [(28.6- -28.6)/2, (28.6- -28.6)/2]}, # concrete shielding
+    "BOX.rec": {'width': 130- -130, 'height': 130- -215, 'axis': 'z', 
+                'origin': [(130- -130)/2, (130- -215)/2], 'boundary_type': 'vacuum' } # concrete shielding
+}
+
+cones: dict = {
+    "RCky.1": {'x0': 0, 'y0': -103.5, 'z0': 35.3, 'r2': 0.1162, 'up': -1}
 }
 
 sqcs: dict = {
@@ -41,10 +47,31 @@ sqcs: dict = {
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
     "ABS.1": {"wh": 2.800, "corner_r": 0.800},
-    "DMY.1": {"wh": 3.500 * 2.0, "corner_r": 1.750},  # outer dim. fuel dummy rounding
-    "DMY.2": {"wh": 3.350 * 2.0, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 3.575 * 2.0, "corner_r": 0.0},    # boundary 1 position
+    "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
+    "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
+    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
 }
+
+cyl_yz: dict = {
+
+}
+
+truncated_cyl_ys: dict = {
+    "RCcy.1": {'x0': 0, 'z0': 35.3, 'r': 13.75, 'y': [-215,-21.45]},
+    "RCcy.2": {"x0": 0, "z0": 35.3, "r": 12.55, "y": [-215, -22.45]},
+    "RCcy.3": {"x0": 0, "z0": 35.3, "r": 12.35, "y": [-220, -22.65]},
+    "RCcy.4": {"x0": 0, "z0": 35.3, "r": 11.35, "y": [-220, -24.65]},
+    "RCcy.5": {"x0": 0, "z0": 35.3, "r": 4.9, "y": [-220, -24.65]},
+    "RCcy.6": {"x0": 0, "z0": 35.3, "r": 4.5, "y": [-220, -22.65]},
+    "RCcy.7": {"x0": 0, "z0": 35.3, "r": 3.9, "y": [-220, -24.65]},
+    "RCcy.8": {"x0": 0, "z0": 35.3, "r": 16.0, "y": [-220, 0]},
+    "RCcy.9": {"x0": 0, "z0": 35.3, "r": 17.5, "y": [-220, 0]},
+    "RCcy.10": {"x0": 0, "z0": 35.3, "r": 21.0, "y": [-220, 0]},
+    "RCcy.11": {"x0": 0, "z0": 35.3, "r": 15.0, "y": [-220, 0]},
+    "RCcy.12": {"x0": 0, "z0": 35.3, "r": 20.0, "y": [-220, 0]},
+    "RCcy.13": {"x0": 0, "z0": 35.3, "r": 21.0, "y": [-220, 0]}, #identical to RCcy.10 for some reason
+    "RCcy.14": {"x0": 0, "z0": 35.3, "r": 22.5, "y": [-220, 0]}
+    }
 
 cyl_zs: dict = {
     "H01.2": 116.5,     # outer H01 vessel radius
@@ -74,18 +101,21 @@ cyl_zs: dict = {
     "RT.2":  1.2505,    # inner radius guide RT
     "RT.3":  1.1,       # outer radius channel RT
     "RT.4":  0.95,      # inner radius channel RT
-    # "Gr1.1":  1.8840 1.9275 1.5770, # upper right corner
-    # "Gr2.1":  -1.8840 1.9275 1.5770, # upper left corner
-    # "Gr1.2":  1.8840 1.9275 1.3070, # upper right corner
-    # "Gr2.2":  -1.8840 1.9275 1.3070, # upper left corner
-    # "Gr1.3":  1.8840 1.9275 1.2000, # upper right corner
-    # "Gr2.3":  -1.8840 1.9275 1.2000, # upper left corner
     "GRD.1":  2.2,      # outer radius of core grid
     "GRD.2":  1.7,      # inner radius of core grid
-    # "RCcz.1":  0 -138 4 35.3 372, # inside vertical channel in radial channel inner radius (estimation)
-    # "RCcz.2":  0 -138 5 35.3 372, # inside vertical channel in radial channel outer radius (estimation)
-    # "RCcz.3":  0 -200 4 35.3 372, # outside vertical channel in radial channel inner radius (estimation)
-    # "RCcz.4":  0 -200 5 35.3 372, # outside vertical channel in radial channel outer radius (estimation)
+    "Gr1.1":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.5770}, # upper right corner
+    "Gr2.1":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.5770}, # upper left corner
+    "Gr1.2":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.3070}, # upper right corner
+    "Gr2.2":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.3070}, # upper left corner
+    "Gr1.3":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.2000}, # upper right corner
+    "Gr2.3":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.2000}, # upper left corner
+}
+
+truncated_cyl_zs: dict = {
+    "RCcz.1": {"x0": 0, "y0": -138, "r": 4, "z": [35.3, 372]},
+    "RCcz.2": {"x0": 0, "y0": -138, "r": 5, "z": [35.3, 372]},
+    "RCcz.3": {"x0": 0, "y0": -200, "r": 4, "z": [35.3, 372]},
+    "RCcz.4": {"x0": 0, "y0": -200, "r": 5, "z": [35.3, 372]}
 }
 
 plane_xs: dict = {
@@ -132,8 +162,8 @@ plane_zs: dict = {
     "FAZ.6": -3.5,      # bottom edge of fuel header
     "ELE.zp":  999.0,   # upper ax. boundary
     "ELE.zn": -999.0,   # lower ax. boundary
-    "H01.zt":  372,     # upper edge boundary condition
-    "H01.zd":  -50,     # lower edge boundary condition
+    "H01.zt":  {'z0': 372,'boundary_type':'vacuum'},     # upper edge boundary condition
+    "H01.zd":  {'z0': -50.0,'boundary_type':'vacuum'},     # lower edge boundary condition
     "RB1.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
     "RB2.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
     "RB3.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
@@ -166,11 +196,34 @@ plane_zs: dict = {
 # ALL SURFACES ARE HERE
 surfaces: dict = {}
 for plane, z in plane_zs.items():
-    surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
+    if type(z) is dict:
+        surfaces[plane] = openmc.ZPlane(name=plane, z0=z['z0'],boundary_type=z['boundary_type'])
+    else:
+        surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
+for plane, y in plane_ys.items():
+    surfaces[plane] = openmc.YPlane(name=plane, y0=y)
+for plane, x in plane_xs.items():
+    surfaces[plane] = openmc.XPlane(name=plane, x0=x)
 for k, sqc in sqcs.items():
     surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
-for cylz, r in cyl_zs.items():
-    surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
+for cyly, params in truncated_cyl_ys.items():
+    surfaces[cyly] = openmc.model.RightCircularCylinder(name=cyly, center_base = [params['x0'],params['y'][0],params['z0']],radius=params['r'], axis = 'y', height = params['y'][1]-params['y'][0])
+for cylz, param in cyl_zs.items():
+    if type(param) is dict:
+        surfaces[cylz] = openmc.ZCylinder(name=cylz,r=param['r'], x0=param['x0'], y0=param['y0'])
+    else:
+        surfaces[cylz] = openmc.ZCylinder(name=cylz, r=param)
+for cylz, params in truncated_cyl_zs.items():
+    #returns a region because openmc doesn't allow finite cylinders
+    surfaces[cylz] = openmc.model.RightCircularCylinder(name=cylz, center_base = [params['x0'],params['y0'],params['z'][0]],radius=params['r'], height = params['z'][1]-params['z'][0])
+for cone, params in cones.items():
+    surfaces[cone] = openmc.model.YConeOneSided(x0=params['x0'], y0=params['y0'],z0=params['z0'],r2=params['r2'],up=params['up'])
+for rect, params in rects.items():
+    if 'boundary_type' in params:
+        boundary_type = 'vacuum'
+    else:
+        boundary_type = 'transmission'
+    surfaces[rect] = openmc.model.RectangularPrism(width=params['width'],height=params['height'],origin=params['origin'],boundary_type=boundary_type)
 
 lattice_unit_names: dict[str:str] = {
     '8': '8-tube FA',
