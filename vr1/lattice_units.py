@@ -313,7 +313,8 @@ class AbsRod(LatticeUnitVR1):
         """ Builds an absorption rod """
         """ Absorption rod surfaces """
         surfaces['boundary_XY'] = surfaces['ABS.1']
-        lower_bound = openmc.ZPlane(z0=plane_zs['GRD.zd'] + rod_height) #adjusting control rod from listed position
+        lower_bound_abs  = openmc.ZPlane(z0= plane_zs['RB1.hd'] + rod_height) 
+        lower_bound_head = openmc.ZPlane(z0= plane_zs['RB1.cd'] + rod_height) 
 
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
@@ -322,22 +323,21 @@ class AbsRod(LatticeUnitVR1):
 
         """ Building Absorber Rod """
 
-        cell_0Guidetube_1 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.1'] & +surfaces['ABS.2'])
+        cell_0Guidetube_1 = openmc.Cell(fill=self.materials.water,     region= -surfaces['ABS.1'] & +surfaces['ABS.2'])
         cell_0Guidetube_2 = openmc.Cell(fill=self.materials.guidetube, region=-surfaces['ABS.2'] & +surfaces['ABS.3'])
 
-        universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1, cell_0Guidetube_2])
-        self.cells['Guidetube'] = openmc.Cell(fill=universe_0Guidetube, region=-surfaces['ABS.1'] & +surfaces['ABS.3'] & -surfaces['ELE.zp'] & +surfaces['GRD.zt'])
+        universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1,cell_0Guidetube_2])
+        self.cells['Guidetube'] = openmc.Cell(fill=universe_0Guidetube,region=-surfaces['ABS.1'] & +surfaces['ABS.3'] & -surfaces['ELE.zp'] & +surfaces['GRD.zt'])
 
-        cell_0Absrod_1 = openmc.Cell(fill=self.materials.abstube,   region=-surfaces['ABS.3'] & +surfaces['ABS.4'] & +surfaces['RB1.cd'])
-        cell_0Absrod_2 = openmc.Cell(fill=self.materials.cdlayer,   region=-surfaces['ABS.4'] & +surfaces['ABS.5'] & +surfaces['RB1.cd'])
-        cell_0Absrod_3 = openmc.Cell(fill=self.materials.abscenter, region=-surfaces['ABS.5'] & +surfaces['RB1.cd'])
-        cell_0Absrod_4 = openmc.Cell(fill=self.materials.abshead,   region=-surfaces['ABS.3'] & -surfaces['RB1.cd'] & +surfaces['RB1.hd'])
-        cell_0Absrod_5 = openmc.Cell(fill=self.materials.water,     region=-surfaces['ABS.3'] & -surfaces['RB1.hd'])
+        cell_0Absrod_1 = openmc.Cell(fill=self.materials.abstube,   region=-surfaces['ABS.3'] & +surfaces['ABS.4']  & +lower_bound_head)
+        cell_0Absrod_2 = openmc.Cell(fill=self.materials.cdlayer,   region=-surfaces['ABS.4'] & +surfaces['ABS.5']  & +lower_bound_head)
+        cell_0Absrod_3 = openmc.Cell(fill=self.materials.abscenter, region=-surfaces['ABS.5'] & +lower_bound_head)
+        cell_0Absrod_4 = openmc.Cell(fill=self.materials.abshead,   region=-surfaces['ABS.3'] & -lower_bound_head & +lower_bound_abs)
 
-        universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4,cell_0Absrod_5])
-        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound)
+        self.cells['Plenum'] = openmc.Cell(fill=self.materials.water, region=-surfaces['ABS.3'] & -lower_bound_abs & +surfaces['GRD.zt'])
 
-        self.cells['Plenum'] = openmc.Cell(fill=self.materials.air, region=-surfaces['ABS.3'] & -lower_bound & + surfaces['GRD.zt'])
+        universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4])
+        self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound_abs) 
 
         return openmc.Universe(name="abs_rod", cells=list(self.cells.values()))
 
