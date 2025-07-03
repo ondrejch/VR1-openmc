@@ -1,20 +1,24 @@
 import openmc
-from vr1.materials import vr1_materials
+from vr1.materials import VR1Materials,vr1_materials
 from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
 from vr1.lattice_units import surfaces
 
-class Facility(LatticeUnitVR1):
+class Facility:
     """Class that builds VR1 reactor inside of the facility"""
-    def __init__(self, materials: vr1_materials) -> None:
-        super().__init__(materials)
+    def __init__(self, materials: VR1Materials = vr1_materials) -> None:
+        self.materials = materials
+        self.cells: dict = {}
         self.surfaces = surfaces
 
     def name(self) -> str:
         return "VR1 Facility"
 
-    def build(self, lattice: openmc.Universe = openmc.Universe([])):
-        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,                      region=-self.surfaces["CORE.rec"] & -self.surfaces['H01.zt'] & +self.surfaces['H01.zd'] & +self.surfaces['RCcy.1'])
+    def build(self, lattice = None): #I would make this type TestLattice but I want the functionality of an empty facility. Maybe pointless
+        if lattice is not None:
+            lattice = lattice.model
+        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & -self.surfaces['H01.zt'] & +self.surfaces['H01.zd'] & +self.surfaces['RCcy.1'])
+        
         self.cells["surf.1"]    = openmc.Cell(name="surf.1",    fill = self.materials.radialchannel, region=-self.surfaces["RCcy.1"] & +self.surfaces["RCcy.2"] & +self.surfaces["RCpy.2"])
         self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["CORE.rec"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
         self.cells["water.2"]   = openmc.Cell(name="water.2",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.4"] & +self.surfaces["RCcy.10"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])

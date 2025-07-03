@@ -252,8 +252,8 @@ lattice_upper_right: list[float] = [lattice_wh / 2.0, lattice_wh / 2.0, plane_zs
 
 class LatticeUnitVR1:
     """ Virtual base class """
-    def __init__(self):
-        self.materials = vr1_materials
+    def __init__(self,materials):
+        self.materials = materials
         self.cells: dict = {}
 
     def name(self) -> str:
@@ -261,9 +261,9 @@ class LatticeUnitVR1:
 
     def get(self, lattice_code: str = 'w') -> openmc.Universe():
         lattice_unit_builders: dict = {
-            '8': IRT4M(fa_type='8'),
-            '6': IRT4M(fa_type='6'),
-            '4': IRT4M(fa_type='4'),
+            '8': IRT4M(fa_type='8',materials=self.materials),
+            '6': IRT4M(fa_type='6',materials=self.materials),
+            '4': IRT4M(fa_type='4',materials=self.materials),
         # 'O': '6-tube FA with a fully withdrawn control rod',
         # 'X': '6-tube FA with a fully inserted control rod',
         # 'R1': '6-tube FA with regulatory control rod 1',
@@ -272,7 +272,7 @@ class LatticeUnitVR1:
         # 'E2': '6-tube FA with experimental shim rod 2',
         # 'E3': '6-tube FA with experimental shim rod 2',
         # 'd': 'Empty fuel dummy',
-            'w': Water(),
+            'w': Water(materials=self.materials),
         }
         return lattice_unit_builders[lattice_code].build()
 
