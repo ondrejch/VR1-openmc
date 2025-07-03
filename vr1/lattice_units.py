@@ -1,7 +1,7 @@
 """ Lattice designs for VR1 """
 
 import openmc
-from vr1.materials import vr1_materials
+from vr1.materials import VR1Materials, vr1_materials
 
 lattice_wh: float = 9.5  # Lattice unit width and height (X-Y) [cm]
 lattice_pitch: float = 7.15  # Actual lattice pitch [cm]orca versus cura slicers
@@ -279,8 +279,8 @@ class LatticeUnitVR1:
 
 class Water(LatticeUnitVR1):
     """ Water lattice unit """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, materials : VR1Materials = vr1_materials):
+        super().__init__(materials)
 
     def name(self) -> str:
         return "Water filling the lattice"
@@ -292,8 +292,8 @@ class Water(LatticeUnitVR1):
 
 class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
-    def __init__(self, fa_type: str, boundary: str = 'water') -> None:
-        super().__init__()
+    def __init__(self, fa_type: str, materials: VR1Materials = vr1_materials, boundary: str = 'water') -> None:
+        super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary
@@ -404,8 +404,8 @@ class IRT4M(LatticeUnitVR1):
 
 class AbsRod(LatticeUnitVR1):
     """ Class that returns absorption rod units """
-    def __init__(self,  boundary: str = 'water') -> None:
-        super().__init__()
+    def __init__(self, materials : VR1Materials = vr1_materials, boundary: str = 'water') -> None:
+        super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary

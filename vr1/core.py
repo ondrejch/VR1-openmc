@@ -38,8 +38,8 @@ class VR1core:
 
 class FuelAssembly(VR1core):
     """ Returns a fuel assembly """
-    def __init__(self, fa_type, boundaries='reflective'):
-        super().__init__()
+    def __init__(self, fa_type, materials: VR1Materials = vr1_materials, boundaries='reflective'):
+        super().__init__(materials)
         if fa_type not in list(lattice_unit_names.keys()):
             raise ValueError(f'{fa_type} is not a known lattice unit type!')
         if 'FA' not in lattice_unit_names[fa_type]:
