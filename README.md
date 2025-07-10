@@ -71,3 +71,47 @@ pip install -r requirements.txt
 pip install .
 ```
 Likely there is a more elegant way, but this works. 
+
+## Visualization Using OpenMC-Plotter
+
+1. The best way to visualize OpenMC geometry is using OpenMC's development branch feature: OpenMC-Plotter. \n
+To install with PyPI:
+
+``` 
+python -m pip install openmc-plotter
+```
+
+To install with conda (recommended if you're using a conda environment):
+
+```
+conda install -c conda-forge openmc-plotter
+```
+
+2. To use openmc-plotter, you must have an OpenMC model generated (at least "settings.xml," "geomtetry.xml," and "materials.xml"). Then, run
+
+```
+openmc-plotter <path_to_openmc_model_dir>
+```
+
+or if you're already in the directory with the necessarily xml files you can run
+
+```
+openmc-plotter
+```
+
+3. If you encounter the error
+
+```
+AttributeError: 'MainWindow' object has no attribute 'shortcutOverlay'
+```
+
+To fix this, run the following commands anywhere in Python. As of 07/09/2025, this was the only way to fix this on MacOS, but in theory it should work on any OS. 
+
+```
+from PySide6 import QtCore, QtGui
+settings = QtCore.QSettings()
+settings.clear()
+conda uninstall openmc-plotter
+conda install -c conda-forge openmc-plotter
+```
+
