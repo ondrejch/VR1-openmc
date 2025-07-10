@@ -6,7 +6,7 @@ from vr1.lattice_units import surfaces
 
 class Facility:
     """Class that builds VR1 reactor inside of the facility"""
-    def __init__(self, materials: VR1Materials = vr1_materials) -> None:
+    def __init__(self, materials: vr1_materials) -> None:
         self.materials = materials
         self.cells: dict = {}
         self.surfaces = surfaces
@@ -17,10 +17,10 @@ class Facility:
     def build(self, lattice = None): #I would make this type TestLattice but I want the functionality of an empty facility. Maybe pointless
         if lattice is not None:
             lattice = lattice.model
-        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & -self.surfaces['H01.zt'] & +self.surfaces['H01.zd'] & +self.surfaces['RCcy.1'])
-        
+
+        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["GRD.zd"])
         self.cells["surf.1"]    = openmc.Cell(name="surf.1",    fill = self.materials.radialchannel, region=-self.surfaces["RCcy.1"] & +self.surfaces["RCcy.2"] & +self.surfaces["RCpy.2"])
-        self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["CORE.rec"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
+        self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & ~self.cells["core.1"].region)
         self.cells["water.2"]   = openmc.Cell(name="water.2",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.4"] & +self.surfaces["RCcy.10"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
         self.cells["water.3"]   = openmc.Cell(name="water.3",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.4"] & +self.surfaces["RCcy.8"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
         self.cells["OUTrk17"]   = openmc.Cell(name="OUTrk17",   fill = self.materials.steelrc,       region=-self.surfaces["RCcy.9"] & +self.surfaces["RCcy.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.2"])
@@ -60,5 +60,18 @@ class Facility:
         self.cells["air.1"]     = openmc.Cell(name="air.1",     fill = self.materials.air,           region=-self.surfaces["RCcy.2"] & -self.surfaces["RCpy.9"] & +self.surfaces["RCpy.12"])
         self.cells["air.2"]     = openmc.Cell(name="air.2",     fill = self.materials.air,           region=-self.surfaces["RCcy.12"] & -self.surfaces["RCpy.12"] & -self.surfaces["BOX.rec"])
 
-        return openmc.Universe(name="facility", cells=list(self.cells.values()))
-    
+        # these cells are in the serpent model but it is not clear what they do. 
+        # they appear to do nothing, but for completeness I'm keeping them here for now
+
+        # self.cells["0.w.2"] = openmc.Cell(name="0.w.2", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["ELE.zp"] & +self.surfaces["GRD.zt"])
+        # self.cells["0.w.4"] = openmc.Cell(name="0.w.4", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & +self.surfaces["GRD.xp"] & +self.surfaces["GRD.yp"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.5"] = openmc.Cell(name="0.w.5", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & +self.surfaces["GRD.xp"] & -self.surfaces["GRD.yn"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.6"] = openmc.Cell(name="0.w.6", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & -self.surfaces["GRD.xn"] & +self.surfaces["GRD.yp"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.7"] = openmc.Cell(name="0.w.7", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & -self.surfaces["GRD.xn"] & -self.surfaces["GRD.yn"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.8"] = openmc.Cell(name="0.w.8", fill = self.materials.grid, region=-self.surfaces["GRD.xp"] & +self.surfaces["GRD.xn"] & +self.surfaces["GRD.1"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.9"] = openmc.Cell(name="0.w.9", fill = self.materials.grid, region=-self.surfaces["GRD.yp"] & +self.surfaces["GRD.yn"] & +self.surfaces["GRD.1"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.10"] = openmc.Cell(name="0.w.10", fill = self.materials.grid, region=-self.surfaces["GRD.1"] & +self.surfaces["GRD.2"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.11"] = openmc.Cell(name="0.w.11", fill = self.materials.water, region=-self.surfaces["GRD.2"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
+        # self.cells["0.w.13"] = openmc.Cell(name="0.w.13", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["GRD.zd"] & +self.surfaces["ELE.zn"])
+
+        return openmc.Universe(name="facility", cells=list(self.cells.values()))    
