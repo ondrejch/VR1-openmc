@@ -108,7 +108,7 @@ AttributeError: 'MainWindow' object has no attribute 'shortcutOverlay'
 To fix this, run the following commands anywhere in Python. As of 07/09/2025, this was the only way to fix this on MacOS, but in theory it should work on any OS. 
 
 ```
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore
 settings = QtCore.QSettings()
 settings.clear()
 conda uninstall openmc-plotter
