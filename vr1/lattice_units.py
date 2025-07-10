@@ -1,14 +1,20 @@
 """ Lattice designs for VR1 """
 
 import openmc
-from vr1.materials import vr1_materials
+from vr1.materials import VR1Materials, vr1_materials
 
 lattice_wh: float = 9.5  # Lattice unit width and height (X-Y) [cm]
 lattice_pitch: float = 7.15  # Actual lattice pitch [cm]orca versus cura slicers
 
 rects: dict = {
-    "CORE.rec": [-28.6, 28.6, -28.6, 28.6],     # core limit
-    "BOX.rec":  [-130, 130, -215, 130],         # concrete shielding
+    "CORE.rec": {'width': 28.6- -28.6, 'height': 28.6- -28.6, 'axis': 'z', 
+                'origin': [(28.6- -28.6)/2, (28.6- -28.6)/2]}, # concrete shielding
+    "BOX.rec": {'width': 130- -130, 'height': 130- -215, 'axis': 'z', 
+                'origin': [(130- -130)/2, (130- -215)/2], 'boundary_type': 'vacuum' } # concrete shielding
+}
+
+cones: dict = {
+    "RCky.1": {'x0': 0, 'y0': -103.5, 'z0': 35.3, 'r2': 0.1162, 'up': -1}
 }
 
 sqcs: dict = {
@@ -41,10 +47,31 @@ sqcs: dict = {
     "7FT.3": {"wh": 2.59, "corner_r": 0.335},
     "7FT.4": {"wh": 2.496, "corner_r": 0.288},
     "ABS.1": {"wh": 2.800, "corner_r": 0.800},
-    "DMY.1": {"wh": 3.500 * 2.0, "corner_r": 1.750},  # outer dim. fuel dummy rounding
-    "DMY.2": {"wh": 3.350 * 2.0, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 3.575 * 2.0, "corner_r": 0.0},    # boundary 1 position
+    "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
+    "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
+    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
 }
+
+cyl_yz: dict = {
+
+}
+
+truncated_cyl_ys: dict = {
+    "RCcy.1": {'x0': 0, 'z0': 35.3, 'r': 13.75, 'y': [-215,-21.45]},
+    "RCcy.2": {"x0": 0, "z0": 35.3, "r": 12.55, "y": [-215, -22.45]},
+    "RCcy.3": {"x0": 0, "z0": 35.3, "r": 12.35, "y": [-220, -22.65]},
+    "RCcy.4": {"x0": 0, "z0": 35.3, "r": 11.35, "y": [-220, -24.65]},
+    "RCcy.5": {"x0": 0, "z0": 35.3, "r": 4.9, "y": [-220, -24.65]},
+    "RCcy.6": {"x0": 0, "z0": 35.3, "r": 4.5, "y": [-220, -22.65]},
+    "RCcy.7": {"x0": 0, "z0": 35.3, "r": 3.9, "y": [-220, -24.65]},
+    "RCcy.8": {"x0": 0, "z0": 35.3, "r": 16.0, "y": [-220, 0]},
+    "RCcy.9": {"x0": 0, "z0": 35.3, "r": 17.5, "y": [-220, 0]},
+    "RCcy.10": {"x0": 0, "z0": 35.3, "r": 21.0, "y": [-220, 0]},
+    "RCcy.11": {"x0": 0, "z0": 35.3, "r": 15.0, "y": [-220, 0]},
+    "RCcy.12": {"x0": 0, "z0": 35.3, "r": 20.0, "y": [-220, 0]},
+    "RCcy.13": {"x0": 0, "z0": 35.3, "r": 21.0, "y": [-220, 0]}, #identical to RCcy.10 for some reason
+    "RCcy.14": {"x0": 0, "z0": 35.3, "r": 22.5, "y": [-220, 0]}
+    }
 
 cyl_zs: dict = {
     "H01.2": 116.5,     # outer H01 vessel radius
@@ -74,18 +101,21 @@ cyl_zs: dict = {
     "RT.2":  1.2505,    # inner radius guide RT
     "RT.3":  1.1,       # outer radius channel RT
     "RT.4":  0.95,      # inner radius channel RT
-    # "Gr1.1":  1.8840 1.9275 1.5770, # upper right corner
-    # "Gr2.1":  -1.8840 1.9275 1.5770, # upper left corner
-    # "Gr1.2":  1.8840 1.9275 1.3070, # upper right corner
-    # "Gr2.2":  -1.8840 1.9275 1.3070, # upper left corner
-    # "Gr1.3":  1.8840 1.9275 1.2000, # upper right corner
-    # "Gr2.3":  -1.8840 1.9275 1.2000, # upper left corner
     "GRD.1":  2.2,      # outer radius of core grid
     "GRD.2":  1.7,      # inner radius of core grid
-    # "RCcz.1":  0 -138 4 35.3 372, # inside vertical channel in radial channel inner radius (estimation)
-    # "RCcz.2":  0 -138 5 35.3 372, # inside vertical channel in radial channel outer radius (estimation)
-    # "RCcz.3":  0 -200 4 35.3 372, # outside vertical channel in radial channel inner radius (estimation)
-    # "RCcz.4":  0 -200 5 35.3 372, # outside vertical channel in radial channel outer radius (estimation)
+    "Gr1.1":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.5770}, # upper right corner
+    "Gr2.1":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.5770}, # upper left corner
+    "Gr1.2":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.3070}, # upper right corner
+    "Gr2.2":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.3070}, # upper left corner
+    "Gr1.3":  {'x0': 1.8840, 'y0': 1.9275, 'r': 1.2000}, # upper right corner
+    "Gr2.3":  {'x0': -1.8840, 'y0': 1.9275, 'r': 1.2000}, # upper left corner
+}
+
+truncated_cyl_zs: dict = {
+    "RCcz.1": {"x0": 0, "y0": -138, "r": 4, "z": [35.3, 372]},
+    "RCcz.2": {"x0": 0, "y0": -138, "r": 5, "z": [35.3, 372]},
+    "RCcz.3": {"x0": 0, "y0": -200, "r": 4, "z": [35.3, 372]},
+    "RCcz.4": {"x0": 0, "y0": -200, "r": 5, "z": [35.3, 372]}
 }
 
 plane_xs: dict = {
@@ -132,8 +162,8 @@ plane_zs: dict = {
     "FAZ.6": -3.5,      # bottom edge of fuel header
     "ELE.zp":  999.0,   # upper ax. boundary
     "ELE.zn": -999.0,   # lower ax. boundary
-    "H01.zt":  372,     # upper edge boundary condition
-    "H01.zd":  -50,     # lower edge boundary condition
+    "H01.zt":  {'z0': 372,'boundary_type':'vacuum'},     # upper edge boundary condition
+    "H01.zd":  {'z0': -50.0,'boundary_type':'vacuum'},     # lower edge boundary condition
     "RB1.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
     "RB2.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
     "RB3.cd": 67.6,     # end of Cd sheet, move from set value by -0.4
@@ -165,12 +195,36 @@ plane_zs: dict = {
 
 # ALL SURFACES ARE HERE
 surfaces: dict = {}
+surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
 for plane, z in plane_zs.items():
-    surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
+    if type(z) is dict:
+        surfaces[plane] = openmc.ZPlane(name=plane, z0=z['z0'],boundary_type=z['boundary_type'])
+    else:
+        surfaces[plane] = openmc.ZPlane(name=plane, z0=z)
+for plane, y in plane_ys.items():
+    surfaces[plane] = openmc.YPlane(name=plane, y0=y)
+for plane, x in plane_xs.items():
+    surfaces[plane] = openmc.XPlane(name=plane, x0=x)
 for k, sqc in sqcs.items():
     surfaces[k] = openmc.model.RectangularPrism(width=sqc['wh'], height=sqc['wh'], corner_radius=sqc['corner_r'])
-for cylz, r in cyl_zs.items():
-    surfaces[cylz] = openmc.ZCylinder(name=cylz, r=r)
+for cyly, params in truncated_cyl_ys.items():
+    surfaces[cyly] = openmc.model.RightCircularCylinder(name=cyly, center_base = [params['x0'],params['y'][0],params['z0']],radius=params['r'], axis = 'y', height = params['y'][1]-params['y'][0])
+for cylz, param in cyl_zs.items():
+    if type(param) is dict:
+        surfaces[cylz] = openmc.ZCylinder(name=cylz,r=param['r'], x0=param['x0'], y0=param['y0'])
+    else:
+        surfaces[cylz] = openmc.ZCylinder(name=cylz, r=param)
+for cylz, params in truncated_cyl_zs.items():
+    #returns a region because openmc doesn't allow finite cylinders
+    surfaces[cylz] = openmc.model.RightCircularCylinder(name=cylz, center_base = [params['x0'],params['y0'],params['z'][0]],radius=params['r'], height = params['z'][1]-params['z'][0])
+for cone, params in cones.items():
+    surfaces[cone] = openmc.model.YConeOneSided(x0=params['x0'], y0=params['y0'],z0=params['z0'],r2=params['r2'],up=params['up'])
+for rect, params in rects.items():
+    if 'boundary_type' in params:
+        boundary_type = 'vacuum'
+    else:
+        boundary_type = 'transmission'
+    surfaces[rect] = openmc.model.RectangularPrism(width=params['width'],height=params['height'],origin=params['origin'],boundary_type=boundary_type)
 
 lattice_unit_names: dict[str:str] = {
     '8': '8-tube FA',
@@ -199,8 +253,8 @@ lattice_upper_right: list[float] = [lattice_wh / 2.0, lattice_wh / 2.0, plane_zs
 
 class LatticeUnitVR1:
     """ Virtual base class """
-    def __init__(self):
-        self.materials = vr1_materials
+    def __init__(self,materials):
+        self.materials = materials
         self.cells: dict = {}
 
     def name(self) -> str:
@@ -208,9 +262,9 @@ class LatticeUnitVR1:
 
     def get(self, lattice_code: str = 'w') -> openmc.Universe():
         lattice_unit_builders: dict = {
-            '8': IRT4M(fa_type='8'),
-            '6': IRT4M(fa_type='6'),
-            '4': IRT4M(fa_type='4'),
+            '8': IRT4M(fa_type='8',materials=self.materials),
+            '6': IRT4M(fa_type='6',materials=self.materials),
+            '4': IRT4M(fa_type='4',materials=self.materials),
         # 'O': '6-tube FA with a fully withdrawn control rod',
         # 'X': '6-tube FA with a fully inserted control rod',
         # 'R1': '6-tube FA with regulatory control rod 1',
@@ -219,28 +273,29 @@ class LatticeUnitVR1:
         # 'E2': '6-tube FA with experimental shim rod 2',
         # 'E3': '6-tube FA with experimental shim rod 2',
         # 'd': 'Empty fuel dummy',
-            'w': Water(),
+            'w': Water(materials=self.materials),
         }
         return lattice_unit_builders[lattice_code].build()
 
 
 class Water(LatticeUnitVR1):
     """ Water lattice unit """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, materials: VR1Materials):
+        super().__init__(materials)
 
     def name(self) -> str:
         return "Water filling the lattice"
 
     def build(self) -> openmc.Universe:
-        self.cells['water'] = openmc.Cell(name='water', fill=self.materials.water, region=-surfaces['ELE.1'])  # & -surfaces['ELE.zp'] & surfaces['GRD.zt'])
+        surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
+        self.cells['water2'] = openmc.Cell(name='water2', fill=self.materials.water, region=-surfaces['boundary_XY'])
         return openmc.Universe(name='water', cells=list(self.cells.values()))
 
 
 class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
-    def __init__(self, fa_type: str, boundary: str = 'water') -> None:
-        super().__init__()
+    def __init__(self, materials: VR1Materials, fa_type: str, boundary: str = 'water') -> None:
+        super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary
@@ -259,16 +314,15 @@ class IRT4M(LatticeUnitVR1):
         """ Builds an IRT4M fuel assembly lattice until. TODO: control rod lattices """
         n_plates: int = int(lattice_unit_names[self.fa_type][0])  # How many plates in the FA
         """ FA surfaces """
-        surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         if self.boundary == 'reflective':
             surfaces['boundary_XY'].boundary_type = 'reflective'
             surfaces['FAZ.2'].boundary_type = 'reflective'
             surfaces['FAZ.4'].boundary_type = 'reflective'
-
+            
         """ Common FA cells """
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
         self.cells['out_mid'] = openmc.Cell(name='out_mid', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
-        self.cells['out_bot'] = openmc.Cell(name='out_bot', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells['out_bot'] = openmc.Cell(name='out_bot', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.4'])
 
         for i in range(1, n_plates):
             self.cells[f'top_c_{i}'] = openmc.Cell(name=f'top_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
@@ -294,13 +348,72 @@ class IRT4M(LatticeUnitVR1):
         self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
         self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
 
+        self.cells[f'0.8.60']    = openmc.Cell(name=f'0.8.60', fill=self.materials.water,   region=-surfaces['1FT.1'] & -surfaces['ELE.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.61']    = openmc.Cell(name=f'0.8.61', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.62']    = openmc.Cell(name=f'0.8.62', fill=self.materials.water,   region=-surfaces['1FT.4'] & +surfaces['2FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.63']    = openmc.Cell(name=f'0.8.63', fill=self.materials.cladding,region=-surfaces['2FT.1'] & +surfaces['2FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.64']    = openmc.Cell(name=f'0.8.64', fill=self.materials.water,   region=-surfaces['2FT.4'] & +surfaces['3FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.65']    = openmc.Cell(name=f'0.8.65', fill=self.materials.cladding,region=-surfaces['3FT.1'] & +surfaces['3FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.66']    = openmc.Cell(name=f'0.8.66', fill=self.materials.water,   region=-surfaces['3FT.4'] & +surfaces['4FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.67']    = openmc.Cell(name=f'0.8.67', fill=self.materials.cladding,region=-surfaces['4FT.1'] & +surfaces['4FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.68']    = openmc.Cell(name=f'0.8.68', fill=self.materials.water,   region=-surfaces['4FT.4'] & +surfaces['5FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.69']    = openmc.Cell(name=f'0.8.69', fill=self.materials.cladding,region=-surfaces['5FT.1'] & +surfaces['5FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.70']    = openmc.Cell(name=f'0.8.70', fill=self.materials.water,   region=-surfaces['5FT.4'] & +surfaces['6FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.71']    = openmc.Cell(name=f'0.8.71', fill=self.materials.cladding,region=-surfaces['6FT.1'] & +surfaces['6FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.72']    = openmc.Cell(name=f'0.8.72', fill=self.materials.water,   region=-surfaces['6FT.4'] & +surfaces['7FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.73']    = openmc.Cell(name=f'0.8.73', fill=self.materials.cladding,region=-surfaces['7FT.1'] & +surfaces['7FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.74']    = openmc.Cell(name=f'0.8.74', fill=self.materials.water,   region=-surfaces['7FT.4'] & +surfaces['8FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.75']    = openmc.Cell(name=f'0.8.75', fill=self.materials.cladding,region=-surfaces['8FT.1'] & +surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        self.cells[f'0.8.76']    = openmc.Cell(name=f'0.8.76', fill=self.materials.water,   region=-surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+
+        self.cells[f'0.8.78']    = openmc.Cell(name=f'0.8.78', fill=self.materials.water,   region=+surfaces['1FT.1'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.79']    = openmc.Cell(name=f'0.8.79', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+        self.cells[f'0.8.80']    = openmc.Cell(name=f'0.8.80', fill=self.materials.water,   region=-surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+
+
+        self.cells[f'0.8.82']    = openmc.Cell(name=f'0.8.82', fill=self.materials.water,region=-surfaces['1FT.4'] & +surfaces['GRD.xp'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.83']    = openmc.Cell(name=f'0.8.83', fill=self.materials.water,region=-surfaces['1FT.4'] & +surfaces['GRD.xp'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.84']    = openmc.Cell(name=f'0.8.84', fill=self.materials.water,region=-surfaces['1FT.4'] & -surfaces['GRD.xn'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.85']    = openmc.Cell(name=f'0.8.85', fill=self.materials.water,region=-surfaces['1FT.4'] & -surfaces['GRD.xn'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.86']    = openmc.Cell(name=f'0.8.86', fill=self.materials.water,region=+surfaces['1FT.1'] & +surfaces['GRD.xp'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.87']    = openmc.Cell(name=f'0.8.87', fill=self.materials.water,region=+surfaces['1FT.1'] & +surfaces['GRD.xp'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.88']    = openmc.Cell(name=f'0.8.88', fill=self.materials.water,region=+surfaces['1FT.1'] & -surfaces['GRD.xn'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.89']    = openmc.Cell(name=f'0.8.89', fill=self.materials.water,region=+surfaces['1FT.1'] & -surfaces['GRD.xn'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.90']    = openmc.Cell(name=f'0.8.90', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & +surfaces['GRD.xp'] & +surfaces['GRD.yp'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells[f'0.8.91']    = openmc.Cell(name=f'0.8.91', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & +surfaces['GRD.xp'] & -surfaces['GRD.yn'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells[f'0.8.92']    = openmc.Cell(name=f'0.8.92', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['GRD.xn'] & +surfaces['GRD.yp'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells[f'0.8.93']    = openmc.Cell(name=f'0.8.93', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['GRD.xn'] & -surfaces['GRD.yn'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells[f'0.8.94']    = openmc.Cell(name=f'0.8.94', fill=self.materials.grid,region=-surfaces['GRD.1']  & +surfaces['GRD.2'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+
+        self.cells[f'0.8.95']    = openmc.Cell(name=f'0.8.95', fill=self.materials.grid,region=-surfaces['GRD.xp'] & +surfaces['GRD.xn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells[f'0.8.96']    = openmc.Cell(name=f'0.8.96', fill=self.materials.grid,region=-surfaces['GRD.yp'] & +surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+
+        self.cells[f'0.8.97']    = openmc.Cell(name=f'0.8.97', fill=self.materials.water,region=-surfaces['GRD.2'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+
+        self.cells[f'0.8.99']    = openmc.Cell(name=f'0.8.99', fill=self.materials.water,region=+surfaces['GRD.xp'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.100']   = openmc.Cell(name=f'0.8.100',fill=self.materials.water,region=+surfaces['GRD.xp'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.101']   = openmc.Cell(name=f'0.8.101',fill=self.materials.water,region=-surfaces['GRD.xn'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.102']   = openmc.Cell(name=f'0.8.102',fill=self.materials.water,region=-surfaces['GRD.xn'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.103']   = openmc.Cell(name=f'0.8.103',fill=self.materials.grid ,region=-surfaces['GRD.1']  & +surfaces['GRD.2']  & -surfaces['FAZ.6'] & +surfaces['GRD.zd'])
+        self.cells[f'0.8.104']   = openmc.Cell(name=f'0.8.104',fill=self.materials.grid ,region=-surfaces['GRD.xp'] & +surfaces['GRD.xn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.105']   = openmc.Cell(name=f'0.8.105',fill=self.materials.grid ,region=-surfaces['GRD.yp'] & +surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.106']   = openmc.Cell(name=f'0.8.106',fill=self.materials.water,region=-surfaces['GRD.2']  & -surfaces['FAZ.6']  & +surfaces['GRD.zd'])
+
+        self.cells[f'0.8.108']   = openmc.Cell(name=f'0.8.108',fill=self.materials.water,region=-surfaces['GRD.zd'] & +surfaces['ELE.zn'] & -surfaces['ELE.1'])
+
+        self.cells['water_low_NW'] = openmc.Cell(name='water_bot_NW', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & +surfaces['GRD.yp'] & -surfaces['GRD.xp'] & -surfaces['GRD.zt'])
+        self.cells['water_low_NE'] = openmc.Cell(name='water_bot_NE', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & +surfaces['GRD.yp'] & +surfaces['GRD.xp'] & -surfaces['GRD.zt'])
+        self.cells['water_low_SW'] = openmc.Cell(name='water_bot_SW', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & -surfaces['GRD.yp'] & -surfaces['GRD.xp'] & -surfaces['GRD.zt'])
+        self.cells['water_low_SE'] = openmc.Cell(name='water_bot_SE', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & -surfaces['GRD.yp'] & +surfaces['GRD.xp'] & -surfaces['GRD.zt'])
+
+
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
 
 class AbsRod(LatticeUnitVR1):
     """ Class that returns absorption rod units """
-    def __init__(self,  boundary: str = 'water') -> None:
-        super().__init__()
+    def __init__(self, materials : VR1Materials = vr1_materials, boundary: str = 'water') -> None:
+        super().__init__(materials)
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary

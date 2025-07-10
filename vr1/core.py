@@ -1,8 +1,9 @@
 """ Core design for VR1 """
 import openmc
-from vr1.materials import vr1_materials
+from vr1.materials import VR1Materials, vr1_materials
 from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
+from vr1.lattice_units import surfaces
 
 # Write an FA lattice, or the core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -27,20 +28,18 @@ VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
     ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
 ]
 
-
 class VR1core:
     """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
-    def __init__(self):
-        self.materials = vr1_materials
+    def __init__(self,materials : VR1Materials = vr1_materials):
+        self.materials = materials
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
         self.model = openmc.Universe
 
-
 class FuelAssembly(VR1core):
     """ Returns a fuel assembly """
-    def __init__(self, fa_type, boundaries='reflective'):
-        super().__init__()
+    def __init__(self, fa_type, materials: VR1Materials = vr1_materials, boundaries='reflective'):
+        super().__init__(materials)
         if fa_type not in list(lattice_unit_names.keys()):
             raise ValueError(f'{fa_type} is not a known lattice unit type!')
         if 'FA' not in lattice_unit_names[fa_type]:
@@ -52,8 +51,8 @@ class FuelAssembly(VR1core):
 
 
 class TestLattice(VR1core):
-    def __init__(self, lattice_str: (None, list[list[str]]) = None):
-        super().__init__()
+    def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
+        super().__init__(materials)
         if lattice_str is None:
             lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
@@ -67,7 +66,7 @@ class TestLattice(VR1core):
         self.lattice.lower_left = (-xy_corner, -xy_corner)
         self.lattice.pitch = (lattice_pitch, lattice_pitch)
         # self.lattice.universes = np.zeros((n, n), dtype=openmc.UniverseBase)  # TODO why is this not working?
-        lattice_builder = LatticeUnitVR1()
+        lattice_builder = LatticeUnitVR1(self.materials)
         lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
@@ -80,16 +79,6 @@ class TestLattice(VR1core):
         z1: float = plane_zs['FAZ.2']
         lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
         lattice_cell = openmc.Cell(fill=self.lattice, region=-lattice_box)
-        """ Water box around the lattice """
-        x0: float = rects['CORE.rec'][0]
-        x1: float = rects['CORE.rec'][1]
-        y0: float = rects['CORE.rec'][2]
-        y1: float = rects['CORE.rec'][3]
-        z0: float = plane_zs['FAZ.6']
-        z1: float = plane_zs['FAZ.1']
-        core_box = openmc.model.RectangularParallelepiped(x0, x1, y0, y1, z0, z1)
-        core_box.boundary_type = 'vacuum'
-        core_cell = openmc.Cell(fill=self.materials.water, region=-core_box & +lattice_box)
-        self.model = openmc.Universe(cells=[lattice_cell, core_cell])
+        self.model = openmc.Universe(cells=[lattice_cell])
         self.source_lower_left = (-xy_corner, -xy_corner, lattice_lower_left[2])
         self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])
