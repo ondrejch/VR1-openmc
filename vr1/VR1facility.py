@@ -60,9 +60,6 @@ class Facility:
         self.cells["air.1"]     = openmc.Cell(name="air.1",     fill = self.materials.air,           region=-self.surfaces["RCcy.2"] & -self.surfaces["RCpy.9"] & +self.surfaces["RCpy.12"])
         self.cells["air.2"]     = openmc.Cell(name="air.2",     fill = self.materials.air,           region=-self.surfaces["RCcy.12"] & -self.surfaces["RCpy.12"] & -self.surfaces["BOX.rec"])
 
-        # these cells are in the serpent model but it is not clear what they do. 
-        # they appear to do nothing, but for completeness I'm keeping them here for now
-
         # self.cells["0.w.2"] = openmc.Cell(name="0.w.2", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["ELE.zp"] & +self.surfaces["GRD.zt"])
         # self.cells["0.w.4"] = openmc.Cell(name="0.w.4", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & +self.surfaces["GRD.xp"] & +self.surfaces["GRD.yp"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
         # self.cells["0.w.5"] = openmc.Cell(name="0.w.5", fill = self.materials.water, region=-self.surfaces["ELE.1"] & +self.surfaces["GRD.1"] & +self.surfaces["GRD.xp"] & -self.surfaces["GRD.yn"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
@@ -74,4 +71,4 @@ class Facility:
         # self.cells["0.w.11"] = openmc.Cell(name="0.w.11", fill = self.materials.water, region=-self.surfaces["GRD.2"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
         # self.cells["0.w.13"] = openmc.Cell(name="0.w.13", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["GRD.zd"] & +self.surfaces["ELE.zn"])
 
-        return openmc.Universe(name="facility", cells=list(self.cells.values()))    
+        return openmc.Universe(name="facility", cells=list(self.cells.values()))   
