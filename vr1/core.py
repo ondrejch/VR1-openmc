@@ -75,7 +75,7 @@ class TestLattice(VR1core):
             lattice_array.append(_l)
         self.lattice.universes = lattice_array
         """ Lattice box """
-        z0: float = plane_zs['FAZ.5']
+        z0: float = plane_zs['H01.sc']
         z1: float = plane_zs['FAZ.2']
         lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
         lattice_cell = openmc.Cell(fill=self.lattice, region=-lattice_box)

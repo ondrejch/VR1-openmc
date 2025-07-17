@@ -18,7 +18,7 @@ class Facility:
         if lattice is not None:
             lattice = lattice.model
 
-        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["GRD.zd"])
+        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,                      region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["H01.sc"])
         self.cells["surf.1"]    = openmc.Cell(name="surf.1",    fill = self.materials.radialchannel, region=-self.surfaces["RCcy.1"] & +self.surfaces["RCcy.2"] & +self.surfaces["RCpy.2"])
         self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & ~self.cells["core.1"].region)
         self.cells["water.2"]   = openmc.Cell(name="water.2",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.4"] & +self.surfaces["RCcy.10"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])

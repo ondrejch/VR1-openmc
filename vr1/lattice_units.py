@@ -191,6 +191,7 @@ plane_zs: dict = {
     "Gpz.6": -3.5,      # bottom end in grid
     "GRD.zt": 0,        # upper edge of core grid
     "GRD.zd": -7.51,    # lower edge of core grid
+    "H01.sc": -10.0     # small channel insertion
 }
 
 # ALL SURFACES ARE HERE
@@ -322,6 +323,7 @@ class GridPlate:
         self.cells['water_low_NE'] = openmc.Cell(name='water_bot_NE', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & +surfaces['GRD.yp'] & +surfaces['GRD.xp'] & -surfaces['GRD.zt'])
         self.cells['water_low_SW'] = openmc.Cell(name='water_bot_SW', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & -surfaces['GRD.yp'] & -surfaces['GRD.xp'] & -surfaces['GRD.zt'])
         self.cells['water_low_SE'] = openmc.Cell(name='water_bot_SE', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & -surfaces['GRD.yp'] & +surfaces['GRD.xp'] & -surfaces['GRD.zt'])
+        self.cells['water_low_low'] = openmc.Cell(name='water_low_low', fill=self.materials.water,region=-self.surfaces['boundary_XY'] & -self.surfaces['GRD.zd'])
         return openmc.Universe(name=f'grid_plate_unit', cells=list(self.cells.values()))
 
 class Water(LatticeUnitVR1):
@@ -392,7 +394,7 @@ class VertChannel(LatticeUnitVR1):
             self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'])
             return openmc.Universe(name='big_channel', cells=list(self.cells.values()))
 
-class IRT4M(LatticeUnitVR1):
+class IRT4M(LatticeUnitVR1_local):
     """ Class that returns IRT4M fuel units """
     def __init__(self, materials: VR1Materials, fa_type: str, boundary: str = 'water') -> None:
         super().__init__(materials)
