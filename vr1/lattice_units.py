@@ -238,8 +238,8 @@ lattice_unit_names: dict[str:str] = {
     # 'E1': '6-tube FA with experimental shim rod 2',
     # 'E2': '6-tube FA with experimental shim rod 2',
     # 'E3': '6-tube FA with experimental shim rod 2',
-    # 'd': 'Empty fuel dummy',
-    # 'w': 'Empty water cell',
+    'w': 'Water cell with grid',
+    'wrc': 'Empty water cell'
 }
 
 lattice_unit_boundaries: list[str] = [
@@ -266,6 +266,11 @@ class LatticeUnitVR1:
             '8': IRT4M(fa_type='8',materials=self.materials),
             '6': IRT4M(fa_type='6',materials=self.materials),
             '4': IRT4M(fa_type='4',materials=self.materials),
+            'v90': VertChannel(materials=self.materials,diameter=9.0),
+            'v56': VertChannel(materials=self.materials,diameter=5.6),
+            'v30': VertChannel(materials=self.materials,diameter=3.0),
+            'v25': VertChannel(materials=self.materials,diameter=2.5),
+            'v12': VertChannel(materials=self.materials,diameter=1.2),
         # 'O': '6-tube FA with a fully withdrawn control rod',
         # 'X': '6-tube FA with a fully inserted control rod',
         # 'R1': '6-tube FA with regulatory control rod 1',
@@ -274,7 +279,8 @@ class LatticeUnitVR1:
         # 'E2': '6-tube FA with experimental shim rod 2',
         # 'E3': '6-tube FA with experimental shim rod 2',
         # 'd': 'Empty fuel dummy',
-            'w': Water(materials=self.materials),
+            'w':   Water(materials=self.materials),
+            'wrc': Water(materials=self.materials,RC=True)
         }
         return lattice_unit_builders[lattice_code].build()
 
@@ -394,7 +400,7 @@ class VertChannel(LatticeUnitVR1):
             self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'])
             return openmc.Universe(name='big_channel', cells=list(self.cells.values()))
 
-class IRT4M(LatticeUnitVR1_local):
+class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
     def __init__(self, materials: VR1Materials, fa_type: str, boundary: str = 'water') -> None:
         super().__init__(materials)

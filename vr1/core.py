@@ -53,8 +53,7 @@ class FuelAssembly(VR1core):
 class TestLattice(VR1core):
     def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
         super().__init__(materials)
-        if lattice_str is None:
-            lattice_str = core_designs['small_test']
+        for i in range(2,6): lattice_str[-1][i] = 'wrc'
         n: int = len(lattice_str)
         print(f'Lattice size {n}')
         assert n > 0
