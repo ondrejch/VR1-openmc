@@ -521,7 +521,7 @@ class AbsRod(LatticeUnitVR1):
 
         universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1,cell_0Absrod_2,cell_0Absrod_3,cell_0Absrod_4])
         self.cells['Absrod'] = openmc.Cell(fill=universe_0Absrod,region=-surfaces['ABS.3'] & -surfaces['ELE.zp'] & +lower_bound_abs) 
-
+        
         return openmc.Universe(name="abs_rod", cells=list(self.cells.values()))
 
 """ Shell scripts to extract surfaces from the Serpent model """
