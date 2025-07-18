@@ -282,6 +282,8 @@ class LatticeUnitVR1:
             'w':   Water(materials=self.materials),
             'wrc': Water(materials=self.materials,RC=True)
         }
+        if lattice_code not in lattice_unit_builders.keys():
+            raise ValueError(f'Unknown lattice type "{lattice_code}"')
         return lattice_unit_builders[lattice_code].build()
 
 class GridPlate:

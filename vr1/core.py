@@ -51,9 +51,42 @@ class FuelAssembly(VR1core):
 
 
 class TestLattice(VR1core):
+    def reformat(self,lattice_str):
+        """
+        Reformats lattice string to be an 8x8 grid
+        Upper-left justified
+        """
+        new_lattice_str = []
+        for row in lattice_str:
+            if len(row) == 8: 
+                new_lattice_str.append(row)
+                n-=1
+                continue
+            elif len(row)>8:
+                raise ValueError('All lattice rows must be of length 8 or shorter')
+            n = 8-len(row)        
+            while n>0:
+                if n%2 == 0: row = ['w'] + row
+                else:        row = row + ['w']
+                n-=1
+            new_lattice_str.append(row)
+        if len(new_lattice_str) < 8:
+            n = 8-len(new_lattice_str)
+            while n>0:
+                if n%2==0: new_lattice_str = [['w','w','w','w','w','w','w','w']] + new_lattice_str
+                else:      new_lattice_str = new_lattice_str + [['w','w','w','w','w','w','w','w']]
+                n-=1 
+        if len(new_lattice_str) != 8: 
+            raise ValueError('Reformatting failed unexpectedly')
+        for i in range(2,6): new_lattice_str[-1][i] = 'wrc'
+        print(f'reformatted\n{new_lattice_str}')
+        return new_lattice_str
+
     def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
         super().__init__(materials)
-        for i in range(2,6): lattice_str[-1][i] = 'wrc'
+        lattice_str = self.reformat(lattice_str)
+        if lattice_str is None:
+            lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
         print(f'Lattice size {n}')
         assert n > 0
