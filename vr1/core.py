@@ -79,7 +79,6 @@ class TestLattice(VR1core):
         if len(new_lattice_str) != 8: 
             raise ValueError('Reformatting failed unexpectedly')
         for i in range(2,6): new_lattice_str[-1][i] = 'wrc'
-        print(f'reformatted\n{new_lattice_str}')
         return new_lattice_str
 
     def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
@@ -88,23 +87,26 @@ class TestLattice(VR1core):
         if lattice_str is None:
             lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
-        print(f'Lattice size {n}')
         assert n > 0
-        for row in lattice_str:
-            if len(row) != n:
-                raise ValueError(f'{lattice_str} is not square')
+        # for row in lattice_str:
+        #     if len(row) != n:
+        #         raise ValueError(f'{lattice_str} is not square')
         self.lattice = openmc.RectLattice(name='test_lattice')
         xy_corner: float = float(n) * lattice_pitch / 2.0
         self.lattice.lower_left = (-xy_corner, -xy_corner)
         self.lattice.pitch = (lattice_pitch, lattice_pitch)
         # self.lattice.universes = np.zeros((n, n), dtype=openmc.UniverseBase)  # TODO why is this not working?
         lattice_builder = LatticeUnitVR1(self.materials)
+        lattice_builder.load()
         lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
+        z=0
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
             for j in range(n):
                 _l.append(lattice_builder.get(lattice_str[i][j]))
             lattice_array.append(_l)
+            
+            z+=1
         self.lattice.universes = lattice_array
         """ Lattice box """
         z0: float = plane_zs['H01.sc']
