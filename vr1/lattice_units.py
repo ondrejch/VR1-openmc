@@ -261,8 +261,8 @@ class LatticeUnitVR1:
     def name(self) -> str:
         return "Lattice Unit VR1 base class"
 
-    def get(self, lattice_code: str = 'w') -> openmc.Universe():
-        lattice_unit_builders: dict = {
+    def load(self):
+        self.lattice_unit_builders: dict = {
             '8': IRT4M(fa_type='8',materials=self.materials),
             '6': IRT4M(fa_type='6',materials=self.materials),
             '4': IRT4M(fa_type='4',materials=self.materials),
@@ -271,8 +271,8 @@ class LatticeUnitVR1:
             'v30': VertChannel(materials=self.materials,diameter=3.0),
             'v25': VertChannel(materials=self.materials,diameter=2.5),
             'v12': VertChannel(materials=self.materials,diameter=1.2),
-        # 'O': '6-tube FA with a fully withdrawn control rod',
-        # 'X': '6-tube FA with a fully inserted control rod',
+            'O': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=84.7), #fully removed control rod
+            'X': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=0), #fully inserted control rod
         # 'R1': '6-tube FA with regulatory control rod 1',
         # 'R2': '6-tube FA with regulatory control rod 2',
         # 'E1': '6-tube FA with experimental shim rod 2',
@@ -282,9 +282,16 @@ class LatticeUnitVR1:
             'w':   Water(materials=self.materials),
             'wrc': Water(materials=self.materials,RC=True)
         }
-        if lattice_code not in lattice_unit_builders.keys():
-            raise ValueError(f'Unknown lattice type "{lattice_code}"')
-        return lattice_unit_builders[lattice_code].build()
+
+    def get(self, lattice_code: str = 'w') -> openmc.Universe():
+        
+        if lattice_code not in self.lattice_unit_builders.keys():
+            if lattice_code.startswith('AR'):
+                assembly = IRT4M(materials=self.materials,fa_type='6',abs_rod_height=float(lattice_code[2:]))
+                return assembly.build()
+            else:
+                raise ValueError(f'Unknown lattice type "{lattice_code}"')
+        return self.lattice_unit_builders[lattice_code].build()
 
 class GridPlate:
     def __init__(self, materials: VR1Materials):
