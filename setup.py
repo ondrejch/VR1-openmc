@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='vr1-openmc',
+    name='vr1',
     version='0.01',
     description='OpenMC model of VR-1 reactor Vrabec',
     author='Ondrej Chvala, Alex Macris, Soha Aslam',
