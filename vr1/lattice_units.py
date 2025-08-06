@@ -292,7 +292,7 @@ class LatticeUnitVR1:
             else:
                 raise ValueError(f'Unknown lattice type "{lattice_code}"')
         return self.lattice_unit_builders[lattice_code].build()
-
+   
 class GridPlate:
     def __init__(self, materials: VR1Materials):
         self.materials = materials
