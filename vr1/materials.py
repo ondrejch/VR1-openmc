@@ -62,8 +62,6 @@ concrete_dict = {"H1": 0.01, "O16": 0.532, "Si28": 0.3108, "Si29": 1.578E-02, "S
                  "Fe54": 8.183E-04, "Fe56": 1.285E-02, "Fe57": 2.967E-04, "Fe58": 3.948E-05}
 vessel_dict = abs_tube_dict
 
-# TODO - add more materials from the serpent deck
-
 
 class VR1Materials:
     """ Materials used in the model. TODO: graphite, air, control rod materials """
@@ -220,5 +218,4 @@ class VR1Materials:
         mats.export_to_xml()
         return mats
 
-
-vr1_materials = VR1Materials()  # Use only this instance
+vr1_materials = VR1Materials()
