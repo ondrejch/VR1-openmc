@@ -114,5 +114,6 @@ class TestLattice(VR1core):
         lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
         lattice_cell = openmc.Cell(fill=self.lattice, region=-lattice_box)
         self.model = openmc.Universe(cells=[lattice_cell])
+        # TODO: Create an AmBe fixed starter source definition
         self.source_lower_left = (-xy_corner, -xy_corner, lattice_lower_left[2])
         self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])

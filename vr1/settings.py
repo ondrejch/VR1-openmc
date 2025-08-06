@@ -26,8 +26,8 @@ class SettingsOpenMC:
         self.plots = plots
         self.sources = sources
         self.rotation = rotation
-
         self.generations_per_batch: int = 1
+
         if parm is None:
             """ npg: Number of particles per generation
                 gen: Number of generations
@@ -35,3 +35,4 @@ class SettingsOpenMC:
             self.parm = {'npg': 1000, 'gen': 110, 'nsk': 10}
         else:
             self.parm = parm
+
