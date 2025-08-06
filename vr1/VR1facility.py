@@ -14,11 +14,11 @@ class Facility:
     def name(self) -> str:
         return "VR1 Facility"
 
-    def build(self, lattice = None): #I would make this type TestLattice but I want the functionality of an empty facility. Maybe pointless
+    def build(self, lattice = None): #I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
         if lattice is not None:
             lattice = lattice.model
 
-        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,                      region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["H01.sc"])
+        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["H01.sc"])
         self.cells["surf.1"]    = openmc.Cell(name="surf.1",    fill = self.materials.radialchannel, region=-self.surfaces["RCcy.1"] & +self.surfaces["RCcy.2"] & +self.surfaces["RCpy.2"])
         self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & ~self.cells["core.1"].region)
         self.cells["water.2"]   = openmc.Cell(name="water.2",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.4"] & +self.surfaces["RCcy.10"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
@@ -71,4 +71,4 @@ class Facility:
         # self.cells["0.w.11"] = openmc.Cell(name="0.w.11", fill = self.materials.water, region=-self.surfaces["GRD.2"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
         # self.cells["0.w.13"] = openmc.Cell(name="0.w.13", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["GRD.zd"] & +self.surfaces["ELE.zn"])
 
-        return openmc.Universe(name="facility", cells=list(self.cells.values()))   
+        return openmc.Universe(name="facility", cells=list(self.cells.values()))  

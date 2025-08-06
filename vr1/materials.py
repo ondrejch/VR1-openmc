@@ -62,8 +62,6 @@ concrete_dict = {"H1": 0.01, "O16": 0.532, "Si28": 0.3108, "Si29": 1.578E-02, "S
                  "Fe54": 8.183E-04, "Fe56": 1.285E-02, "Fe57": 2.967E-04, "Fe58": 3.948E-05}
 vessel_dict = abs_tube_dict
 
-# TODO - add more materials from the serpent deck
-
 
 class VR1Materials:
     """ Materials used in the model. TODO: graphite, air, control rod materials """
@@ -74,125 +72,150 @@ class VR1Materials:
     # NOTE: Singleton does not help, it has to be the same identical instance or OpenMC's internal numbering breaks.
     # This is why I create vr1_materials below, and use it though out the code.
     def __init__(self, *args, **kwargs):
+        self.mats_list = []
         self.fuel = openmc.Material(name='fuel meat')
         self.fuel.add_components(fuel_dict, 'wo')
         self.fuel.set_density('g/cm3', 5.53)
         self.fuel.temperature = 293.15
         self.fuel.depletable = True
+        self.mats_list.append(self.fuel)
 
         self.water = openmc.Material(name='water in the pool')
         self.water.add_components(water_dict, 'ao')
         self.water.set_density('g/cm3', 0.9982)
         self.water.temperature = 293.15
         self.water.add_s_alpha_beta('c_H_in_H2O')
+        self.mats_list.append(self.water)
 
         self.cladding = openmc.Material(name='fuel cladding')
         self.cladding.add_components(cladding_dict, 'wo')
         self.cladding.set_density('g/cm3', 2.7)
         self.cladding.temperature = 293.15
+        self.mats_list.append(self.cladding)
 
         self.radialchannel = openmc.Material(name='radialchannel')
         self.radialchannel.add_components(radial_channel_dict,'wo')
         self.radialchannel.set_density('g/cm3',2.65)
         self.radialchannel.temperature = 293.15
+        self.mats_list.append(self.radialchannel)
 
         self.bottomnozzle = openmc.Material(name='bottomnozzle')
         self.bottomnozzle.add_components(bottom_nozzle_dict,'wo')
         self.bottomnozzle.set_density('g/cm3',2.65)
         self.bottomnozzle.temperature = 293.15
+        self.mats_list.append(self.bottomnozzle)
 
         self.smallchannel = openmc.Material(name='smallchannel')
         self.smallchannel.add_components(small_channel_dict,'wo')
         self.smallchannel.set_density('g/cm3',2.65)
         self.smallchannel.temperature = 293.15
+        self.mats_list.append(self.smallchannel)
 
         self.dummy = openmc.Material(name='fuel dummy')
         self.dummy.add_components(cladding_dict, 'wo')
         self.dummy.set_density('g/cm3', 2.65)
         self.dummy.temperature = 293.15
+        self.mats_list.append(self.dummy)    
 
         self.guidetube = openmc.Material(name='guidetube')
         self.guidetube.add_components(guide_tube_dict,'wo')
         self.guidetube.set_density('g/cm3',2.7)
         self.guidetube.temperature = 293.15
+        self.mats_list.append(self.guidetube)
 
         self.abscenter = openmc.Material(name='abscenter')
         self.abscenter.add_components(abs_center_dict,'wo')
         self.abscenter.set_density('g/cm3',2.7)
         self.abscenter.temperature=293.15
+        self.mats_list.append(self.abscenter)
 
         self.rabbittube = openmc.Material(name='rabbittube')
         self.rabbittube.add_components(rabbit_tube_dict,'wo')
         self.rabbittube.set_density('g/cm3',2.7)
         self.rabbittube.temperature=293.15
+        self.mats_list.append(self.rabbittube)
 
         self.air = openmc.Material(name='air')
         self.air.add_components(air_dict,'wo')
         self.air.set_density('g/cm3',0.001161)
         self.air.temperature=293.15
+        self.mats_list.append(self.air)
 
         self.grid = openmc.Material(name='grid')
         self.grid.add_components(grid_dict,'wo')
         self.grid.set_density('g/cm3',2.63)
         self.grid.temperature=293.15
+        self.mats_list.append(self.grid)
 
         self.bigchannel = openmc.Material(name='bigchannel')
         self.bigchannel.add_components(big_channel_dict,'wo')
         self.bigchannel.set_density('g/cm3',2.63)
         self.bigchannel.temperature=293.15
+        self.mats_list.append(self.bigchannel)
 
         self.abstube = openmc.Material(name='abstube')
         self.abstube.add_components(abs_tube_dict,'ao')
         self.abstube.set_density('g/cm3',7.85)
         self.abstube.temperature = 293.15
+        self.mats_list.append(self.abstube)
 
         self.damper = openmc.Material(name='damper')
         self.damper.add_components(damper_dict,'ao')
         self.damper.set_density('g/cm3',7.85)
         self.damper.temperature = 293.15
+        self.mats_list.append(self.damper)
 
         self.cdlayer = openmc.Material(name='cdlayer')
         self.cdlayer.add_components(cd_layer_dict,'ao')
         self.cdlayer.set_density('g/cm3',8.65)
         self.cdlayer.temperature = 293.15
+        self.mats_list.append(self.cdlayer)
 
         self.abshead = openmc.Material(name='abshead')
         self.abshead.add_components(abs_head_dict,'wo')
         self.abshead.set_density('g/cm3',5.497)
         self.abshead.temperature = 293.15
+        self.mats_list.append(self.abshead)
 
         self.algraflayer = openmc.Material(name='algraflayer')
         self.algraflayer.add_components(algraflayer_dict,'wo')
         self.algraflayer.set_density('g/cm3',2.7)
         self.algraflayer.temperature = 293.15
+        self.mats_list.append(self.algraflayer)
 
         self.displacer = openmc.Material(name='displacer')
         self.displacer.add_components(displacer_dict,'ao')
         self.displacer.set_density('g/cm3',2.7)
         self.displacer.temperature = 293.15
+        self.mats_list.append(self.displacer)
 
         self.steelrc = openmc.Material(name='steelrc')
         self.steelrc.add_components(abs_head_dict,'ao')
         self.steelrc.set_density('g/cm3',7.85)
         self.steelrc.temperature = 293.15
+        self.mats_list.append(self.steelrc)
 
         self.lead = openmc.Material(name='lead')
         self.lead.add_components(abs_head_dict,'ao')
         self.lead.set_density('g/cm3',11.3)
         self.lead.temperature = 293.15
+        self.mats_list.append(self.lead)
 
         self.concrete = openmc.Material(name='concrete')
         self.concrete.add_components(concrete_dict,'wo')
         self.concrete.set_density('g/cm3',2.3)
         self.concrete.temperature = 293.15
+        self.mats_list.append(self.concrete)
 
         self.vessel = openmc.Material(name='vessel')
         self.vessel.add_components(vessel_dict,'ao')
         self.vessel.set_density('g/cm3',7.85)
         self.vessel.temperature = 293.15
+        self.mats_list.append(self.vessel)
 
     def get_materials(self):
-        return openmc.Materials([self.fuel, self.water, self.cladding, self.dummy])
+        mats = openmc.Materials(self.mats_list)
+        mats.export_to_xml()
+        return mats
 
-
-vr1_materials = VR1Materials()  # Use only this instance
+vr1_materials = VR1Materials()
