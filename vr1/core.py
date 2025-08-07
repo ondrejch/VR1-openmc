@@ -3,7 +3,6 @@ import openmc
 from vr1.materials import VR1Materials, vr1_materials
 from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
                                IRT4M, lattice_pitch, LatticeUnitVR1)
-from vr1.lattice_units import surfaces
 
 # Write an FA lattice, or the core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -28,6 +27,7 @@ VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
     ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
 ]
 
+
 class VR1core:
     """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
     def __init__(self,materials : VR1Materials = vr1_materials):
@@ -35,6 +35,7 @@ class VR1core:
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
         self.model = openmc.Universe
+
 
 class FuelAssembly(VR1core):
     """ Returns a fuel assembly """
@@ -51,34 +52,39 @@ class FuelAssembly(VR1core):
 
 
 class TestLattice(VR1core):
-    def reformat(self,lattice_str):
+    def reformat(self, lattice_str):
         """
         Reformats lattice string to be an 8x8 grid
         Upper-left justified
         """
         new_lattice_str = []
         for row in lattice_str:
-            if len(row) == 8: 
+            if len(row) == 8:
                 new_lattice_str.append(row)
-                n-=1
+                n -= 1
                 continue
-            elif len(row)>8:
+            elif len(row) > 8:
                 raise ValueError('All lattice rows must be of length 8 or shorter')
-            n = 8-len(row)        
-            while n>0:
-                if n%2 == 0: row = ['w'] + row
-                else:        row = row + ['w']
-                n-=1
+            n = 8 - len(row)
+            while n > 0:
+                if n % 2 == 0:
+                    row = ['w'] + row
+                else:
+                    row = row + ['w']
+                n -= 1
             new_lattice_str.append(row)
         if len(new_lattice_str) < 8:
-            n = 8-len(new_lattice_str)
-            while n>0:
-                if n%2==0: new_lattice_str = [['w','w','w','w','w','w','w','w']] + new_lattice_str
-                else:      new_lattice_str = new_lattice_str + [['w','w','w','w','w','w','w','w']]
-                n-=1 
-        if len(new_lattice_str) != 8: 
+            n = 8 - len(new_lattice_str)
+            while n > 0:
+                if n%2 == 0:
+                    new_lattice_str = [['w','w','w','w','w','w','w','w']] + new_lattice_str
+                else:
+                    new_lattice_str = new_lattice_str + [['w','w','w','w','w','w','w','w']]
+                n -= 1
+        if len(new_lattice_str) != 8:
             raise ValueError('Reformatting failed unexpectedly')
-        for i in range(2,6): new_lattice_str[-1][i] = 'wrc'
+        for i in range(2, 6):
+            new_lattice_str[-1][i] = 'wrc'
         return new_lattice_str
 
     def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
@@ -99,14 +105,14 @@ class TestLattice(VR1core):
         lattice_builder = LatticeUnitVR1(self.materials)
         lattice_builder.load()
         lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
-        z=0
+        z: int = 0
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
             for j in range(n):
                 _l.append(lattice_builder.get(lattice_str[i][j]))
             lattice_array.append(_l)
-            
-            z+=1
+
+            z += 1
         self.lattice.universes = lattice_array
         """ Lattice box """
         z0: float = plane_zs['H01.sc']

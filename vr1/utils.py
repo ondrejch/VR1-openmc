@@ -34,13 +34,13 @@ my_mat = '''
 
 
 def mat_s2open(s2mat: str):
-    for l in s2mat.splitlines():
-        if l == '':
+    for line in s2mat.splitlines():
+        if line == '':
             continue
         # print(l)
-        (zaid, wostr) = l.split(' ')
+        (zaid, wostr) = line.split(' ')
         wo = -1. * float(wostr)
-        (za, id) = zaid.split('.')
+        (za, lib_id) = zaid.split('.')
         A = int(za[-3:])
         Z = int(za[0:-3])
         # print(za, Z, A, vr1.ELEMENTS[Z], wo)

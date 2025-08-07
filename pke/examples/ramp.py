@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # Define reactivity function (ramp insertion)
 def ramp_rho(t: float) -> float:
-    return 0.5 * solver.beta_total * max(0, t - 2)  # 0.5$/s ramp starting at t=2s
+    return 0.5 * solver.beta_total * max(0, t - 2.0)  # 0.5$/s ramp starting at t=2s
 
 
 # Initialize and solve

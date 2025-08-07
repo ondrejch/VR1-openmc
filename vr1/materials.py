@@ -48,7 +48,7 @@ abs_head_dict = {"C12": 0.613229215, "C13": 0.007187085, "Al27": 22.34264, "Si28
                  "Ni58": 5.211166, "Ni60": 2.076471, "Ni61": 0.09176879, "Ni62": 0.2973895, "Ni64": 0.07818203,
                  "Cu63": 0.003843418, "Cu65": 0.001767457, "Zn64": 2.726370e-03, "Zn66": 1.565140e-03,
                  "Zn67": 2.300020e-04, "Zn68": 1.054640e-03, "Zn70": 3.365880e-05}
-grafit_dict = {} #not sure how to parse this from serpent
+grafit_dict = {}  # not sure how to parse this from serpent
 algraflayer_dict = guide_tube_dict
 displacer_dict = {"Al27": 1.0}
 steelrc_dict = {"Fe54": 3.91068E-02, "Fe56": 6.13893E-01, "Fe57": 1.41775E-02, "Fe58": 1.88676E-03, "C12": 8.95626E-03,
@@ -115,7 +115,7 @@ class VR1Materials:
         self.dummy.add_components(cladding_dict, 'wo')
         self.dummy.set_density('g/cm3', 2.65)
         self.dummy.temperature = 293.15
-        self.mats_list.append(self.dummy)    
+        self.mats_list.append(self.dummy)
 
         self.guidetube = openmc.Material(name='guidetube')
         self.guidetube.add_components(guide_tube_dict,'wo')
@@ -217,5 +217,6 @@ class VR1Materials:
         mats = openmc.Materials(self.mats_list)
         mats.export_to_xml()
         return mats
+
 
 vr1_materials = VR1Materials()

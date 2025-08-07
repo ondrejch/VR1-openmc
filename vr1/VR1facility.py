@@ -1,8 +1,7 @@
 import openmc
-from vr1.materials import VR1Materials,vr1_materials
-from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
-                               IRT4M, lattice_pitch, LatticeUnitVR1)
+from vr1.materials import vr1_materials
 from vr1.lattice_units import surfaces
+
 
 class Facility:
     """Class that builds VR1 reactor inside of the facility"""
@@ -14,7 +13,7 @@ class Facility:
     def name(self) -> str:
         return "VR1 Facility"
 
-    def build(self, lattice = None): #I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
+    def build(self, lattice = None):  # I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
         if lattice is not None:
             lattice = lattice.model
 
@@ -71,4 +70,4 @@ class Facility:
         # self.cells["0.w.11"] = openmc.Cell(name="0.w.11", fill = self.materials.water, region=-self.surfaces["GRD.2"] & -self.surfaces["GRD.zt"] & +self.surfaces["GRD.zd"])
         # self.cells["0.w.13"] = openmc.Cell(name="0.w.13", fill = self.materials.water, region=-self.surfaces["ELE.1"] & -self.surfaces["GRD.zd"] & +self.surfaces["ELE.zn"])
 
-        return openmc.Universe(name="facility", cells=list(self.cells.values()))  
+        return openmc.Universe(name="facility", cells=list(self.cells.values()))

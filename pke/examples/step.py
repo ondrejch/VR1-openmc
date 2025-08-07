@@ -1,5 +1,4 @@
 from pke.solver import PointKineticsEquationSolver
-import numpy as np
 import matplotlib.pyplot as plt
 # import matplotlib
 # import PyQt5
