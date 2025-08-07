@@ -59,13 +59,13 @@ class TestLattice(VR1core):
         """
         new_lattice_str = []
         for row in lattice_str:
+            n = 8 - len(row)
             if len(row) == 8:
                 new_lattice_str.append(row)
                 n -= 1
                 continue
             elif len(row) > 8:
                 raise ValueError('All lattice rows must be of length 8 or shorter')
-            n = 8 - len(row)
             while n > 0:
                 if n % 2 == 0:
                     row = ['w'] + row
