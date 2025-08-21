@@ -14,7 +14,7 @@ setup(
         'json5',
         'pytest',
         'scipy',
-        'openmc',
+        # 'openmc',
         'matplotlib~=3.9',
         'uncertainties',
         'setuptools',
