@@ -94,9 +94,6 @@ class TestLattice(VR1core):
             lattice_str = core_designs['small_test']
         n: int = len(lattice_str)
         assert n > 0
-        # for row in lattice_str:
-        #     if len(row) != n:
-        #         raise ValueError(f'{lattice_str} is not square')
         self.lattice = openmc.RectLattice(name='test_lattice')
         xy_corner: float = float(n) * lattice_pitch / 2.0
         self.lattice.lower_left = (-xy_corner, -xy_corner)

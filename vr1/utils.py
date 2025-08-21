@@ -47,6 +47,11 @@ def mat_s2open(s2mat: str):
         ele = f'{vr1.ELEMENTS[Z]}'.capitalize() + str(A)
         print(f'"{ele}": {wo},')
 
+import os
+import subprocess
+
+def plot_vr1():
+    subprocess.run(["openmc-plotter"])
 
 if __name__ == '__main__':
     mat_s2open(my_mat)
