@@ -13,7 +13,7 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 ## Project Goals
 
 - Build a VR1 reactor core model in OpenMC
-- Validate OpenMC results against Serpent or experimental data
+- Validate OpenMC results against Serpent models and experimental data
 - Provide reusable code for reactor physics training and education
 
 ## Repository Structure
@@ -35,7 +35,8 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 These steps show you how to install the VR1-openmc package using conda. 
 
 1. Make sure you have conda installed.
-2. Create a new conda environment with Python 3.11 and activate it:
+2. Install openmc using conda-forge or mamba. OpenMC is a dependency for VR1. 
+3. Create a new conda environment with Python 3.11 and activate it:
 ```
 conda create -n vr1 python=3.11 openmc -c conda-forge
 conda activate vr1
