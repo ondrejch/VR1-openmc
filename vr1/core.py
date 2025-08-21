@@ -57,6 +57,7 @@ class TestLattice(VR1core):
         Reformats lattice string to be an 8x8 grid
         Upper-left justified
         """
+        lattice_str = [[str(i) for i in j] for j in lattice_str]
         new_lattice_str = []
         for row in lattice_str:
             n = 8 - len(row)
