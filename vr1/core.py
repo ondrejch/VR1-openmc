@@ -87,11 +87,14 @@ class TestLattice(VR1core):
             new_lattice_str[-1][i] = 'wrc'
         return new_lattice_str
 
-    def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None):
+    def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None, preset=False):
         super().__init__(materials)
-        lattice_str = self.reformat(lattice_str)
         if lattice_str is None:
-            lattice_str = core_designs['small_test']
+            if preset is False:
+                raise ValueError('Must specify lattice string or provide a preset lattice')
+            else: lattice_str = preset
+        lattice_str = [[str(i) for i in j] for j in lattice_str]
+        lattice_str = self.reformat(lattice_str)
         n: int = len(lattice_str)
         assert n > 0
         self.lattice = openmc.RectLattice(name='test_lattice')
