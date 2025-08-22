@@ -242,7 +242,7 @@ lattice_unit_names: dict[str:str] = {
     # 'E1': '6-tube FA with experimental shim rod 2',
     # 'E2': '6-tube FA with experimental shim rod 2',
     # 'E3': '6-tube FA with experimental shim rod 2',
-    # 'd': 'Empty fuel dummy',
+    'd': 'Empty fuel dummy',
     'w': 'Water cell with grid',
     'wrc': 'Empty water cell'
 }
@@ -283,6 +283,7 @@ class LatticeUnitVR1:
         # 'E2': '6-tube FA with experimental shim rod 2',
         # 'E3': '6-tube FA with experimental shim rod 2',
             'd': Dummy(materials=self.materials),
+            'rt': Dummy(materials=self.materials,RT=True),
             'w':   Water(materials=self.materials),
             'wrc': Water(materials=self.materials,RC=True)
         }
@@ -371,9 +372,10 @@ class Water(LatticeUnitVR1):
         return openmc.Universe(name='water', cells=list(self.cells.values()))
 
 class Dummy:
-    def __init__(self, materials: VR1Materials):
+    def __init__(self, materials: VR1Materials, RT = False):
         self.materials = materials
         self.cells: dict = {}
+        self.RT = RT
 
     def name(self) -> str:
         return "Dummy fuel unit"
@@ -382,8 +384,19 @@ class Dummy:
 
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['DMY.1'] & -surfaces['FAZ.2'] & +surfaces['GRD.zt'])
 
+        if self.RT is True:
+            water_region = -surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["GRD.zt"] & +surfaces['RT.1']
+            self.cells["27.RT.1"] = openmc.Cell(name="27.RT.1", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.2"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
+            self.cells["27.RT.2"] = openmc.Cell(name="27.RT.2", fill = self.materials.air,        region=-surfaces["RT.2"] & +surfaces["RT.3"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
+            self.cells["27.RT.3"] = openmc.Cell(name="27.RT.3", fill = self.materials.rabbittube, region=-surfaces["RT.3"] & +surfaces["RT.4"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
+            self.cells["27.RT.4"] = openmc.Cell(name="27.RT.4", fill = self.materials.air,        region=-surfaces["RT.4"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
+            self.cells["27.RT.5"] = openmc.Cell(name="27.RT.5", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.zd"] & -surfaces["RT.zt"])
+            self.cells["27.RT.6"] = openmc.Cell(name="27.RT.6", fill = self.materials.water, region=-surfaces["RT.1"] & -surfaces["RT.zd"] & +surfaces["ELE.zn"])
+        else:
+            water_region = -surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["GRD.zt"]
+
+        self.cells['dummer_center_water'] = openmc.Cell(name='dummer_center_water', fill = self.materials.water, region= water_region)
         self.cells['dummy_fuel'] = openmc.Cell(name='dummy_fuel', fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.1"] & +surfaces["GRD.zt"])
-        self.cells['dummer_center_water'] = openmc.Cell(name='dummer_center_water', fill = self.materials.water, region=-surfaces["DMY.2"] & -surfaces["FAZ.1"] & +surfaces["GRD.zt"])
 
         gridplate = GridPlate(self.materials)
         grid_unit = gridplate.build()
@@ -464,11 +477,11 @@ class IRT4M(LatticeUnitVR1):
         if boundary not in lattice_unit_boundaries:
             raise ValueError(f'boundary {boundary} is not valid')
         self.boundary: str = boundary
-        self.known_fuel_assemblies: list[str] = list(lattice_unit_names.keys())
-        if fa_type not in self.known_fuel_assemblies:
-            raise ValueError(f'{fa_type} is not a known lattice unit type!')
-        if 'FA' not in lattice_unit_names[fa_type]:
-            raise ValueError(f'{fa_type} is not a known fuel assembly type!')
+        # self.known_fuel_assemblies: list[str] = list(lattice_unit_names.keys())
+        # if fa_type not in self.known_fuel_assemblies:
+        #     raise ValueError(f'{fa_type} is not a known lattice unit type!')
+        # if 'FA' not in lattice_unit_names[fa_type]:
+        #     raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type: str = fa_type
         self.n_plates: int = -1
 
@@ -657,6 +670,59 @@ class AbsRod(LatticeUnitVR1):
 vr1_presets = {
     'C12-C-2023_KS1_leden2024': []
 }
+
+class RabbitTube:
+    def __init__(self, materials: VR1Materials):
+        self.materials = materials
+        self.cells: dict = {}
+
+    def name(self) -> str:
+        return "Dummy fuel unit"
+
+    def build(self) -> openmc.Universe:
+
+        # self.cells["27.dpp.4"] = openmc.Cell(name="27.dpp.4", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.1"] & +surfaces["FAZ.2"])
+        # self.cells["27.dpp.5"] = openmc.Cell(name="27.dpp.5", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.1"] & +surfaces["FAZ.2"])
+        # self.cells["27.dpp.8"] = openmc.Cell(name="27.dpp.8", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.2"] & +surfaces["FAZ.3"])
+        # self.cells["27.dpp.9"] = openmc.Cell(name="27.dpp.9", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["FAZ.3"])
+        # self.cells["27.dpp.12"] = openmc.Cell(name="27.dpp.12", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.3"] & +surfaces["FAZ.4"])
+        # self.cells["27.dpp.13"] = openmc.Cell(name="27.dpp.13", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.3"] & +surfaces["FAZ.4"])
+        # self.cells["27.dpp.16"] = openmc.Cell(name="27.dpp.16", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.4"] & +surfaces["FAZ.5"])
+        # self.cells["27.dpp.17"] = openmc.Cell(name="27.dpp.17", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.4"] & +surfaces["FAZ.5"])
+        # self.cells["27.dpp.20"] = openmc.Cell(name="27.dpp.20", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.5"] & +surfaces["GRD.zt"])
+        # self.cells["27.dpp.21"] = openmc.Cell(name="27.dpp.21", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.5"] & +surfaces["GRD.zt"])
+        # self.cells["27.dpp.24"] = openmc.Cell(name="27.dpp.24", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.25"] = openmc.Cell(name="27.dpp.25", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.26"] = openmc.Cell(name="27.dpp.26", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.27"] = openmc.Cell(name="27.dpp.27", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.28"] = openmc.Cell(name="27.dpp.28", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.29"] = openmc.Cell(name="27.dpp.29", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.30"] = openmc.Cell(name="27.dpp.30", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.31"] = openmc.Cell(name="27.dpp.31", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.32"] = openmc.Cell(name="27.dpp.32", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.33"] = openmc.Cell(name="27.dpp.33", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.34"] = openmc.Cell(name="27.dpp.34", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.35"] = openmc.Cell(name="27.dpp.35", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.36"] = openmc.Cell(name="27.dpp.36", fill = self.materials.grid, region=-surfaces["GRD.1"] & +surfaces["GRD.2"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.37"] = openmc.Cell(name="27.dpp.37", fill = self.materials.grid, region=-surfaces["GRD.xp"] & +surfaces["GRD.xn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.38"] = openmc.Cell(name="27.dpp.38", fill = self.materials.grid, region=-surfaces["GRD.yp"] & +surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
+        # self.cells["27.dpp.41"] = openmc.Cell(name="27.dpp.41", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.42"] = openmc.Cell(name="27.dpp.42", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.43"] = openmc.Cell(name="27.dpp.43", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.44"] = openmc.Cell(name="27.dpp.44", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.45"] = openmc.Cell(name="27.dpp.45", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.1"] & +surfaces["GRD.2"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.46"] = openmc.Cell(name="27.dpp.46", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.xp"] & +surfaces["GRD.xn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.47"] = openmc.Cell(name="27.dpp.47", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.yp"] & +surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
+        # self.cells["27.dpp.52"] = openmc.Cell(name="27.dpp.52", fill = self.materials.fill, region=+surfaces["27.RT"] & -surfaces["RT.1"])
+        self.cells["27.RT.1"] = openmc.Cell(name="27.RT.1", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.2"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
+        self.cells["27.RT.2"] = openmc.Cell(name="27.RT.2", fill = self.materials.air,        region=-surfaces["RT.2"] & +surfaces["RT.3"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
+        self.cells["27.RT.3"] = openmc.Cell(name="27.RT.3", fill = self.materials.rabbittube, region=-surfaces["RT.3"] & +surfaces["RT.4"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
+        self.cells["27.RT.4"] = openmc.Cell(name="27.RT.4", fill = self.materials.air,        region=-surfaces["RT.4"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
+        self.cells["27.RT.5"] = openmc.Cell(name="27.RT.5", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.zd"] & -surfaces["RT.zt"])
+        self.cells["27.RT.6"] = openmc.Cell(name="27.RT.6", fill = self.materials.water, region=-surfaces["RT.1"] & -surfaces["RT.zd"] & +surfaces["ELE.zn"])
+
+
+        return openmc.Universe(name=f'dummy_unit', cells=list(self.cells.values()))
 
 """ Shell scripts to extract surfaces from the Serpent model """
 # grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
