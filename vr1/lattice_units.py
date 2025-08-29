@@ -270,11 +270,11 @@ class LatticeUnitVR1:
             '8': IRT4M(fa_type='8',materials=self.materials),
             '6': IRT4M(fa_type='6',materials=self.materials),
             '4': IRT4M(fa_type='4',materials=self.materials),
-            'v90': VertChannel(materials=self.materials,diameter=9.0),
-            'v56': VertChannel(materials=self.materials,diameter=5.6),
-            'v30': VertChannel(materials=self.materials,diameter=3.0),
-            'v25': VertChannel(materials=self.materials,diameter=2.5),
-            'v12': VertChannel(materials=self.materials,diameter=1.2),
+            'v90': VertChannel(materials=self.materials,diameter=90),
+            'v56': VertChannel(materials=self.materials,diameter=56),
+            'v30': VertChannel(materials=self.materials,diameter=30),
+            'v25': VertChannel(materials=self.materials,diameter=25),
+            'v12': VertChannel(materials=self.materials,diameter=12),
             'O': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=84.7), #fully removed control rod
             'X': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=0), #fully inserted control rod
         # 'R1': '6-tube FA with regulatory control rod 1',
