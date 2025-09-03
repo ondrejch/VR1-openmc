@@ -64,7 +64,7 @@ class TestLattice(VR1core):
                 new_lattice_str.append(row)
                 n -= 1
                 continue
-            elif len(row) > 8:
+            if len(row) > 8:
                 raise ValueError('All lattice rows must be of length 8 or shorter')
             while n > 0:
                 if n % 2 == 0:
@@ -92,7 +92,7 @@ class TestLattice(VR1core):
         if lattice_str is None:
             if preset is False:
                 raise ValueError('Must specify lattice string or provide a preset lattice')
-            else: lattice_str = preset
+            lattice_str = preset
         lattice_str = [[str(i) for i in j] for j in lattice_str]
         lattice_str = self.reformat(lattice_str)
         n: int = len(lattice_str)
