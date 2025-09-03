@@ -34,6 +34,11 @@ my_mat = '''
 
 
 def mat_s2open(s2mat: str):
+    """Convert the Serpent 2 material input string to OpenMC material input format.
+    Parameters:
+        - s2mat (str): The Serpent 2 material string representing isotopic composition and atomic weights.
+    Returns:
+        - None: The function prints the OpenMC formatted material dictionary entries to the console."""
     for line in s2mat.splitlines():
         if line == '':
             continue

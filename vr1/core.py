@@ -40,6 +40,13 @@ class VR1core:
 class FuelAssembly(VR1core):
     """ Returns a fuel assembly """
     def __init__(self, fa_type, materials: VR1Materials = vr1_materials, boundaries='reflective'):
+        """Initialize a new instance of a fuel assembly model with specified parameters.
+        Parameters:
+            - fa_type (str): The type of fuel assembly, must be a known lattice unit type.
+            - materials (VR1Materials): The materials used in the fuel assembly, defaults to vr1_materials.
+            - boundaries (str): The type of boundary condition, defaults to 'reflective'.
+        Returns:
+            - None"""
         super().__init__(materials)
         if fa_type not in list(lattice_unit_names.keys()):
             raise ValueError(f'{fa_type} is not a known lattice unit type!')
@@ -52,6 +59,17 @@ class FuelAssembly(VR1core):
 
 
 class TestLattice(VR1core):
+    """
+    Represents a lattice-based geometry for simulations, supporting custom or preset material configurations.
+    Parameters:
+        - materials (VR1Materials): The materials to be used within the lattice structure.
+        - lattice_str (list[list[str]], optional): A 2D list representing the layout of the lattice. Defaults to None.
+        - preset (bool, optional): If True and lattice_str is None, uses a preset lattice configuration. Defaults to False.
+    Processing Logic:
+        - The lattice string is reformatted to ensure it forms an 8x8 grid, adding 'w' as necessary.
+        - The class raises a ValueError if given lattice rows exceed length 8 or the lattice string is not provided without a preset.
+        - A lattice box defines the boundaries of the simulation using given planar coordinates.
+    """
     def reformat(self, lattice_str):
         """
         Reformats lattice string to be an 8x8 grid
@@ -88,6 +106,13 @@ class TestLattice(VR1core):
         return new_lattice_str
 
     def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None, preset=False):
+        """Initializes an instance of a lattice-based geometry with specified or preset configurations.
+        Parameters:
+            - materials (VR1Materials): The materials to be used within the lattice structure.
+            - lattice_str (list[list[str]], optional): A 2D list representing the layout of the lattice. Defaults to None.
+            - preset (bool, optional): If True and lattice_str is None, uses a preset lattice configuration. Defaults to False.
+        Returns:
+            - None: This is a constructor method; it initializes the instance and does not return a value."""
         super().__init__(materials)
         if lattice_str is None:
             if preset is False:

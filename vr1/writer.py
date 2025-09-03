@@ -10,6 +10,12 @@ from vr1.settings import SettingsOpenMC
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
     def __init__(self, settings: SettingsOpenMC, core: VR1core) -> None:
+        """Initializes a class with settings and core parameters to set up the OpenMC model.
+        Parameters:
+            - settings (SettingsOpenMC): Configuration settings for the OpenMC simulation.
+            - core (VR1core): The core specification for the VR1 reactor model.
+        Returns:
+            - None: This constructor does not return a value."""
         self.output_dir: str = 'vr1'
         self.core: VR1core = core
         self.settings = settings

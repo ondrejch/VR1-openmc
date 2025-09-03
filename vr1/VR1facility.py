@@ -14,6 +14,11 @@ class Facility:
         return "VR1 Facility"
 
     def build(self, lattice = None):  # I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
+        """Builds a nuclear facility geometry using OpenMC by defining various cells with specified materials and regions.
+        Parameters:
+            - lattice (optional): An instance of a lattice model to be used as a fill material for one of the core cells.
+        Returns:
+            - openmc.Universe: A universe object representing the full geometry of the facility comprised of the defined cells."""
         if lattice is not None:
             lattice = lattice.model
 
