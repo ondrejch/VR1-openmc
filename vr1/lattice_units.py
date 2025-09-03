@@ -221,8 +221,7 @@ for cylz, params in truncated_cyl_zs.items():
     #returns a region because openmc doesn't allow finite cylinders
     surfaces[cylz] = openmc.model.RightCircularCylinder(name=cylz, center_base = [params['x0'],params['y0'],params['z'][0]],radius=params['r'], height = params['z'][1]-params['z'][0])
 for cone, params in cones.items():
-    if params['up'] > 0: uppies = True
-    else: uppies = False
+    uppies = params['up'] > 0
     surfaces[cone] = openmc.model.YConeOneSided(x0=params['x0'], y0=params['y0'],z0=params['z0'],r2=params['r2'],up=uppies)
 for rect, params in rects.items():
     if 'boundary_type' in params:
