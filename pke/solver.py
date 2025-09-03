@@ -21,6 +21,16 @@ fast_reactor_params: dict = {
 
 
 class PointKineticsEquationSolver:
+    """Nuclear reactor point kinetics analyzer with modular plotting
+    Parameters:
+        - reactivity_func (callable): ρ(t) in dollars, a function describing the reactor's external reactivity over time.
+        - source_func (callable, optional): Describes the external neutron source. Defaults to a function returning zero (no source).
+        - params (dict, optional): Reactor parameters including 'beta', 'lambda_', and 'Lambda'. Defaults to U-235 thermal parameters.
+    Processing Logic:
+        - Validates that the length of 'beta' and 'lambda_' arrays are equal and not empty.
+        - Initializes the neutron density and delayed neutron precursor concentrations at steady-state.
+        - Uses Runge-Kutta method (RK45) for solving differential equations.
+        - Offers plotting options for analyzing neuron density, precursor concentrations, and source contribution with optional logging in visual representations."""
     def __init__(self, reactivity_func, source_func=None, params=None):
         """ Nuclear reactor point kinetics analyzer with modular plotting
         Args:
@@ -56,6 +66,12 @@ class PointKineticsEquationSolver:
         y0 = np.concatenate(([n0], C0))
 
         def equations(t, y):
+            """Calculate the rate of change in neutron population and precursor concentrations over time.
+            Parameters:
+                - t (float): Time variable.
+                - y (list): Contains neutron density and concentrations of delayed neutron precursors.
+            Returns:
+                - list: A list comprising the rate of change of neutron density followed by the rates of change of each precursor concentration."""
             n, *C = y
             rho = self.reactivity_func(t)       # External reactivity
             Q = self.source_func(t)             # External neutron source

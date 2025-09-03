@@ -266,6 +266,11 @@ class LatticeUnitVR1:
         return "Lattice Unit VR1 base class"
 
     def load(self):
+        """Initializes a dictionary mapping various identifiers to corresponding lattice unit builder objects, utilizing given material properties.
+        Parameters:
+            - self (object): The instance of the class containing materials.
+        Returns:
+            - None: This function modifies the instance's state by setting up the `lattice_unit_builders` dictionary."""
         self.lattice_unit_builders: dict = {
             '8': IRT4M(fa_type='8',materials=self.materials),
             '6': IRT4M(fa_type='6',materials=self.materials),
@@ -289,6 +294,11 @@ class LatticeUnitVR1:
         }
 
     def get(self, lattice_code: str = 'w') -> openmc.Universe():
+        """Get an OpenMC Universe based on the specified lattice code.
+        Parameters:
+            - lattice_code (str): Lattice code specifying the type of lattice unit to build. Defaults to 'w'.
+        Returns:
+            - openmc.Universe: An OpenMC Universe corresponding to the lattice code provided."""
 
         if lattice_code not in self.lattice_unit_builders.keys():
             if lattice_code.startswith('AR'):
@@ -299,6 +309,14 @@ class LatticeUnitVR1:
         return self.lattice_unit_builders[lattice_code].build()
 
 class GridPlate:
+    """GridPlate is used for constructing a grid plate unit with specific materials and geometry configurations in an OpenMC simulation.
+    Parameters:
+        - materials (VR1Materials): Specifies the materials to be used for constructing the grid plate unit cells.
+    Processing Logic:
+        - The build method constructs cell regions using predefined surfaces and assigns materials to these cells.
+        - Cells are created to represent different areas of the grid plate, such as corners, boundaries, and centers.
+        - The method primarily uses water and grid-related materials, along with bottom nozzle materials for specific regions.
+        - The build method returns an OpenMC Universe object comprising all defined cells for simulation."""
     def __init__(self, materials: VR1Materials):
         self.materials = materials
         self.cells: dict = {}
@@ -316,6 +334,11 @@ class GridPlate:
         # self.cells['asdf']    = openmc.Cell(name='asdf', fill=self.materials.water,region=+surfaces['1FT.1'] & +surfaces['GRD.xp'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
         # self.cells[f'0.8.88']    = openmc.Cell(name=f'0.8.88', fill=self.materials.water,region=+surfaces['1FT.1'] & -surfaces['GRD.xn'] & +surfaces['GRD.yp'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
         # self.cells[f'0.8.89']    = openmc.Cell(name=f'0.8.89', fill=self.materials.water,region=+surfaces['1FT.1'] & -surfaces['GRD.xn'] & -surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'] & -surfaces['ELE.1'])
+        """Constructs and returns an OpenMC Universe representing a grid plate unit with specified geometry and materials.
+        Parameters:
+            None
+        Returns:
+            - openmc.Universe: An OpenMC Universe object containing the constructed grid plate unit cells."""
         self.cells['grid_bound_NE']    = openmc.Cell(name='grid_bound_NE', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & +surfaces['GRD.xp'] & +surfaces['GRD.yp'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
         self.cells['grid_bound_SE']    = openmc.Cell(name='grid_bound_SE', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & +surfaces['GRD.xp'] & -surfaces['GRD.yn'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
         self.cells['grid_bound_NW']    = openmc.Cell(name='grid_bound_NW', fill=self.materials.bottomnozzle,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['GRD.xn'] & +surfaces['GRD.yp'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
@@ -358,6 +381,11 @@ class Water(LatticeUnitVR1):
         return "Water filling the lattice"
 
     def build(self) -> openmc.Universe:
+        """Builds an OpenMC Universe filled with water cells, optionally including a radial channel.
+        Parameters:
+            - RC (bool): Indicates if the radial channel (RC) is to be included in the universe.
+        Returns:
+            - openmc.Universe: A universe composed of water cells, and optionally a radial channel, defined by specified regions and materials."""
         surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         if self.RC is True:
             water_RC = openmc.Cell(name='water_(RC)',fill=self.materials.water,region=-surfaces['boundary_XY'])
@@ -372,6 +400,16 @@ class Water(LatticeUnitVR1):
         return openmc.Universe(name='water', cells=list(self.cells.values()))
 
 class Dummy:
+    """
+    Represents a dummy fuel unit used for constructing an OpenMC Universe with predefined cells and materials.
+    Parameters:
+        - materials (VR1Materials): Contains material definitions for different components of the universe.
+        - RT (bool): Optional setting to determine if rabbit tube (RT) specific cells should be included.
+    Processing Logic:
+        - Initializes with materials and an optional RT flag to configure cell inclusion.
+        - Constructs cells based on region definitions determined by boundary surfaces.
+        - Builds and returns an openmc.Universe object populated with configured cells.
+    """
     def __init__(self, materials: VR1Materials, RT = False):
         self.materials = materials
         self.cells: dict = {}
@@ -381,6 +419,11 @@ class Dummy:
         return "Dummy fuel unit"
 
     def build(self) -> openmc.Universe:
+        """Builds an OpenMC Universe with pre-defined cells and materials based on the region definitions and settings.
+        Parameters:
+            - None
+        Returns:
+            - openmc.Universe: An OpenMC Universe object populated with predefined cells filled with corresponding materials and configured regions based on the boundary surfaces and optional RT setting."""
 
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['DMY.1'] & -surfaces['FAZ.2'] & +surfaces['GRD.zt'])
 
@@ -472,6 +515,14 @@ class VertChannel(LatticeUnitVR1):
 class IRT4M(LatticeUnitVR1):
     """ Class that returns IRT4M fuel units """
     def __init__(self, materials: VR1Materials, fa_type: str, abs_rod_height = None, boundary: str = 'water') -> None:
+        """Initialize the object with specific materials, fuel assembly type, and optional parameters.
+        Parameters:
+            - materials (VR1Materials): Materials used in the VR1 reactor.
+            - fa_type (str): Type of the fuel assembly.
+            - abs_rod_height (optional, default=None): Absolute rod height.
+            - boundary (str, default='water'): Surrounding boundary for the assembly.
+        Returns:
+            - None: This is an initializer and does not return a value."""
         super().__init__(materials)
         self.abs_rod_height = abs_rod_height
         if boundary not in lattice_unit_boundaries:
@@ -559,6 +610,11 @@ class IRT4M(LatticeUnitVR1):
             return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
     def build_abs(self):
+        """Builds an assembly of OpenMC cells representing a fuel assembly design, incorporating cladding, fuel, water, absorber rods, and grid plates.
+        Parameters:
+            - self: The instance of the class containing this method, with attributes such as cells, materials, n_plates, and abs_rod_height.
+        Returns:
+            - openmc.Universe: The OpenMC Universe object representing the complete lattice of the fuel assembly, fully populated with the specified cells and materials."""
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.2'] & +surfaces['FAZ.3'])
         self.cells['out_mid'] = openmc.Cell(name='out_mid', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.3'] & +surfaces['FAZ.4'])
         self.cells['out_bot'] = openmc.Cell(name='out_bot', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['FAZ.4'])
@@ -672,6 +728,15 @@ vr1_presets = {
 }
 
 class RabbitTube:
+    """
+    RabbitTube class encapsulates a set of predefined OpenMC cells with assigned materials and regions to construct a dummy fuel unit.
+    Parameters:
+        - materials (VR1Materials): A collection of materials to be used in creating the cells within the rabbit tube.
+    Processing Logic:
+        - Uses predefined surfaces and materials to create cells representing various components of a dummy fuel unit.
+        - Cells are stored in a dictionary with their IDs as keys.
+        - The build method returns an OpenMC Universe object containing all configured cells.
+    """
     def __init__(self, materials: VR1Materials):
         self.materials = materials
         self.cells: dict = {}
@@ -714,6 +779,9 @@ class RabbitTube:
         # self.cells["27.dpp.46"] = openmc.Cell(name="27.dpp.46", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.xp"] & +surfaces["GRD.xn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
         # self.cells["27.dpp.47"] = openmc.Cell(name="27.dpp.47", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.yp"] & +surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
         # self.cells["27.dpp.52"] = openmc.Cell(name="27.dpp.52", fill = self.materials.fill, region=+surfaces["27.RT"] & -surfaces["RT.1"])
+        """Builds and returns an OpenMC Universe object containing predefined cells and materials.
+        Returns:
+            - openmc.Universe: An OpenMC Universe object encapsulating a collection of cells with assigned materials and regions."""
         self.cells["27.RT.1"] = openmc.Cell(name="27.RT.1", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.2"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
         self.cells["27.RT.2"] = openmc.Cell(name="27.RT.2", fill = self.materials.air,        region=-surfaces["RT.2"] & +surfaces["RT.3"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])
         self.cells["27.RT.3"] = openmc.Cell(name="27.RT.3", fill = self.materials.rabbittube, region=-surfaces["RT.3"] & +surfaces["RT.4"] & +surfaces["RT.zt"] & -surfaces["ELE.zp"])

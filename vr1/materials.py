@@ -72,6 +72,12 @@ class VR1Materials:
     # NOTE: Singleton does not help, it has to be the same identical instance or OpenMC's internal numbering breaks.
     # This is why I create vr1_materials below, and use it though out the code.
     def __init__(self, *args, **kwargs):
+        """Initializes various OpenMC materials for a nuclear reactor setup, setting properties such as component composition, density, and temperature for each material, and storing them in a list.
+        Parameters:
+            - *args (tuple): Optional positional arguments.
+            - **kwargs (dict): Optional keyword arguments.
+        Returns:
+            - None: This method does not return a value. Initializes materials for further simulation use."""
         self.mats_list = []
         self.fuel = openmc.Material(name='fuel meat')
         self.fuel.add_components(fuel_dict, 'wo')
