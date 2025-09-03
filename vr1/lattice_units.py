@@ -410,7 +410,7 @@ class VertChannel(LatticeUnitVR1):
         super().__init__(materials)
 
     def name(self) -> str:
-        if self.diameter in [1.2,2.5,3.0]:
+        if self.diameter in {1.2, 2.5, 3.0}:
             return f"Small channel ({self.diameter*10}mm)"
         return f"Big channel ({self.diameter*10}mm)"
 
@@ -422,7 +422,7 @@ class VertChannel(LatticeUnitVR1):
 
         if self.diameter not in [1.2,2.5,3.0,5.6,9.0]:
             raise ValueError(f'No vertical channels with diameter {self.diameter*10}mm are available.\nThe possible diameters are 90mm, 56mm, 30mm, 25mm, and 12mm.')
-        if self.diameter in [1.2,2.5,3.0]:
+        if self.diameter in {1.2, 2.5, 3.0}:
             #small channel, this one is way harder to code bc the channel goes through the grid plate ? or something
             surfaces['inner_radius'] = openmc.ZCylinder(r=self.diameter/2)
             surfaces['outer_radius'] = openmc.ZCylinder(r=self.diameter/2+0.1)
