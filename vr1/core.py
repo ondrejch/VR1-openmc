@@ -70,7 +70,7 @@ class TestLattice(VR1core):
                 if n % 2 == 0:
                     row = ['w'] + row
                 else:
-                    row = row + ['w']
+                    row += ['w']
                 n -= 1
             new_lattice_str.append(row)
         if len(new_lattice_str) < 8:
@@ -79,7 +79,7 @@ class TestLattice(VR1core):
                 if n%2 == 0:
                     new_lattice_str = [['w','w','w','w','w','w','w','w']] + new_lattice_str
                 else:
-                    new_lattice_str = new_lattice_str + [['w','w','w','w','w','w','w','w']]
+                    new_lattice_str += [['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w']]
                 n -= 1
         if len(new_lattice_str) != 8:
             raise ValueError('Reformatting failed unexpectedly')
