@@ -59,6 +59,7 @@ class PointKineticsEquationSolver:
         beta = self.params['beta']
         lambda_ = self.params['lambda_']
         Lambda = self.params['Lambda']
+        beta_sum: float = self.beta_total
 
         # Initial conditions (steady-state)
         n0 = 1.0
@@ -75,7 +76,7 @@ class PointKineticsEquationSolver:
             n, *C = y
             rho = self.reactivity_func(t)       # External reactivity
             Q = self.source_func(t)             # External neutron source
-            prompt = (rho - beta.sum()) / Lambda
+            prompt = (rho - beta_sum) / Lambda
             delayed = np.dot(lambda_, C)
 
             dndt = n * prompt + delayed + Q
