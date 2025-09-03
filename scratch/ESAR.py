@@ -76,10 +76,10 @@ class srp_to_omc(object):
             if self.plane_type == 'pz':
                 return openmc.ZPlane(z0=float(self.loc))
 
-            elif self.plane_type == 'py':
+            if self.plane_type == 'py':
                 return openmc.YPlane(y0=float(self.loc))
 
-            elif self.plane_type == 'px':
+            if self.plane_type == 'px':
                 return openmc.XPlane(x0=float(self.loc))
 
     class cyl(object):
@@ -99,10 +99,10 @@ class srp_to_omc(object):
             if self.cyl_type == 'cylz':
                 return openmc.ZCylinder(r=self.r, x0=self.coords[0], y0=self.coords[1])
 
-            elif self.cyl_type == 'cyly':
+            if self.cyl_type == 'cyly':
                 return openmc.YCylinder(r=self.r, x0=self.coords[0], z0=self.coords[1])
 
-            elif self.cyl_type == 'cylx':
+            if self.cyl_type == 'cylx':
                 return openmc.XCylinder(r=self.r, y0=self.coords[0], z0=self.coords[1])
 
     class cone(object):
