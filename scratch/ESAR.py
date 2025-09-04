@@ -16,7 +16,20 @@ chain_file = ""
 
 
 class srp_to_omc(object):
+    """A class that converts a raw space-separated string into specific geometric surface representations using OpenMC.
+    Parameters:
+        - raw_str (str): Raw input string containing space-separated values used to initialize object attributes.
+    Processing Logic:
+        - Extracts and assigns values from the raw string to initialize object attributes like id, surf_type, and params.
+        - Filters parameters, removing elements after a '%' if present.
+        - Determines the type of geometric object to create based on surf_type and constructs it accordingly.
+        - Supports multiple geometric shapes including rectangular prism, plane, cylinder, and cone."""
     def __init__(self, raw_str):
+        """Initializes an object with attributes derived from a raw string input.
+        Parameters:
+            - raw_str (str): Raw input string containing space-separated values used to initialize object attributes.
+        Returns:
+            - None: This is a constructor method and does not return a value."""
         self.surface = None
         split_str = raw_str.split(' ')
         self.id = split_str[1]
@@ -26,6 +39,11 @@ class srp_to_omc(object):
             self.params = self.params[:self.params.index('%')]
 
     def omc_surface(self):
+        """Determine the type of surface to generate based on an internal mapping and build that surface.
+        Parameters:
+            - None
+        Returns:
+            - object: The constructed surface object based on the surface type and provided parameters."""
         srp_to_omc_types = {'sqc': srp_to_omc.sqc,
                             'pz': srp_to_omc.plane,
                             'py': srp_to_omc.plane,
@@ -72,14 +90,20 @@ class srp_to_omc(object):
             self.surface = self.build()
 
         def build(self):
+            """Build and return an OpenMC plane object based on the specified plane type and location.
+            Parameters:
+                - self.plane_type (str): Type of the plane ('px', 'py', 'pz') indicating the X, Y, or Z plane.
+                - self.loc (str or float): Location where the plane is positioned.
+            Returns:
+                - openmc.XPlane, openmc.YPlane, or openmc.ZPlane: The constructed plane object depending on the plane type specified."""
             print(f'{self.plane_type} {self.loc}')
             if self.plane_type == 'pz':
                 return openmc.ZPlane(z0=float(self.loc))
 
-            elif self.plane_type == 'py':
+            if self.plane_type == 'py':
                 return openmc.YPlane(y0=float(self.loc))
 
-            elif self.plane_type == 'px':
+            if self.plane_type == 'px':
                 return openmc.XPlane(x0=float(self.loc))
 
     class cyl(object):
@@ -95,14 +119,19 @@ class srp_to_omc(object):
                 self.r, self.coords = float(params[3]), [float(params[1]), float(params[2])]
 
         def build(self):
+            """Build an OpenMC cylinder based on the specified type and parameters.
+            Parameters:
+                - self: Instance of the class containing 'cyl_type', 'r', and 'coords' attributes.
+            Returns:
+                - openmc.Cylinder: An OpenMC cylinder object based on the specified type ('cylz', 'cyly', 'cylx')."""
             print(f'{self.cyl_type} {self.r} {self.coords}')
             if self.cyl_type == 'cylz':
                 return openmc.ZCylinder(r=self.r, x0=self.coords[0], y0=self.coords[1])
 
-            elif self.cyl_type == 'cyly':
+            if self.cyl_type == 'cyly':
                 return openmc.YCylinder(r=self.r, x0=self.coords[0], z0=self.coords[1])
 
-            elif self.cyl_type == 'cylx':
+            if self.cyl_type == 'cylx':
                 return openmc.XCylinder(r=self.r, y0=self.coords[0], z0=self.coords[1])
 
     class cone(object):
@@ -113,6 +142,11 @@ class srp_to_omc(object):
             self.r2, self.up = float(params[4]), int(params[5])
 
         def build(self):
+            """Constructs and returns a one-sided cone object based on the specified cone type and coordinates.
+            Parameters:
+                - self: The instance of the class containing attributes 'cone_type', 'coords', 'r2', and 'up'.
+            Returns:
+                - openmc.model.ConicalAbstractRepresentation: An instance of a one-sided cone (ZConeOneSided, YConeOneSided, or XConeOneSided) determined by the 'cone_type'."""
             print(f'{self.cone_type} {self.coords}')
             if self.cone_type == 'ckz':
                 return openmc.model.ZConeOneSided(x0=self.coords[0], y0=self.coords[1], z0=self.coords[2], r2=self.r2,

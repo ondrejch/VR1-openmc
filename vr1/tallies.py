@@ -24,6 +24,14 @@ class VR1Tally:
 class FluxTally(VR1Tally):
     """ Returns flux tally """
     def __init__(self, material: VR1Materials, tally_type: str) -> None:
+        """Initializes an object to set up tally parameters for different materials and types.
+        Parameters:
+            - material (VR1Materials): The material for which the tally will be set up.
+            - tally_type (str): The type of tally (e.g., 'fuel flux', 'water flux'). Must be a valid tally type in `tally_types`.
+        Raises:
+            - ValueError: If `tally_type` is not a valid tally type.
+        Returns:
+            - None: This function does not return any value."""
         if tally_type not in tally_types:
             raise ValueError(f'Tally type {tally_type} is not valid')
         self.tally_type = tally_type
