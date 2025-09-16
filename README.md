@@ -35,7 +35,7 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 These steps show you how to install the VR1-openmc package using conda. 
 
 1. Make sure you have conda installed.
-2. Install openmc using conda-forge or mamba. OpenMC is a dependency for VR1. 
+2. **Install openmc using conda-forge or mamba.** OpenMC is a dependency for VR1. Instructions can be found on [OpenMC's website](https://docs.openmc.org/en/stable/quickinstall.html).
 3. Create a new conda environment with Python 3.11 and activate it:
 ```
 conda create -n vr1 python=3.11 openmc -c conda-forge
