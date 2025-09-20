@@ -2,7 +2,7 @@
 import openmc
 from vr1.materials import VR1Materials, vr1_materials
 from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
-                               IRT4M, lattice_pitch, LatticeUnitVR1)
+                               IRT4M, lattice_pitch, LatticeUnitVR1, AbsRod)
 
 # Write an FA lattice, or the core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -134,6 +134,10 @@ class TestLattice(VR1core):
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
             for j in range(n):
+                # if '_' in lattice_str[i][j]:
+                #     height = lattice_str[i][j][2:]
+                #     assembly = AbsRod(materials=vr1_materials,assembly_type='6',rod_height=float(height))
+                #     _l.append(lattice_builder.get(assembly.build()))
                 _l.append(lattice_builder.get(lattice_str[i][j]))
             lattice_array.append(_l)
 
