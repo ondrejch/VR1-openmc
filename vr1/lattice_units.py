@@ -278,10 +278,10 @@ class LatticeUnitVR1:
             'v56': VertChannel(materials=self.materials,diameter=56),
             'v30': VertChannel(materials=self.materials,diameter=30),
             # 'v25': VertChannel(materials=self.materials,diameter=25),
-            'v25': IRT4M(materials=self.materials,fa_type='6',VC_diameter=25),
+            'v25': VertChannel(materials=self.materials,lattice_type='w',diameter=25),
             'v12': VertChannel(materials=self.materials,diameter=12),
-            'O': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=84.7), #fully removed control rod
-            'X': IRT4M(materials=self.materials,fa_type='6',abs_rod_height=0), #fully inserted control rod
+            'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod
+            'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod
         # 'R1': '6-tube FA with regulatory control rod 1',
         # 'R2': '6-tube FA with regulatory control rod 2',
         # 'E1': '6-tube FA with experimental shim rod 2',
@@ -291,8 +291,6 @@ class LatticeUnitVR1:
             'rt': Dummy(materials=self.materials,RT=True),
             'w':   Water(materials=self.materials),
             'wrc': Water(materials=self.materials,RC=True),
-            '6test': AbsRod(materials=self.materials, assembly_type='6',rod_height=5),
-            'dtest': AbsRod(materials=self.materials, assembly_type='d',rod_height=15),
         }
 
     def get(self, lattice_code: str = 'w') -> openmc.Universe():
@@ -303,8 +301,8 @@ class LatticeUnitVR1:
             - openmc.Universe: An OpenMC Universe corresponding to the lattice code provided."""
 
         if lattice_code not in self.lattice_unit_builders.keys():
-            if lattice_code.startswith('AR'):
-                assembly = IRT4M(materials=self.materials,fa_type='6',abs_rod_height=float(lattice_code[2:]))
+            if '_' in lattice_code:
+                assembly = AbsRod(materials=self.materials,assembly_type='6',rod_height=float(lattice_code[2:]))
                 return assembly.build()
             raise ValueError(f'Unknown lattice type "{lattice_code}"')
         return self.lattice_unit_builders[lattice_code].build()
@@ -450,8 +448,9 @@ class Dummy:
 
 class VertChannel(LatticeUnitVR1):
     """ Water lattice unit """
-    def __init__(self, materials: VR1Materials,diameter:float = 56):
+    def __init__(self, materials: VR1Materials,diameter:float = 56, lattice_type = 'water'):
         self.diameter=diameter/10.0
+        self.lattice_type = lattice_type
         super().__init__(materials)
 
     def name(self) -> str:
@@ -475,20 +474,20 @@ class VertChannel(LatticeUnitVR1):
             surfaces['channel_bottom'] = openmc.ZPlane(z0=-10)
             surfaces['channel_bottom_inner'] = openmc.ZPlane(z0=-9.9) #thickness of pipe is 0.5 radially so i'm assuming it is the same here
 
-            self.cells[f'channel{self.diameter}_water1'] = openmc.Cell(name=f'channel{self.diameter}_water1',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['GRD.zt'])
-            self.cells[f'channel{self.diameter}_water2'] = openmc.Cell(name=f'channel{self.diameter}_water2',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['GRD.zt'])
-
             self.cells['channel'] =     openmc.Cell(name=f'channel{self.diameter}',     fill=self.materials.smallchannel,region=-surfaces['outer_radius'] & +surfaces['inner_radius'] & +surfaces['channel_bottom'])
             self.cells['channel_head'] = openmc.Cell(name=f'channel_head{self.diameter}', fill=self.materials.smallchannel,region=-surfaces['inner_radius'] & +surfaces['channel_bottom'] & -surfaces['channel_bottom_inner'])
             self.cells['channel_air'] = openmc.Cell(name=f'channel_air{self.diameter}', fill=self.materials.air,region=-surfaces['inner_radius'] & +surfaces['channel_bottom_inner'])
 
-            gridplate = GridPlate(self.materials)
-            grid_unit = gridplate.build()
-            self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4']
-                                             & ~self.cells['channel'].region
-                                             & ~self.cells['channel_head'].region
-                                             & ~self.cells['channel_air'].region)
-
+            if self.lattice_type == '6':
+                assembly_object = IRT4M(materials=self.materials,fa_type=str(self.lattice_type))
+                assembly_uni = assembly_object.build()
+                self.cells['assembly_cell'] = openmc.Cell(fill=assembly_uni,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['channel_bottom'])
+            else:
+                self.cells[f'channel{self.diameter}_water1'] = openmc.Cell(name=f'channel{self.diameter}_water1',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['GRD.zt'])
+                self.cells[f'channel{self.diameter}_water2'] = openmc.Cell(name=f'channel{self.diameter}_water2',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['GRD.zt'])
+                gridplate = GridPlate(self.materials)
+                grid_unit = gridplate.build()
+                self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'] & +surfaces['H01.sc'])
             return openmc.Universe(name='small_channel', cells=list(self.cells.values()))
 
         surfaces['inner_radius'] = openmc.ZCylinder(r=self.diameter/2)
@@ -505,9 +504,17 @@ class VertChannel(LatticeUnitVR1):
         self.cells['channel_head'] = openmc.Cell(name=f'channel_head{self.diameter}', fill=self.materials.bigchannel,region=-surfaces['inner_radius'] & +surfaces['channel_bottom'] & -surfaces['channel_bottom_inner'])
         self.cells['channel_air'] = openmc.Cell(name=f'channel_air{self.diameter}', fill=self.materials.air,region=-surfaces['inner_radius'] & +surfaces['channel_bottom_inner'])
 
-        gridplate = GridPlate(self.materials)
-        grid_unit = gridplate.build()
-        self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'] & +surfaces['H01.sc'])
+        if self.lattice_type == '6':
+            assembly_object = IRT4M(materials=self.materials,fa_type=str(self.lattice_type))
+            assembly_uni = assembly_object.build()
+            self.cells['assembly_cell'] = openmc.Cell(fill=assembly_uni,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['channel_bottom'])
+        else:
+            self.cells[f'channel{self.diameter}_water1'] = openmc.Cell(name=f'channel{self.diameter}_water1',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['GRD.zt'])
+            self.cells[f'channel{self.diameter}_water2'] = openmc.Cell(name=f'channel{self.diameter}_water2',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['GRD.zt'])
+            gridplate = GridPlate(self.materials)
+            grid_unit = gridplate.build()
+            self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'] & +surfaces['H01.sc'])
+
         return openmc.Universe(name='big_channel', cells=list(self.cells.values()))
 
 class IRT4M(LatticeUnitVR1):
@@ -754,7 +761,6 @@ class AbsRod(LatticeUnitVR1):
     """ Class that returns absorption rod units """
     def __init__(self, materials: VR1Materials, rod_height: float = 0.0, assembly_type = None, boundary: str = 'water') -> None:
         super().__init__(materials)
-        print(assembly_type)
         if str(assembly_type) not in {'d','6','4'}:
             raise ValueError('Assembly type just be 6, 4, or dummy')
         self.rod_height = rod_height
@@ -833,40 +839,6 @@ class RabbitTube:
         return "Dummy fuel unit"
 
     def build(self) -> openmc.Universe:
-
-        # self.cells["27.dpp.4"] = openmc.Cell(name="27.dpp.4", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.1"] & +surfaces["FAZ.2"])
-        # self.cells["27.dpp.5"] = openmc.Cell(name="27.dpp.5", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.1"] & +surfaces["FAZ.2"])
-        # self.cells["27.dpp.8"] = openmc.Cell(name="27.dpp.8", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.2"] & +surfaces["FAZ.3"])
-        # self.cells["27.dpp.9"] = openmc.Cell(name="27.dpp.9", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["FAZ.3"])
-        # self.cells["27.dpp.12"] = openmc.Cell(name="27.dpp.12", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.3"] & +surfaces["FAZ.4"])
-        # self.cells["27.dpp.13"] = openmc.Cell(name="27.dpp.13", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.3"] & +surfaces["FAZ.4"])
-        # self.cells["27.dpp.16"] = openmc.Cell(name="27.dpp.16", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.4"] & +surfaces["FAZ.5"])
-        # self.cells["27.dpp.17"] = openmc.Cell(name="27.dpp.17", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.4"] & +surfaces["FAZ.5"])
-        # self.cells["27.dpp.20"] = openmc.Cell(name="27.dpp.20", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["FAZ.5"] & +surfaces["GRD.zt"])
-        # self.cells["27.dpp.21"] = openmc.Cell(name="27.dpp.21", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["FAZ.5"] & +surfaces["GRD.zt"])
-        # self.cells["27.dpp.24"] = openmc.Cell(name="27.dpp.24", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.25"] = openmc.Cell(name="27.dpp.25", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.26"] = openmc.Cell(name="27.dpp.26", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.27"] = openmc.Cell(name="27.dpp.27", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["DMY.2"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.28"] = openmc.Cell(name="27.dpp.28", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.29"] = openmc.Cell(name="27.dpp.29", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.30"] = openmc.Cell(name="27.dpp.30", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.31"] = openmc.Cell(name="27.dpp.31", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["DMY.1"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.32"] = openmc.Cell(name="27.dpp.32", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.33"] = openmc.Cell(name="27.dpp.33", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.34"] = openmc.Cell(name="27.dpp.34", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.35"] = openmc.Cell(name="27.dpp.35", fill = self.materials.dummy, region=-surfaces["DMY.1"] & +surfaces["DMY.2"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.36"] = openmc.Cell(name="27.dpp.36", fill = self.materials.grid, region=-surfaces["GRD.1"] & +surfaces["GRD.2"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.37"] = openmc.Cell(name="27.dpp.37", fill = self.materials.grid, region=-surfaces["GRD.xp"] & +surfaces["GRD.xn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.38"] = openmc.Cell(name="27.dpp.38", fill = self.materials.grid, region=-surfaces["GRD.yp"] & +surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["GRD.zt"] & +surfaces["FAZ.6"])
-        # self.cells["27.dpp.41"] = openmc.Cell(name="27.dpp.41", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["GRD.xp"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.42"] = openmc.Cell(name="27.dpp.42", fill = self.materials.water, region=-surfaces["ELE.1"] & +surfaces["GRD.xp"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.43"] = openmc.Cell(name="27.dpp.43", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["GRD.xn"] & +surfaces["GRD.yp"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.44"] = openmc.Cell(name="27.dpp.44", fill = self.materials.water, region=-surfaces["ELE.1"] & -surfaces["GRD.xn"] & -surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.45"] = openmc.Cell(name="27.dpp.45", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.1"] & +surfaces["GRD.2"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.46"] = openmc.Cell(name="27.dpp.46", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.xp"] & +surfaces["GRD.xn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.47"] = openmc.Cell(name="27.dpp.47", fill = self.materials.grid, region=-surfaces["ELE.1"] & -surfaces["GRD.yp"] & +surfaces["GRD.yn"] & +surfaces["GRD.1"] & -surfaces["FAZ.6"] & +surfaces["GRD.zd"])
-        # self.cells["27.dpp.52"] = openmc.Cell(name="27.dpp.52", fill = self.materials.fill, region=+surfaces["27.RT"] & -surfaces["RT.1"])
         """Builds and returns an OpenMC Universe object containing predefined cells and materials.
         Returns:
             - openmc.Universe: An OpenMC Universe object encapsulating a collection of cells with assigned materials and regions."""
@@ -878,7 +850,7 @@ class RabbitTube:
         self.cells["27.RT.6"] = openmc.Cell(name="27.RT.6", fill = self.materials.water, region=-surfaces["RT.1"] & -surfaces["RT.zd"] & +surfaces["ELE.zn"])
 
 
-        return openmc.Universe(name=f'dummy_unit', cells=list(self.cells.values()))
+        return openmc.Universe(name=f'rabbittube_unit', cells=list(self.cells.values()))
 
 """ Shell scripts to extract surfaces from the Serpent model """
 # grep ' px ' C12-C-2023_1| sed -e 's/surf\ /\ \ \ \ "/g' -e 's/\ px/":\ /g' -e s/\ %/,\ #/g
