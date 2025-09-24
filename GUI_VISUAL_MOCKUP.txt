@@ -1,0 +1,99 @@
+"""
+VR-1 Reactor Lattice Builder GUI - Visual Mockup
+
+This is a text-based representation of what the GUI looks like when running.
+The actual GUI uses tkinter with colored buttons and interactive components.
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       VR-1 Reactor Lattice Builder                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Click on grid cells to cycle through component types. Grid represents 8x8  │
+│ reactor lattice.                                                            │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                      Reactor Lattice (8x8 Grid)                           │
+│                                                                             │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 0│ │ 1│ │ 2│ │ 3│ │ 4│ │ 5│ │ 6│ │ 7│                                │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 1│ │ w│ │ w│ │ 8│ │ 8│ │ w│ │ w│ │ w│    <- Water & Fuel Assemblies  │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 2│ │ w│ │ 6│ │ 6│ │ 6│ │ 6│ │ w│ │ w│    <- 6-tube Fuel Assemblies  │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 3│ │ w│ │ 8│ │ X│ │rt │v56│ │ 8│ │ w│    <- Control Rod & Channels  │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 4│ │ w│ │ 8│ │ 6│ │v56│ │ 6│ │ 8│ │ w│    <- Mixed Configuration     │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 5│ │ w│ │ d│ │ d│ │ X│ │ d│ │ d│ │ w│    <- Dummies & Control Rod   │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 6│ │ w│ │ w│ │ w│ │ w│ │ w│ │ w│ │ w│    <- Water cells              │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│    ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐                                │
+│    │ 7│ │ w│ │ w│ │ w│ │ w│ │ w│ │ w│ │ w│    <- Water cells              │
+│    └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘ └──┘                                │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Status: Cell [3][4]: Vertical channel (56mm)                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                          Component Types                                    │
+│                                                                             │
+│  w: Water cell with grid        8: 8-tube Fuel Assembly                   │
+│  6: 6-tube Fuel Assembly        4: 4-tube Fuel Assembly                   │
+│  X: 6-tube FA with inserted     O: 6-tube FA with removed control rod     │
+│  d: Empty fuel dummy            rt: Dummy with rabbit tube                 │
+│  wrc: Empty water cell          v90: Vertical channel (90mm)               │
+│  v56: Vertical channel (56mm)   v30: Vertical channel (30mm)               │  
+│  v25: Vertical channel (25mm)   v12: Vertical channel (12mm)               │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  [Load Default]  [Reset All to Water]  [Save Configuration]  [Load Config]│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GUI Features:
+=============
+
+✅ Interactive Grid: Each cell is a clickable button
+✅ Color Coding: Different colors for different component types
+   - Water (w): Light blue background
+   - Fuel Assemblies (8,6,4): Red, teal, blue backgrounds  
+   - Control Rods (X,O): Green, yellow backgrounds
+   - Channels (v90,v56,etc): Orange/yellow gradient
+   - Dummies (d,rt): Purple background
+
+✅ Click to Cycle: Clicking any cell cycles through all 14 component types
+✅ Status Updates: Shows current cell description in status bar
+✅ Save/Load: Full file dialog support for configurations
+✅ Default Reset: Restore original VR1_EMPTY_LATTICE_TEMPLATE
+✅ Integration: Accessible via vr1.utils.launch_lattice_builder()
+
+Generated Output Example:
+========================
+
+The GUI saves configurations to Python files like this:
+
+    CUSTOM_LATTICE = [
+        ['0', '1', '2', '3', '4', '5', '6', '7'],
+        ['1', 'w', 'w', '8', '8', 'w', 'w', 'w'],
+        ['2', 'w', '6', '6', '6', '6', 'w', 'w'],
+        ['3', 'w', '8', 'X', 'rt', 'v56', '8', 'w'],
+        ['4', 'w', '8', '6', 'v56', '6', '8', 'w'],
+        ['5', 'w', 'd', 'd', 'X', 'd', 'd', 'w'],
+        ['6', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+        ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+    ]
+
+Usage in VR-1:
+==============
+
+    from vr1.core import TestLattice
+    from custom_lattice import CUSTOM_LATTICE
+    my_core = TestLattice(lattice_str=CUSTOM_LATTICE)
+
+"""

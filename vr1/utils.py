@@ -58,5 +58,26 @@ import subprocess
 def plot_vr1():
     subprocess.run(["openmc-plotter"])
 
+
+def launch_lattice_builder():
+    """Launch the VR-1 lattice builder GUI application.
+    
+    This function starts the interactive GUI for creating and editing
+    VR-1 reactor lattice configurations using tkinter.
+    
+    Returns:
+        None
+    """
+    try:
+        from vr1.gui import VR1LatticeBuilder
+        app = VR1LatticeBuilder()
+        app.run()
+    except ImportError as e:
+        print(f"Error importing GUI module: {e}")
+        print("Make sure all required dependencies are installed.")
+    except Exception as e:
+        print(f"Error launching lattice builder: {e}")
+
+
 if __name__ == '__main__':
     mat_s2open(my_mat)
