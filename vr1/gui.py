@@ -220,7 +220,7 @@ class VR1LatticeBuilder:
             filename = filedialog.asksaveasfilename(
                 defaultextension=".py",
                 filetypes=[("Python files", "*.py"), ("All files", "*.*")],
-                initialvalue="custom_lattice.py"
+                initialfile="custom_lattice.py"
             )
             
             if filename:
