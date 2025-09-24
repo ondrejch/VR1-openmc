@@ -4,15 +4,15 @@ import openmc
 import os
 from vr1.core import VR1core
 from vr1.materials import vr1_materials
-from vr1.settings import SettingsOpenMC
+from vr1.settings import VR1Settings
 
 
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
-    def __init__(self, settings: SettingsOpenMC, core: VR1core) -> None:
+    def __init__(self, settings: VR1Settings, core: VR1core) -> None:
         """Initializes a class with settings and core parameters to set up the OpenMC model.
         Parameters:
-            - settings (SettingsOpenMC): Configuration settings for the OpenMC simulation.
+            - settings (VR1Settings): Configuration settings for the OpenMC simulation.
             - core (VR1core): The core specification for the VR1 reactor model.
         Returns:
             - None: This constructor does not return a value."""

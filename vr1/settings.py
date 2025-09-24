@@ -1,11 +1,12 @@
 """ General OpenMC settings """
 
 import os
+import openmc
 from datetime import datetime
 MY_TIME_NOW: str = datetime.isoformat(datetime.now(), "#", "seconds")
 
 
-class SettingsOpenMC:
+class VR1Settings:
     """
     SettingsOpenMC class is designed to initialize and manage various simulation parameters for an OpenMC nuclear simulation.
     Parameters:
@@ -26,7 +27,7 @@ class SettingsOpenMC:
     """
     def __init__(self, name: str = 'openmc deck', xs_lib: str = 'endf7.1', xs_xml_root_path: str = '/opt/OpenMC_DATA',
                  tallies: (list, None) = None, plots: (list, None) = None, parm: (dict, None) = None,
-                 rotation: float = 0.0, sources: (None, list) = None, power: (None, float) = None):
+                 rotation: float = 0.0, ext_sources: (None, list) = None, power: (None, float) = None):
         """Initializes an instance with various simulation parameters for the OpenMC nuclear simulation.
         Parameters:
             - name (str): The name of the simulation; defaults to 'openmc deck'.
@@ -55,7 +56,7 @@ class SettingsOpenMC:
         self.power = power  # [W_th]
         self.tallies = tallies
         self.plots = plots
-        self.sources = sources
+        self.ext_sources = ext_sources
         self.rotation = rotation
         self.generations_per_batch: int = 1
 

@@ -67,7 +67,7 @@ class FuelAssembly(VR1core):
         self.source_upper_right = lattice_upper_right
 
 
-class TestLattice(VR1core):
+class Lattice(VR1core):
     """
     Represents a lattice-based geometry for simulations, supporting custom or preset material configurations.
     Parameters:
@@ -155,7 +155,7 @@ class TestLattice(VR1core):
         """ Lattice box """
         z0: float = plane_zs['H01.sc']
         z1: float = plane_zs['FAZ.2']
-        lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1)
+        lattice_box = openmc.model.RectangularParallelepiped(-xy_corner, xy_corner, -xy_corner, xy_corner, z0, z1,boundary_type='vacuum')
         lattice_cell = openmc.Cell(fill=self.lattice, region=-lattice_box)
         self.model = openmc.Universe(cells=[lattice_cell])
         # TODO: Create an AmBe fixed starter source definition

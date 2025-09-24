@@ -666,7 +666,7 @@ class AbsRod(LatticeUnitVR1):
         cell_0Absrod_4 = openmc.Cell(name='Absrod4', fill=self.materials.abshead,   region=-surfaces['ABS.3'] & -lower_bound_head & +lower_bound_abs)
         # cell_0Absrod_5 = openmc.Cell(name='Absrod_damp1', fill=self.materials.damper,region=-surfaces['GRD.2'] & +surfaces['DMP.1'] & +surfaces['GRD.zd'] & +surfaces['ABS.3'])
         self.cells['Plenum'] = openmc.Cell(name='Plenum', fill=self.materials.water, region=-surfaces['ABS.3'] & -lower_bound_abs & +surfaces['GRD.zd'])
-
+        self.cells['water_fill'] = openmc.Cell(name='water_fill',fill=self.materials.water,region=-surfaces['DMP.1'] & -surfaces['GRD.zt'] & +surfaces['GRD.zd'] & +surfaces['ABS.3']) #-DMP.1 -GRD.zt FAZ.6 ABS.3
         self.cells['damper1'] = openmc.Cell(name='Absrod_damp1', fill=self.materials.damper,region=-surfaces['GRD.2'] & +surfaces['DMP.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
         self.cells['damper2'] = openmc.Cell(name='Absrod_damp2', fill=self.materials.damper,region=-surfaces['GRD.2'] & +surfaces['DMP.1'] & +surfaces['GRD.zd'] & -surfaces['FAZ.6'])
         universe_0Absrod = openmc.Universe(cells=[cell_0Absrod_1, cell_0Absrod_2, cell_0Absrod_3, cell_0Absrod_4])
