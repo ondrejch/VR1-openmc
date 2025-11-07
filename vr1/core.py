@@ -127,10 +127,12 @@ class Lattice(VR1core):
             if preset is False:
                 raise ValueError('Must specify lattice string or provide a preset lattice')
             lattice_str = preset
-        lattice_str = [[str(i) for i in j] for j in lattice_str]
-        lattice_str = self.reformat(lattice_str)
-        n: int = len(lattice_str)
-        assert n > 0
+        self.lattice_str = [[str(i) for i in j] for j in lattice_str]
+        self.lattice_str = self.reformat(self.lattice_str)
+        self.build()
+
+    def build(self):
+        n = 8
         self.lattice = openmc.RectLattice(name='test_lattice')
         xy_corner: float = float(n) * lattice_pitch / 2.0
         self.lattice.lower_left = (-xy_corner, -xy_corner)
@@ -147,7 +149,7 @@ class Lattice(VR1core):
                 #     height = lattice_str[i][j][2:]
                 #     assembly = AbsRod(materials=vr1_materials,assembly_type='6',rod_height=float(height))
                 #     _l.append(lattice_builder.get(assembly.build()))
-                _l.append(lattice_builder.get(lattice_str[i][j]))
+                _l.append(lattice_builder.get(self.lattice_str[i][j]))
             lattice_array.append(_l)
 
             z += 1
@@ -161,3 +163,17 @@ class Lattice(VR1core):
         # TODO: Create an AmBe fixed starter source definition
         self.source_lower_left = (-xy_corner, -xy_corner, lattice_lower_left[2])
         self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])
+
+    def SCRAM(self):
+        for i in range(8):
+            for j in range(8):
+                if any(x in self.lattice_str[i][j] for x in ['_','O']):
+                    self.lattice_str[i][j] = 'X'
+        self.build()
+
+    def unSCRAM(self):
+        for i in range(8):
+            for j in range(8):
+                if any(x in self.lattice_str[i][j] for x in ['_','X']):
+                    self.lattice_str[i][j] = 'O'
+        self.build()

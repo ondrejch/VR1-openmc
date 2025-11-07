@@ -26,22 +26,25 @@ assembly = vlu.IRT4M(materials=mats,fa_type='8')
 facility = Facility(materials=mats)
 gridplate = vlu.GridPlate(materials=mats)
 
-latticetest: list[list[str]] = [
-    ['8']*8,
-    ['w']*8,
-    ['8']*8,
-    ['6']*8,
-    ['w']*8,
-    ['8']*8,
-    ['6']*8,
-]
-
+# latticetest: list[list[str]] = [
+#     ['8']*8,
+#     ['w']*8,
+#     ['8']*8,
+#     ['6']*8,
+#     ['w']*8,
+#     ['8']*8,
+#     ['6']*8,
+# ]
+latticetest = [['6','6_10','6_20','6_30','6_40']]
 dummy = vlu.Dummy(materials=mats,RT=True)
 
 rabbit = vlu.RabbitTube(materials=mats)
 
 lattice = Lattice(materials=mats,lattice_str=latticetest)
+# lattice.build()
 
+lattice.SCRAM()
+lattice.unSCRAM()
 # uni_abs = absorption_rod.build(rod_height=100)
 # uni_assembly = assembly.build()
 
