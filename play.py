@@ -1,6 +1,6 @@
 import vr1
-from vr1.core import FuelAssembly, TestLattice
-from vr1.settings import SettingsOpenMC
+from vr1.core import FuelAssembly, Lattice
+from vr1.settings import VR1Settings
 from vr1.writer import WriterOpenMC
 from vr1.plots import test_plots
 from vr1.materials import VR1Materials
@@ -9,7 +9,8 @@ import vr1.lattice_units as vlu
 import openmc
 from vr1.core import core_designs
 
-# my_settings = SettingsOpenMC()
+my_settings = VR1Settings()
+my_settings.get_settings()
 # my_settings.plots = test_plots()
 # my_core = TestLattice()
 # my_writer = WriterOpenMC(my_settings, my_core)
@@ -26,16 +27,20 @@ facility = Facility(materials=mats)
 gridplate = vlu.GridPlate(materials=mats)
 
 latticetest: list[list[str]] = [
-    ['v56','6_15','6','v12_6']
+    ['8']*8,
+    ['w']*8,
+    ['8']*8,
+    ['6']*8,
+    ['w']*8,
+    ['8']*8,
+    ['6']*8,
 ]
-
-latticetest = core_designs['C12-C-2023']
 
 dummy = vlu.Dummy(materials=mats,RT=True)
 
 rabbit = vlu.RabbitTube(materials=mats)
 
-lattice = TestLattice(materials=mats,lattice_str=latticetest)
+lattice = Lattice(materials=mats,lattice_str=latticetest)
 
 # uni_abs = absorption_rod.build(rod_height=100)
 # uni_assembly = assembly.build()
@@ -56,15 +61,28 @@ geo.export_to_xml()
 mod = openmc.Model()
 mod.geometry = geo
 
-plot=openmc.Plot()
-plot.colors = {mats.air: 'pink', mats.water:'red', mats.abshead: 'lime', mats.abscenter: 'blue', mats.cdlayer: 'black',
-               mats.grid: 'grey', mats.bottomnozzle: 'yellow', mats.guidetube:'orange', mats.fuel: 'cyan', mats.abstube: 'green'}
-plot.width = (40, 40)
-plot.pixels = (1000, 1000)
-plot.origin = (0, 0, 0)
-plot.basis = 'xz'
-# mod.plots = openmc.Plots([plot])
-plot.to_xml_element()
+settings = openmc.Settings()
+settings.run_mode = 'eigenvalue'
+settings.temperature = {'method':'interpolation','range':(293.15,923.15)} #unsure
+settings.batches = 30
+settings.inactive = 15 #inactive batches
+settings.particles = 5000
+settings.photon_transport = False
+source_area = openmc.stats.Box(lattice.source_lower_left,lattice.source_upper_right)
+settings.source = openmc.Source(space=source_area,constraints={'fissionable': True})
+settings.export_to_xml()
+
+# openmc.run()
+
+# plot=openmc.Plot()
+# plot.colors = {mats.air: 'pink', mats.water:'red', mats.abshead: 'lime', mats.abscenter: 'blue', mats.cdlayer: 'black',
+#                mats.grid: 'grey', mats.bottomnozzle: 'yellow', mats.guidetube:'orange', mats.fuel: 'cyan', mats.abstube: 'green'}
+# plot.width = (40, 40)
+# plot.pixels = (1000, 1000)
+# plot.origin = (0, 0, 0)
+# plot.basis = 'xz'
+# # mod.plots = openmc.Plots([plot])
+# plot.to_xml_element()
 
 import vr1.utils
 vr1.utils.plot_vr1()
