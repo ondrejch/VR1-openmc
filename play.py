@@ -26,14 +26,20 @@ facility = Facility(materials=mats)
 gridplate = vlu.GridPlate(materials=mats)
 
 latticetest: list[list[str]] = [
-    ['v56','6_15','6','v12_6']
+    ['8']*8,
+    ['w']*8,
+    ['8']*8,
+    ['6']*8,
+    ['w']*8,
+    ['8']*8,
+    ['6']*8,
 ]
 
 dummy = vlu.Dummy(materials=mats,RT=True)
 
 rabbit = vlu.RabbitTube(materials=mats)
 
-lattice = Lattice(materials=mats,lattice_str=core_designs['C12-C-2023'])
+lattice = Lattice(materials=mats,lattice_str=latticetest)
 
 # uni_abs = absorption_rod.build(rod_height=100)
 # uni_assembly = assembly.build()
