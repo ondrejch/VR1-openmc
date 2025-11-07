@@ -145,10 +145,6 @@ class Lattice(VR1core):
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
             for j in range(n):
-                # if '_' in lattice_str[i][j]:
-                #     height = lattice_str[i][j][2:]
-                #     assembly = AbsRod(materials=vr1_materials,assembly_type='6',rod_height=float(height))
-                #     _l.append(lattice_builder.get(assembly.build()))
                 _l.append(lattice_builder.get(self.lattice_str[i][j]))
             lattice_array.append(_l)
 
