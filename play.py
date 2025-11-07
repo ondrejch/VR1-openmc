@@ -9,7 +9,8 @@ import vr1.lattice_units as vlu
 import openmc
 from vr1.core import core_designs
 
-# my_settings = SettingsOpenMC()
+my_settings = VR1Settings()
+my_settings.get_settings()
 # my_settings.plots = test_plots()
 # my_core = TestLattice()
 # my_writer = WriterOpenMC(my_settings, my_core)
@@ -71,7 +72,7 @@ source_area = openmc.stats.Box(lattice.source_lower_left,lattice.source_upper_ri
 settings.source = openmc.Source(space=source_area,constraints={'fissionable': True})
 settings.export_to_xml()
 
-openmc.run()
+# openmc.run()
 
 # plot=openmc.Plot()
 # plot.colors = {mats.air: 'pink', mats.water:'red', mats.abshead: 'lime', mats.abscenter: 'blue', mats.cdlayer: 'black',
@@ -83,5 +84,5 @@ openmc.run()
 # # mod.plots = openmc.Plots([plot])
 # plot.to_xml_element()
 
-# import vr1.utils
-# vr1.utils.plot_vr1()
+import vr1.utils
+vr1.utils.plot_vr1()
