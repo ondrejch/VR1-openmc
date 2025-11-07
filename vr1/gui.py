@@ -52,14 +52,14 @@ class VR1LatticeBuilder:
         
         # Initialize lattice with default template
         self.default_lattice = [
-            ['0', '1', '2', '3', '4', '5', '6', '7'],
-            ['1', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['2', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['3', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['4', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['5', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['6', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
         ]
         
         self.current_lattice = copy.deepcopy(self.default_lattice)
