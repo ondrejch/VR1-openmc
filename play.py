@@ -7,6 +7,7 @@ from vr1.materials import VR1Materials
 from vr1.VR1facility import Facility
 import vr1.lattice_units as vlu
 import openmc
+import openmc.deplete
 from vr1.core import core_designs
 
 my_settings = VR1Settings()
@@ -17,7 +18,7 @@ my_settings.get_settings()
 # my_writer.write_openmc_XML()
 
 openmc.Materials.cross_sections = "/Users/macris/openmc_data/endfb-viii.0-hdf5/cross_sections.xml" #must use viii.0 for C12
-
+chainfile = "/Users/macris/openmc_data/chainfile.xml"
 mats = VR1Materials()
 mats.get_materials() #generates materials.xml for plotting
 
@@ -36,15 +37,16 @@ gridplate = vlu.GridPlate(materials=mats)
 #     ['6']*8,
 # ]
 latticetest = [['6','6_10','6_20','6_30','6_40']]
+lattice_preset = vr1.core.core_designs['C12-C-2023']
 dummy = vlu.Dummy(materials=mats,RT=True)
 
 rabbit = vlu.RabbitTube(materials=mats)
 
-lattice = Lattice(materials=mats,lattice_str=latticetest)
+lattice = Lattice(materials=mats,lattice_str=lattice_preset)
 # lattice.build()
 
-lattice.SCRAM()
-lattice.unSCRAM()
+# lattice.SCRAM()
+# lattice.unSCRAM()
 # uni_abs = absorption_rod.build(rod_height=100)
 # uni_assembly = assembly.build()
 
@@ -63,6 +65,9 @@ geo = openmc.Geometry(root=uni_facility_lattice)
 geo.export_to_xml()
 mod = openmc.Model()
 mod.geometry = geo
+# settings = 
+mod.settings = openmc.Settings.from_xml('./settings.xml')
+mod.materials = openmc.Materials.from_xml('./materials.xml')
 
 settings = openmc.Settings()
 settings.run_mode = 'eigenvalue'
@@ -75,6 +80,11 @@ source_area = openmc.stats.Box(lattice.source_lower_left,lattice.source_upper_ri
 settings.source = openmc.Source(space=source_area,constraints={'fissionable': True})
 settings.export_to_xml()
 
+depletion_days = [1,1,1,1]
+op = openmc.deplete.CoupledOperator(model=mod, normalization_mode = "fission-q",chain_file=chainfile) # MAY NEED MSR CHAIN
+intguy = openmc.deplete.PredictorIntegrator(op, depletion_days, timestep_units='d', power=1E6)
+
+# intguy.integrate()
 # openmc.run()
 
 # plot=openmc.Plot()

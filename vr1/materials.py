@@ -84,6 +84,7 @@ class VR1Materials:
         self.fuel.set_density('g/cm3', 5.53)
         self.fuel.temperature = 293.15
         self.fuel.depletable = True
+        self.fuel.volume = 10000 #TODO
         self.mats_list.append(self.fuel)
 
         self.water = openmc.Material(name='water in the pool')

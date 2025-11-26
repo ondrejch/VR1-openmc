@@ -53,12 +53,12 @@ class VR1LatticeBuilder:
         # Initialize lattice with default template
         self.default_lattice = [
             ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-            ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'w', '8', '8', '8', '8', 'w', 'w'],
+            ['w', 'w', 'v30', '8', '8', 'X', 'v25', 'w'],
+            ['w', 'w', 'X', 'X', 'd', 'X', 'w', 'w'],
+            ['v56', 'w', '6', 'X', 'X', 'd', 'w', 'v56'],
+            ['w', 'w', 'd', 'X', 'v30', '4', 'w', 'w'],
+            ['w', 'w', 'd', '8', '8', '8', 'w', 'w'],
             ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
         ]
         
@@ -93,10 +93,13 @@ class VR1LatticeBuilder:
         for row in range(8):
             button_row = []
             for col in range(8):
-                btn = tk.Button(grid_frame, 
-                              width=6, height=3,
-                              command=lambda r=row, c=col: self.on_cell_click(r, c),
-                              font=('Courier', 10, 'bold'))
+                btn = tk.Label(grid_frame,
+                            width=6, height=3,
+                            font=('Courier', 16, 'bold'),
+                            relief="solid",
+                            borderwidth=1,
+                            bg=self.get_cell_color('w'))
+                btn.bind("<Button-1>", lambda e, r=row, c=col: self.on_cell_click(r, c))
                 btn.grid(row=row, column=col, padx=1, pady=1)
                 button_row.append(btn)
             self.buttons.append(button_row)
@@ -118,7 +121,7 @@ class VR1LatticeBuilder:
             row = i // 4
             col = i % 4
             legend_text = f"{component}: {self.component_descriptions.get(component, 'Unknown')}"
-            label = ttk.Label(legend_frame, text=legend_text, font=('Courier', 9))
+            label = ttk.Label(legend_frame, text=legend_text, font=('Courier', 14)) #just changed this
             label.grid(row=row, column=col, sticky=tk.W, padx=10, pady=2)
         
         # Button frame
@@ -144,10 +147,10 @@ class VR1LatticeBuilder:
         """Get display color for component type"""
         color_map = {
             'w': '#E6F3FF',      # Light blue for water
-            '8': '#FF6B6B',      # Red for 8-tube FA
+            '8': '#96CEB4',      # Red for 8-tube FA
             '6': '#4ECDC4',      # Teal for 6-tube FA  
             '4': '#45B7D1',      # Blue for 4-tube FA
-            'X': '#96CEB4',      # Green for inserted control rod
+            'X': '#FF6B6B',      # Green for inserted control rod
             'O': '#FECA57',      # Yellow for removed control rod
             'd': '#DDA0DD',      # Plum for dummy
             'rt': '#DDA0DD',     # Plum for rabbit tube dummy
@@ -164,7 +167,6 @@ class VR1LatticeBuilder:
         """Update button appearance for given cell"""
         component = self.current_lattice[row][col]
         btn = self.buttons[row][col]
-        
         btn.config(text=component, bg=self.get_cell_color(component))
         
         # Add hover tooltip simulation
