@@ -88,6 +88,52 @@ from vr1.utils import launch_lattice_builder
 launch_lattice_builder()
 ```
 
+## Visualization Using OpenMC-Plotter
+
+### OpenMC-Plotter Installation 
+The best way to visualize OpenMC geometry is using OpenMC's development branch feature: OpenMC-Plotter. \n
+To install with PyPI:
+
+``` 
+python -m pip install openmc-plotter
+```
+
+To install with conda (recommended if you're using a conda environment):
+
+```
+conda install -c conda-forge openmc-plotter
+```
+
+### OpenMC-Plotter Usage
+To use openmc-plotter, you must have an OpenMC model generated (at least "settings.xml," "geomtetry.xml," and "materials.xml"). Then, run
+
+```
+openmc-plotter <path_to_openmc_model_dir>
+```
+
+or if you're already in the directory with the necessarily xml files you can run
+
+```
+openmc-plotter
+```
+### OpenMC-Plotter Issues
+
+If you encounter the error
+
+```
+AttributeError: 'MainWindow' object has no attribute 'shortcutOverlay'
+```
+
+To fix this, run the following commands anywhere in Python. As of 07/09/2025, this was the only way to fix this on MacOS, but in theory it should work on any OS. 
+
+```
+from PySide6 import QtCore
+settings = QtCore.QSettings()
+settings.clear()
+conda uninstall openmc-plotter
+conda install -c conda-forge openmc-plotter
+```
+
 ## Tests
 
 Run tests:
@@ -130,10 +176,3 @@ srun openmc
   - `model.xml`
   - OpenMC version
   - nuclear-data library version/path
-
-## Repository Structure
-
-- `vr1/`: main VR-1 geometry/material/tally/settings/writer code
-- `pke/`: point kinetics solver and examples
-- `tests/`: unit/integration tests
-- `scratch/`: exploratory scripts
