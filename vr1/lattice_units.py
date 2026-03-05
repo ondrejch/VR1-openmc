@@ -230,6 +230,25 @@ for rect, params in rects.items():
         boundary_type = 'transmission'
     surfaces[rect] = openmc.model.RectangularPrism(width=params['width'],height=params['height'],origin=params['origin'],boundary_type=boundary_type)
 
+_DEFAULT_BOUNDARY_TYPES: dict[str, str | None] = {
+    name: surface.boundary_type
+    for name, surface in surfaces.items()
+    if hasattr(surface, "boundary_type")
+}
+
+
+def _reset_surface_boundary_types() -> None:
+    """Reset mutable global surface boundary types to initial values.
+
+    Some lattice builders temporarily set reflective boundaries. This helper
+    prevents those mutations from leaking into later builds.
+    """
+    for name, boundary_type in _DEFAULT_BOUNDARY_TYPES.items():
+        surface = surfaces.get(name)
+        if surface is not None and hasattr(surface, "boundary_type"):
+            surface.boundary_type = boundary_type
+
+
 lattice_unit_names: dict[str:str] = {
     '8': '8-tube FA',
     '6': '6-tube FA',
@@ -375,8 +394,6 @@ class GridPlate:
         # self.cells[f'0.8.104']   = openmc.Cell(name=f'0.8.104',fill=self.materials.grid ,region=-surfaces['GRD.xp'] & +surfaces['GRD.xn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
         # self.cells[f'0.8.105']   = openmc.Cell(name=f'0.8.105',fill=self.materials.grid ,region=-surfaces['GRD.yp'] & +surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'] & -surfaces['ELE.1'])
         self.cells['grid_center_water_lower']   = openmc.Cell(name='grid_center_water_lower',fill=self.materials.water,region=-surfaces['GRD.2']  & -surfaces['FAZ.6']  & +surfaces['GRD.zd'])
-
-        self.cells['grid_water_center']   = openmc.Cell(name='grid_water_center',fill=self.materials.water,region=-surfaces['GRD.2'] & -surfaces['FAZ.6'] & +surfaces['GRD.zd'])
 
         self.cells['grid_water_NW'] = openmc.Cell(name='grid_water_NW', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & +surfaces['GRD.yp'] & -surfaces['GRD.xp'] & -surfaces['GRD.zt'] & +surfaces['GRD.zd'])
         self.cells['grid_water_NE'] = openmc.Cell(name='grid_water_NE', fill=self.materials.water,region=+surfaces['GRD.1'] & -surfaces['boundary_XY'] & +surfaces['GRD.yp'] & +surfaces['GRD.xp'] & -surfaces['GRD.zt'] & +surfaces['GRD.zd'])
@@ -561,8 +578,8 @@ class IRT4M(LatticeUnitVR1):
 
     def build(self) -> openmc.Universe:
         """ Builds an IRT4M fuel assembly lattice until. TODO: control rod lattices """
+        _reset_surface_boundary_types()
         self.n_plates = int(lattice_unit_names[self.fa_type][0])  # How many plates in the FA
-        print(f'building {self.n_plates} assembly')
         surfaces['boundary_XY']  = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         """ FA surfaces """
         if self.boundary == 'reflective':
@@ -602,26 +619,27 @@ class IRT4M(LatticeUnitVR1):
         self.cells[f'bot_c_{i}'] = openmc.Cell(name=f'bot_c_{i}', fill=self.materials.cladding, region=-surfaces[f'{i}FT.1'] & +surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
         self.cells[f'bot_w_{i}'] = openmc.Cell(name=f'bot_w_{i}', fill=self.materials.water, region=-surfaces[f'{i}FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
         
-        self.cells[f'0.8.61']    = openmc.Cell(name=f'0.8.61', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.62']    = openmc.Cell(name=f'0.8.62', fill=self.materials.water,   region=-surfaces['1FT.4'] & +surfaces['2FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.63']    = openmc.Cell(name=f'0.8.63', fill=self.materials.cladding,region=-surfaces['2FT.1'] & +surfaces['2FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.64']    = openmc.Cell(name=f'0.8.64', fill=self.materials.water,   region=-surfaces['2FT.4'] & +surfaces['3FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.65']    = openmc.Cell(name=f'0.8.65', fill=self.materials.cladding,region=-surfaces['3FT.1'] & +surfaces['3FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.66']    = openmc.Cell(name=f'0.8.66', fill=self.materials.water,   region=-surfaces['3FT.4'] & +surfaces['4FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.67']    = openmc.Cell(name=f'0.8.67', fill=self.materials.cladding,region=-surfaces['4FT.1'] & +surfaces['4FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.68']    = openmc.Cell(name=f'0.8.68', fill=self.materials.water,   region=-surfaces['4FT.4'] & +surfaces['5FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.69']    = openmc.Cell(name=f'0.8.69', fill=self.materials.cladding,region=-surfaces['5FT.1'] & +surfaces['5FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.70']    = openmc.Cell(name=f'0.8.70', fill=self.materials.water,   region=-surfaces['5FT.4'] & +surfaces['6FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.71']    = openmc.Cell(name=f'0.8.71', fill=self.materials.cladding,region=-surfaces['6FT.1'] & +surfaces['6FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.72']    = openmc.Cell(name=f'0.8.72', fill=self.materials.water,   region=-surfaces['6FT.4'] & +surfaces['7FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.73']    = openmc.Cell(name=f'0.8.73', fill=self.materials.cladding,region=-surfaces['7FT.1'] & +surfaces['7FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.74']    = openmc.Cell(name=f'0.8.74', fill=self.materials.water,   region=-surfaces['7FT.4'] & +surfaces['8FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.75']    = openmc.Cell(name=f'0.8.75', fill=self.materials.cladding,region=-surfaces['8FT.1'] & +surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
-        self.cells[f'0.8.76']    = openmc.Cell(name=f'0.8.76', fill=self.materials.water,   region=-surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+        if self.n_plates == 8:
+            self.cells[f'0.8.61']    = openmc.Cell(name=f'0.8.61', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.62']    = openmc.Cell(name=f'0.8.62', fill=self.materials.water,   region=-surfaces['1FT.4'] & +surfaces['2FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.63']    = openmc.Cell(name=f'0.8.63', fill=self.materials.cladding,region=-surfaces['2FT.1'] & +surfaces['2FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.64']    = openmc.Cell(name=f'0.8.64', fill=self.materials.water,   region=-surfaces['2FT.4'] & +surfaces['3FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.65']    = openmc.Cell(name=f'0.8.65', fill=self.materials.cladding,region=-surfaces['3FT.1'] & +surfaces['3FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.66']    = openmc.Cell(name=f'0.8.66', fill=self.materials.water,   region=-surfaces['3FT.4'] & +surfaces['4FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.67']    = openmc.Cell(name=f'0.8.67', fill=self.materials.cladding,region=-surfaces['4FT.1'] & +surfaces['4FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.68']    = openmc.Cell(name=f'0.8.68', fill=self.materials.water,   region=-surfaces['4FT.4'] & +surfaces['5FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.69']    = openmc.Cell(name=f'0.8.69', fill=self.materials.cladding,region=-surfaces['5FT.1'] & +surfaces['5FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.70']    = openmc.Cell(name=f'0.8.70', fill=self.materials.water,   region=-surfaces['5FT.4'] & +surfaces['6FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.71']    = openmc.Cell(name=f'0.8.71', fill=self.materials.cladding,region=-surfaces['6FT.1'] & +surfaces['6FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.72']    = openmc.Cell(name=f'0.8.72', fill=self.materials.water,   region=-surfaces['6FT.4'] & +surfaces['7FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.73']    = openmc.Cell(name=f'0.8.73', fill=self.materials.cladding,region=-surfaces['7FT.1'] & +surfaces['7FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.74']    = openmc.Cell(name=f'0.8.74', fill=self.materials.water,   region=-surfaces['7FT.4'] & +surfaces['8FT.1'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.75']    = openmc.Cell(name=f'0.8.75', fill=self.materials.cladding,region=-surfaces['8FT.1'] & +surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
+            self.cells[f'0.8.76']    = openmc.Cell(name=f'0.8.76', fill=self.materials.water,   region=-surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
 
-        self.cells[f'0.8.78']    = openmc.Cell(name=f'0.8.78', fill=self.materials.water,   region=+surfaces['1FT.1'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'] & -surfaces['ELE.1'])
-        self.cells[f'0.8.79']    = openmc.Cell(name=f'0.8.79', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
-        self.cells[f'0.8.80']    = openmc.Cell(name=f'0.8.80', fill=self.materials.water,   region=-surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+            self.cells[f'0.8.78']    = openmc.Cell(name=f'0.8.78', fill=self.materials.water,   region=+surfaces['1FT.1'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'] & -surfaces['ELE.1'])
+            self.cells[f'0.8.79']    = openmc.Cell(name=f'0.8.79', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+            self.cells[f'0.8.80']    = openmc.Cell(name=f'0.8.80', fill=self.materials.water,   region=-surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
 
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
@@ -644,6 +662,7 @@ class AbsRod(LatticeUnitVR1):
     def build(self) -> openmc.Universe:
         """ Builds a absorption rod """
         """ Absorption rod surfaces """
+        _reset_surface_boundary_types()
         surfaces['boundary_XY']  = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
         lower_bound_abs  = openmc.ZPlane(z0=plane_zs['GRD.zd'] + self.rod_height)
         lower_bound_head = openmc.ZPlane(z0=plane_zs['GRD.zd'] + self.rod_height + 0.3)  # check this value

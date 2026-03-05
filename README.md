@@ -1,118 +1,114 @@
 # VR1 OpenMC Model
-## Overview
 
-This repository contains an **OpenMC model of the VR1 research reactor**. The VR1 is a pool-type, light-water moderated research reactor located at the Czech Technical University in Prague.  Designed between 1985–1989 and achieving first criticality on 3 December 1990, the unit operates at a rated thermal power of 1 kW (with authorized excursions to 5 kW for short periods). The purpose of this github repo is to replicate the VR-1 geometry, materials, and operating conditions in OpenMC and benchmarking our results with the Czech Serpent simulation results.
+OpenMC model of the VR-1 research reactor (CTU Prague), including:
+- core/facility geometry builders (`vr1/`)
+- material and tally definitions
+- plotting helpers
+- point-kinetics solver (`pke/`)
 
-<div align="center">
-  <img width="450" alt="Cross-section view of the VR1 reactor." src="https://github.com/user-attachments/assets/bf684307-44a0-48e8-93e5-52fa0b335b61" />
-  <div style="margin-top: 8px; font-style: italic; color: #555;">
-    <b>Figure 1:</b> Cross-section view of the VR-1 reactor.
-  </div>
-</div>
+## Installation
 
-## Project Goals
-
-- Build a VR1 reactor core model in OpenMC
-- Validate OpenMC results against Serpent models and experimental data
-- Provide reusable code for reactor physics training and education
-
-## Repository Structure
-
-- `/vr1`: Main source code for geometry, materials, tallies, plotting, and settings
-- `/tests`: Automated tests for code correctness
-- `/pke`: Point kinetics solver
-- `/scratch`: Experimental or prototype scripts
-- `requirements.txt`: Dependencies for running the code
-- `setup.py`: For package installation
-
-## We have (4) Serpent input files for OpenMC-to-Serpent comparison: 
-1. C12-C-2023_1 - Full current VR-1 core (critical state)
-2. 6 – 6-tube IRT-4M fuel assembly
-3. 8 – 8-tube IRT-4M fuel assembly
-4. 6_with_abs_rod – 6-tube assembly with an inserted absorber rod
-
-## Installation Guide - Conda
-These steps show you how to install the VR1-openmc package using conda. 
-
-1. Make sure you have conda installed.
-2. **Install openmc using conda-forge or mamba.** OpenMC is a dependency for VR1. Instructions can be found on [OpenMC's website](https://docs.openmc.org/en/stable/quickinstall.html).
-3. Create a new conda environment with Python 3.11 and activate it:
+### Option A: Conda (recommended)
+```bash
+conda env create -f environment.yml
+conda activate vr1-openmc
 ```
-conda create -n vr1 python=3.11 openmc -c conda-forge
-conda activate vr1
-```
-3. Install the VR1 package from GitHub
-```
-pip install git+https://github.com/ondrejch/VR1-openmc.git
-```
-4. You can now use the VR1 digital twin tools in your Python scripts or Jupyter notebooks. Try doing `import vr1` and it should work.
-5. You can also clone the repo using
-```
-git clone https://github.com/ondrejch/VR1-openmc.git
-cd VR1-openmc
+
+### Option B: pip/venv
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 pip install -e .
 ```
 
-## Installation Guide - venv
+## Cross Section Data
 
-1. Make and activate a virtual environment.
-```
-python -m venv vr1-venv
-source vr1-venv/bin/activate
-```
-2. Install OpenMC into the virtual environment. This assumes you have cloned and build OpenMC already.  
-```
-pip install <path to>/openmc/
-```
-3. Install vr-1 package from GitHub
-```
-git clone git@github.com:ondrejch/VR1-openmc.git
-cd VR1-openmc
-pip install -r requirements.txt
-pip install .
-```
-Likely there is a more elegant way, but this works. 
+OpenMC requires HDF5 nuclear data and a `cross_sections.xml` file.
 
-## Visualization Using OpenMC-Plotter
-
-1. The best way to visualize OpenMC geometry is using OpenMC's development branch feature: OpenMC-Plotter. \n
-To install with PyPI:
-
-``` 
-python -m pip install openmc-plotter
+Typical setup:
+```bash
+export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
 ```
 
-To install with conda (recommended if you're using a conda environment):
+You can also pass the path directly via `VR1Settings(xs_xml="...")`.
 
-```
-conda install -c conda-forge openmc-plotter
-```
+## Quick Usage
 
-2. To use openmc-plotter, you must have an OpenMC model generated (at least "settings.xml," "geomtetry.xml," and "materials.xml"). Then, run
+### Build an 8x8 lattice and export XML
+```python
+from vr1.core import Lattice
+from vr1.materials import VR1Materials
+from vr1.settings import VR1Settings
+from vr1.writer import WriterOpenMC
 
-```
-openmc-plotter <path_to_openmc_model_dir>
-```
+materials = VR1Materials()
+core = Lattice(materials=materials, preset="C12-C-2023")
+settings = VR1Settings(
+    xs_xml="/path/to/cross_sections.xml",
+    parm={"npg": 5000, "batches": 110, "inactive": 10},
+)
 
-or if you're already in the directory with the necessarily xml files you can run
-
-```
-openmc-plotter
-```
-
-3. If you encounter the error
-
-```
-AttributeError: 'MainWindow' object has no attribute 'shortcutOverlay'
-```
-
-To fix this, run the following commands anywhere in Python. As of 07/09/2025, this was the only way to fix this on MacOS, but in theory it should work on any OS. 
-
-```
-from PySide6 import QtCore
-settings = QtCore.QSettings()
-settings.clear()
-conda uninstall openmc-plotter
-conda install -c conda-forge openmc-plotter
+writer = WriterOpenMC(settings=settings, core=core)
+writer.output_dir = "vr1_run"
+writer.write_openmc_XML()
 ```
 
+Expected output files in `vr1_run/`:
+- `model.xml`
+
+### Run GUI lattice builder
+```python
+from vr1.utils import launch_lattice_builder
+launch_lattice_builder()
+```
+
+## Tests
+
+Run tests:
+```bash
+pytest -q
+```
+
+OpenMC-dependent tests auto-skip when OpenMC is unavailable.
+
+## HPC / SLURM Notes
+
+Example SLURM script:
+```bash
+#!/bin/bash
+#SBATCH --job-name=vr1-openmc
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --time=01:00:00
+#SBATCH --partition=compute
+
+module load openmc
+source /path/to/venv/bin/activate
+export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
+
+python -c "from vr1.core import Lattice; from vr1.materials import VR1Materials; \
+from vr1.settings import VR1Settings; from vr1.writer import WriterOpenMC; \
+m=VR1Materials(); c=Lattice(materials=m,preset='C12-C-2023'); \
+s=VR1Settings(xs_xml='$OPENMC_CROSS_SECTIONS'); \
+w=WriterOpenMC(s,c); w.output_dir='run'; w.write_openmc_XML()"
+
+cd run
+srun openmc
+```
+
+## Reproducibility Notes
+
+- Pin package versions (`requirements.txt` / `environment.yml`).
+- Set OpenMC RNG seed in settings when needed for exact Monte Carlo reproducibility.
+- Archive:
+  - `model.xml`
+  - OpenMC version
+  - nuclear-data library version/path
+
+## Repository Structure
+
+- `vr1/`: main VR-1 geometry/material/tally/settings/writer code
+- `pke/`: point kinetics solver and examples
+- `tests/`: unit/integration tests
+- `scratch/`: exploratory scripts

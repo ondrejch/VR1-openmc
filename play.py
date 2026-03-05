@@ -13,7 +13,7 @@ from vr1.core import core_designs
 my_settings = VR1Settings()
 my_settings.get_settings()
 # my_settings.plots = test_plots()
-# my_core = TestLattice()
+# my_core = Lattice()
 # my_writer = WriterOpenMC(my_settings, my_core)
 # my_writer.write_openmc_XML()
 

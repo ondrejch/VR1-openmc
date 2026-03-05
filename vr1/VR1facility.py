@@ -1,3 +1,5 @@
+"""Facility-level VR-1 geometry construction."""
+
 import openmc
 from vr1.materials import vr1_materials
 from vr1.lattice_units import surfaces
@@ -5,15 +7,18 @@ from vr1.lattice_units import surfaces
 
 class Facility:
     """Class that builds VR1 reactor inside of the facility"""
+
     def __init__(self, materials: vr1_materials) -> None:
+        """Initialize facility builder with shared material and surface tables."""
         self.materials = materials
         self.cells: dict = {}
         self.surfaces = surfaces
 
     def name(self) -> str:
+        """Return human-readable facility name."""
         return "VR1 Facility"
 
-    def build(self, lattice = None):  # I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
+    def build(self, lattice = None):  # Kept optional to support an empty facility model.
         """Builds a nuclear facility geometry using OpenMC by defining various cells with specified materials and regions.
         Parameters:
             - lattice (optional): An instance of a lattice model to be used as a fill material for one of the core cells.

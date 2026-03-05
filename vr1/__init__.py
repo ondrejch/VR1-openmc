@@ -1,3 +1,5 @@
+"""Top-level VR-1 package constants."""
+
 ELEMENTS: list = ['neutron',
     'h',                                                                                                  'he',
     'li', 'be',                                                              'b',  'c',  'n',  'o',  'f', 'ne',

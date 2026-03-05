@@ -112,9 +112,9 @@ def cli_demo():
     
     # Show how to use with VR1 classes
     print(f"\nUsage with VR-1 classes:")
-    print("from vr1.core import TestLattice")
+    print("from vr1.core import Lattice")
     print("from example_custom_lattice import CUSTOM_LATTICE") 
-    print("my_core = TestLattice(lattice_str=CUSTOM_LATTICE)")
+    print("my_core = Lattice(lattice_str=CUSTOM_LATTICE)")
     
     print(f"\n✓ CLI demonstration completed successfully!")
 
@@ -136,9 +136,9 @@ def save_lattice(lattice, filename):
             f.write(f'    {row},\n')
         f.write(']\n\n')
         f.write('# Usage example:\n')
-        f.write('# from vr1.core import TestLattice\n')
+        f.write('# from vr1.core import Lattice\n')
         f.write('# from custom_lattice import CUSTOM_LATTICE\n') 
-        f.write('# my_core = TestLattice(lattice_str=CUSTOM_LATTICE)\n')
+        f.write('# my_core = Lattice(lattice_str=CUSTOM_LATTICE)\n')
 
 def gui_demo():
     """Launch the GUI version"""

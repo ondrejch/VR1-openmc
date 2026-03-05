@@ -14,10 +14,14 @@ tally_types: list[str] = [
 
 
 class VR1Tally:
+    """Base class for VR-1 tally wrappers."""
+
     def __init__(self):
+        """Initialize empty OpenMC tally."""
         self.flux_tally = openmc.Tally()
 
     def get(self):
+        """Return underlying OpenMC tally."""
         return self.flux_tally
 
 
@@ -38,7 +42,8 @@ class FluxTally(VR1Tally):
         self.material = material
         super().__init__()
 
-        energy_bins = scale_252_energy_bins
+        # OpenMC requires monotonically increasing energy-bin boundaries.
+        energy_bins = sorted(scale_252_energy_bins)
         energy_filter = openmc.EnergyFilter(energy_bins)
         self.flux_tally.name = tally_type
         cell_filter = None
@@ -50,6 +55,7 @@ class FluxTally(VR1Tally):
             self.flux_tally.filters = [cell_filter, energy_filter]
         else:
             self.flux_tally.filters = [energy_filter]
+        self.flux_tally.scores = ["flux"]
 
 
 """ SCALE 252 group energy structure """
