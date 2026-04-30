@@ -1,3 +1,5 @@
+"""Utility helpers for VR-1 workflows."""
+
 import vr1
 
 my_mat = '''
@@ -52,11 +54,11 @@ def mat_s2open(s2mat: str):
         ele = f'{vr1.ELEMENTS[Z]}'.capitalize() + str(A)
         print(f'"{ele}": {wo},')
 
-import os
 import subprocess
 
 def plot_vr1():
-    subprocess.run(["openmc-plotter"])
+    """Launch ``openmc-plotter`` and fail on non-zero exit status."""
+    subprocess.run(["openmc-plotter"], check=True)
 
 
 def launch_lattice_builder():

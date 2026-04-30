@@ -29,7 +29,7 @@ grid_dict = {"Al27": 0.9353353, "Mn55": 0.002999189, "Mg24": 0.03894506, "Mg25":
     "Zn66": 0.000278866, "Zn67": 4.09805e-05, "Zn68": 0.00018791, "Zn70": 5.99714e-06, "Ti46": 7.91718e-05,
     "Ti47": 7.29506e-05, "Ti48": 0.000738218, "Ti49": 5.53035e-05, "Ti50": 5.4033e-05, }
 big_channel_dict = grid_dict
-abs_tube_dict = {"Fe54": 3.734050e-02, "Fe54": 5.861660e-01, "Fe57": 1.353710e-02, "Fe58": 1.801540e-03,
+abs_tube_dict = {"Fe54": 3.734050e-02, "Fe56": 5.861660e-01, "Fe57": 1.353710e-02, "Fe58": 1.801540e-03,
                "C12": 3.501192E-02, "C13": 3.786794E-04, "Si28": 1.395870e-02, "Si29": 7.087880e-04,
                "Si30": 4.672390e-04, "Mn55": 1.934300e-03, "P31": 6.003990e-04, "S32": 3.146070e-04,
                "S33": 2.518710e-06, "S34": 1.421750e-05, "S36": 6.628190e-08, "Cr50": 7.992040e-03,
@@ -84,6 +84,7 @@ class VR1Materials:
         self.fuel.set_density('g/cm3', 5.53)
         self.fuel.temperature = 293.15
         self.fuel.depletable = True
+        self.fuel.volume = 10000 #TODO
         self.mats_list.append(self.fuel)
 
         self.water = openmc.Material(name='water in the pool')
@@ -196,13 +197,13 @@ class VR1Materials:
         self.mats_list.append(self.displacer)
 
         self.steelrc = openmc.Material(name='steelrc')
-        self.steelrc.add_components(abs_head_dict,'ao')
+        self.steelrc.add_components(steelrc_dict,'ao')
         self.steelrc.set_density('g/cm3',7.85)
         self.steelrc.temperature = 293.15
         self.mats_list.append(self.steelrc)
 
         self.lead = openmc.Material(name='lead')
-        self.lead.add_components(abs_head_dict,'ao')
+        self.lead.add_components(lead_dict,'ao')
         self.lead.set_density('g/cm3',11.3)
         self.lead.temperature = 293.15
         self.mats_list.append(self.lead)
@@ -220,8 +221,8 @@ class VR1Materials:
         self.mats_list.append(self.vessel)
 
     def get_materials(self):
+        """Return OpenMC materials collection without exporting XML."""
         mats = openmc.Materials(self.mats_list)
-        mats.export_to_xml()
         return mats
 
 

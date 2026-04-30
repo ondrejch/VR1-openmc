@@ -1,3 +1,5 @@
+"""Facility-level VR-1 geometry construction."""
+
 import openmc
 from vr1.materials import vr1_materials
 from vr1.lattice_units import surfaces
@@ -5,15 +7,18 @@ from vr1.lattice_units import surfaces
 
 class Facility:
     """Class that builds VR1 reactor inside of the facility"""
+
     def __init__(self, materials: vr1_materials) -> None:
+        """Initialize facility builder with shared material and surface tables."""
         self.materials = materials
         self.cells: dict = {}
         self.surfaces = surfaces
 
     def name(self) -> str:
+        """Return human-readable facility name."""
         return "VR1 Facility"
 
-    def build(self, lattice = None):  # I would make this require type TestLattice but I want the functionality of an empty facility. Maybe pointless
+    def build(self, lattice = None):  # Kept optional to support an empty facility model.
         """Builds a nuclear facility geometry using OpenMC by defining various cells with specified materials and regions.
         Parameters:
             - lattice (optional): An instance of a lattice model to be used as a fill material for one of the core cells.
@@ -22,7 +27,7 @@ class Facility:
         if lattice is not None:
             lattice = lattice.model
 
-        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,             region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["H01.sc"])
+        self.cells["core.1"]    = openmc.Cell(name="core.1",    fill = lattice,                      region=-self.surfaces["CORE.rec"] & +self.surfaces['RCcy.1'] & -self.surfaces["FAZ.2"] & +self.surfaces["H01.sc"])
         self.cells["surf.1"]    = openmc.Cell(name="surf.1",    fill = self.materials.radialchannel, region=-self.surfaces["RCcy.1"] & +self.surfaces["RCcy.2"] & +self.surfaces["RCpy.2"])
         self.cells["water.1"]   = openmc.Cell(name="water.1",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & +self.surfaces["RCcy.1"] & +self.surfaces["RCpy.1"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & ~self.cells["core.1"].region)
         self.cells["water.2"]   = openmc.Cell(name="water.2",   fill = self.materials.water,         region=-self.surfaces["H01.1"] & -self.surfaces["RCpy.1"] & +self.surfaces["RCpy.4"] & +self.surfaces["RCcy.10"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])

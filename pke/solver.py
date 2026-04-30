@@ -23,7 +23,7 @@ fast_reactor_params: dict = {
 class PointKineticsEquationSolver:
     """Nuclear reactor point kinetics analyzer with modular plotting
     Parameters:
-        - reactivity_func (callable): ρ(t) in dollars, a function describing the reactor's external reactivity over time.
+        - reactivity_func (callable): ρ(t) in delta-k/k.
         - source_func (callable, optional): Describes the external neutron source. Defaults to a function returning zero (no source).
         - params (dict, optional): Reactor parameters including 'beta', 'lambda_', and 'Lambda'. Defaults to U-235 thermal parameters.
     Processing Logic:
@@ -34,7 +34,7 @@ class PointKineticsEquationSolver:
     def __init__(self, reactivity_func, source_func=None, params=None):
         """ Nuclear reactor point kinetics analyzer with modular plotting
         Args:
-            reactivity_func (callable): ρ(t) in dollars
+            reactivity_func (callable): ρ(t) in delta-k/k
             params (dict): Reactor parameters (default: U-235 thermal) """
         if params is None:
             params = thermal_default_params
@@ -51,14 +51,24 @@ class PointKineticsEquationSolver:
         self.solution = None
 
     def _validate_parameters(self):
-        if len(self.params['beta']) != len(self.params['lambda_']) or len(self.params['beta']) < 1:
+        """Validate kinetics parameter consistency."""
+        beta = np.asarray(self.params['beta'], dtype=float)
+        lambda_ = np.asarray(self.params['lambda_'], dtype=float)
+        Lambda = float(self.params['Lambda'])
+        if len(beta) != len(lambda_) or len(beta) < 1:
             raise ValueError("Beta and lambda arrays must have equal length")
+        if np.any(beta < 0.0):
+            raise ValueError("Beta values must be non-negative")
+        if np.any(lambda_ <= 0.0):
+            raise ValueError("Lambda-group decay constants must be positive")
+        if Lambda <= 0.0:
+            raise ValueError("Prompt generation time 'Lambda' must be positive")
 
     def solve(self, t_span=(0, 10), t_eval=None):
         """Solve the point kinetics equations"""
-        beta = self.params['beta']
-        lambda_ = self.params['lambda_']
-        Lambda = self.params['Lambda']
+        beta = np.asarray(self.params['beta'], dtype=float)
+        lambda_ = np.asarray(self.params['lambda_'], dtype=float)
+        Lambda = float(self.params['Lambda'])
         beta_sum: float = self.beta_total
 
         # Initial conditions (steady-state)
@@ -73,15 +83,16 @@ class PointKineticsEquationSolver:
                 - y (list): Contains neutron density and concentrations of delayed neutron precursors.
             Returns:
                 - list: A list comprising the rate of change of neutron density followed by the rates of change of each precursor concentration."""
-            n, *C = y
+            n = float(y[0])
+            C = np.asarray(y[1:], dtype=float)
             rho = self.reactivity_func(t)       # External reactivity
             Q = self.source_func(t)             # External neutron source
             prompt = (rho - beta_sum) / Lambda
             delayed = np.dot(lambda_, C)
 
             dndt = n * prompt + delayed + Q
-            dCdt = [beta[i] / Lambda * n - lambda_[i] * C[i] for i in range(len(C))]
-            return [dndt] + dCdt
+            dCdt = beta / Lambda * n - lambda_ * C
+            return np.concatenate(([dndt], dCdt))
 
         self.solution = solve_ivp(equations, t_span, y0, method='RK45', t_eval=t_eval, rtol=1e-6, atol=1e-8)
         return self.solution.t, self.solution.y[0], self.solution.y[1:]
@@ -91,7 +102,7 @@ class PointKineticsEquationSolver:
         Args:
             logscale (bool): Use logarithmic y-axis
             **plot_kwargs: Matplotlib styling options """
-        if not self.solution:
+        if self.solution is None:
             raise RuntimeError("Call solve() before plotting")
         fig, ax = plt.subplots(figsize=figsize)
         if logscale:
@@ -107,7 +118,7 @@ class PointKineticsEquationSolver:
         """ Plot precursor group concentrations
         Args:
             groups: List of group indices (0-based) or 'all' """
-        if not self.solution:
+        if self.solution is None:
             raise RuntimeError("Call solve() before plotting")
 
         fig, ax = plt.subplots(figsize=figsize)
@@ -122,7 +133,7 @@ class PointKineticsEquationSolver:
 
     def plot_source_contribution(self, figsize=(8, 4), **plot_kwargs):
         """Plot the external source function over time"""
-        if not self.solution:
+        if self.solution is None:
             raise RuntimeError("Call solve() before plotting")
 
         fig, ax = plt.subplots(figsize=figsize)

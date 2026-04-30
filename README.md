@@ -13,7 +13,7 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 ## Project Goals
 
 - Build a VR1 reactor core model in OpenMC
-- Validate OpenMC results against Serpent models and experimental data
+- Validate OpenMC results against Serpent or experimental data
 - Provide reusable code for reactor physics training and education
 
 ## Repository Structure
@@ -31,51 +31,67 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 3. 8 – 8-tube IRT-4M fuel assembly
 4. 6_with_abs_rod – 6-tube assembly with an inserted absorber rod
 
-## Installation Guide - Conda
-These steps show you how to install the VR1-openmc package using conda. 
+## Installation
 
-1. Make sure you have conda installed.
-2. **Install openmc using conda-forge or mamba.** OpenMC is a dependency for VR1. Instructions can be found on [OpenMC's website](https://docs.openmc.org/en/stable/quickinstall.html).
-3. Create a new conda environment with Python 3.11 and activate it:
+### Option A: Conda (recommended)
+```bash
+conda env create -f environment.yml
+conda activate vr1-openmc
 ```
-conda create -n vr1 python=3.11 openmc -c conda-forge
-conda activate vr1
-```
-3. Install the VR1 package from GitHub
-```
-pip install git+https://github.com/ondrejch/VR1-openmc.git
-```
-4. You can now use the VR1 digital twin tools in your Python scripts or Jupyter notebooks. Try doing `import vr1` and it should work.
-5. You can also clone the repo using
-```
-git clone https://github.com/ondrejch/VR1-openmc.git
-cd VR1-openmc
+
+### Option B: pip/venv
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 pip install -e .
 ```
 
-## Installation Guide - venv
+## Cross Section Data
 
-1. Make and activate a virtual environment.
+OpenMC requires HDF5 nuclear data and a `cross_sections.xml` file.
+
+Typical setup:
+```bash
+export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
 ```
-python -m venv vr1-venv
-source vr1-venv/bin/activate
+
+You can also pass the path directly via `VR1Settings(xs_xml="...")`.
+
+## Quick Usage
+
+### Build an 8x8 lattice and export XML
+```python
+from vr1.core import Lattice
+from vr1.materials import VR1Materials
+from vr1.settings import VR1Settings
+from vr1.writer import WriterOpenMC
+
+materials = VR1Materials()
+core = Lattice(materials=materials, preset="C12-C-2023")
+settings = VR1Settings(
+    xs_xml="/path/to/cross_sections.xml",
+    parm={"npg": 5000, "batches": 110, "inactive": 10},
+)
+
+writer = WriterOpenMC(settings=settings, core=core)
+writer.output_dir = "vr1_run"
+writer.write_openmc_XML()
 ```
-2. Install OpenMC into the virtual environment. This assumes you have cloned and build OpenMC already.  
+
+Expected output files in `vr1_run/`:
+- `model.xml`
+
+### Run GUI lattice builder
+```python
+from vr1.utils import launch_lattice_builder
+launch_lattice_builder()
 ```
-pip install <path to>/openmc/
-```
-3. Install vr-1 package from GitHub
-```
-git clone git@github.com:ondrejch/VR1-openmc.git
-cd VR1-openmc
-pip install -r requirements.txt
-pip install .
-```
-Likely there is a more elegant way, but this works. 
 
 ## Visualization Using OpenMC-Plotter
 
-1. The best way to visualize OpenMC geometry is using OpenMC's development branch feature: OpenMC-Plotter. \n
+### OpenMC-Plotter Installation 
+The best way to visualize OpenMC geometry is using OpenMC's development branch feature: OpenMC-Plotter. \n
 To install with PyPI:
 
 ``` 
@@ -88,7 +104,8 @@ To install with conda (recommended if you're using a conda environment):
 conda install -c conda-forge openmc-plotter
 ```
 
-2. To use openmc-plotter, you must have an OpenMC model generated (at least "settings.xml," "geomtetry.xml," and "materials.xml"). Then, run
+### OpenMC-Plotter Usage
+To use openmc-plotter, you must have an OpenMC model generated (at least "settings.xml," "geomtetry.xml," and "materials.xml"). Then, run
 
 ```
 openmc-plotter <path_to_openmc_model_dir>
@@ -99,8 +116,9 @@ or if you're already in the directory with the necessarily xml files you can run
 ```
 openmc-plotter
 ```
+### OpenMC-Plotter Issues
 
-3. If you encounter the error
+If you encounter the error
 
 ```
 AttributeError: 'MainWindow' object has no attribute 'shortcutOverlay'
@@ -116,3 +134,45 @@ conda uninstall openmc-plotter
 conda install -c conda-forge openmc-plotter
 ```
 
+## Tests
+
+Run tests:
+```bash
+pytest -q
+```
+
+OpenMC-dependent tests auto-skip when OpenMC is unavailable.
+
+## HPC / SLURM Notes
+
+Example SLURM script:
+```bash
+#!/bin/bash
+#SBATCH --job-name=vr1-openmc
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --time=01:00:00
+#SBATCH --partition=compute
+
+module load openmc
+source /path/to/venv/bin/activate
+export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
+
+python -c "from vr1.core import Lattice; from vr1.materials import VR1Materials; \
+from vr1.settings import VR1Settings; from vr1.writer import WriterOpenMC; \
+m=VR1Materials(); c=Lattice(materials=m,preset='C12-C-2023'); \
+s=VR1Settings(xs_xml='$OPENMC_CROSS_SECTIONS'); \
+w=WriterOpenMC(s,c); w.output_dir='run'; w.write_openmc_XML()"
+
+cd run
+srun openmc
+```
+
+## Reproducibility Notes
+
+- Pin package versions (`requirements.txt` / `environment.yml`).
+- Set OpenMC RNG seed in settings when needed for exact Monte Carlo reproducibility.
+- Archive:
+  - `model.xml`
+  - OpenMC version
+  - nuclear-data library version/path

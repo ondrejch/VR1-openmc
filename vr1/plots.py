@@ -1,3 +1,5 @@
+"""Plot helpers for VR-1 OpenMC models."""
+
 import openmc
 import matplotlib.pyplot as plt
 import os
@@ -151,28 +153,5 @@ def test_plots() -> openmc.Plots:
     plot1f.color_by = 'material'
     plot1f.colors = material_colors
     plot1f.basis = 'yz'
-
-    def create_plots(self):
-        """Creates visual plots based on predefined plot definitions.
-        Parameters:
-            - None
-        Returns:
-            - list: A list of openmc.Plot objects that were created, configured, and exported to XML."""
-        plots = []
-        for p in self.plot_defs:
-            plot = openmc.Plot()
-            plot.filename = p['filename']
-            plot.width = p['width']
-            plot.pixels = (self.resolution, self.resolution)
-            plot.color_by = 'material'
-            plot.colors = self.material_colors
-            plot.show_overlaps = True
-            plot.show_outline = True
-            plot.basis = p['basis']
-            plot.origin = p['origin']
-            plots.append(plot)
-        plot_file = openmc.Plots(plots)
-        plot_file.export_to_xml()
-        return plots
 
     return openmc.Plots([plot, plotf, plot1, plot1f])

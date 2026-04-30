@@ -1,0 +1,15 @@
+name: vr1-openmc
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - openmc>=0.15.0
+  - numpy>=1.24
+  - scipy>=1.10
+  - matplotlib>=3.9,<4.0
+  - uncertainties>=3.2
+  - json5>=0.9
+  - pytest>=8.0
+  - pip
+  - pip:
+      - -e .

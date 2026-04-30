@@ -1,8 +1,18 @@
 """ Core design for VR1 """
+
+from __future__ import annotations
+
 import openmc
 from vr1.materials import VR1Materials, vr1_materials
-from vr1.lattice_units import (rects, plane_zs, lattice_unit_names, lattice_lower_left, lattice_upper_right,
-                               IRT4M, lattice_pitch, LatticeUnitVR1, AbsRod)
+from vr1.lattice_units import (
+    IRT4M,
+    LatticeUnitVR1,
+    lattice_lower_left,
+    lattice_pitch,
+    lattice_unit_names,
+    lattice_upper_right,
+    plane_zs,
+)
 
 # Write an FA lattice, or the core lattice, or the whole reactor
 core_types: list[str] = ['fuel_lattice', 'active_zone', 'reactor']
@@ -39,7 +49,9 @@ VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
 
 class VR1core:
     """ TODO: lattice structure, geometry of the overall reactor, pool, channels """
-    def __init__(self,materials : VR1Materials = vr1_materials):
+
+    def __init__(self, materials: VR1Materials = vr1_materials):
+        """Initialize shared core-level state."""
         self.materials = materials
         self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
         self.source_upper_right: list[float] = [0, 0, 0]
@@ -48,6 +60,7 @@ class VR1core:
 
 class FuelAssembly(VR1core):
     """ Returns a fuel assembly """
+
     def __init__(self, fa_type, materials: VR1Materials = vr1_materials, boundaries='reflective'):
         """Initialize a new instance of a fuel assembly model with specified parameters.
         Parameters:
@@ -62,7 +75,11 @@ class FuelAssembly(VR1core):
         if 'FA' not in lattice_unit_names[fa_type]:
             raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type = fa_type
-        self.model = IRT4M(self.fa_type, boundaries)
+        self.model = IRT4M(
+            materials=self.materials,
+            fa_type=self.fa_type,
+            boundary=boundaries,
+        ).build()
         self.source_lower_left = lattice_lower_left
         self.source_upper_right = lattice_upper_right
 
@@ -79,17 +96,17 @@ class Lattice(VR1core):
         - The class raises a ValueError if given lattice rows exceed length 8 or the lattice string is not provided without a preset.
         - A lattice box defines the boundaries of the simulation using given planar coordinates.
     """
-    def reformat(self, lattice_str):
+    def reformat(self, lattice_str: list[list[str]]) -> list[list[str]]:
         """
         Reformats lattice string to be an 8x8 grid
         Upper-left justified
         """
         new_lattice_str = []
         for row in lattice_str:
+            row = list(row)
             n = 8 - len(row)
             if len(row) == 8:
                 new_lattice_str.append(row)
-                n -= 1
                 continue
             if len(row) > 8:
                 raise ValueError('All lattice rows must be of length 8 or shorter')
@@ -114,41 +131,58 @@ class Lattice(VR1core):
             new_lattice_str[-1][i] = 'wrc'
         return new_lattice_str
 
-    def __init__(self, materials : VR1Materials = vr1_materials, lattice_str: list[list[str]] = None, preset=False):
+    def __init__(
+        self,
+        materials: VR1Materials = vr1_materials,
+        lattice_str: list[list[str]] | None = None,
+        preset: str | list[list[str]] | None = None,
+    ):
         """Initializes an instance of a lattice-based geometry with specified or preset configurations.
         Parameters:
             - materials (VR1Materials): The materials to be used within the lattice structure.
             - lattice_str (list[list[str]], optional): A 2D list representing the layout of the lattice. Defaults to None.
-            - preset (bool, optional): If True and lattice_str is None, uses a preset lattice configuration. Defaults to False.
+            - preset (str | list[list[str]] | None, optional): Preset name or lattice
+              definition used when ``lattice_str`` is not provided.
         Returns:
             - None: This is a constructor method; it initializes the instance and does not return a value."""
         super().__init__(materials)
         if lattice_str is None:
-            if preset is False:
+            if preset is None:
                 raise ValueError('Must specify lattice string or provide a preset lattice')
-            lattice_str = preset
+            if isinstance(preset, str):
+                if preset not in core_designs:
+                    raise ValueError(
+                        f'Unknown preset "{preset}". '
+                        f"Available presets: {sorted(core_designs.keys())}"
+                    )
+                lattice_str = core_designs[preset]
+            elif isinstance(preset, list):
+                lattice_str = preset
+            else:
+                raise TypeError('Preset must be a preset name or a lattice list')
         self.lattice_str = [[str(i) for i in j] for j in lattice_str]
         self.lattice_str = self.reformat(self.lattice_str)
         self.build()
 
     def build(self):
+        """Build the OpenMC lattice universe from the current lattice string."""
         n = 8
         self.lattice = openmc.RectLattice(name='test_lattice')
         xy_corner: float = float(n) * lattice_pitch / 2.0
         self.lattice.lower_left = (-xy_corner, -xy_corner)
         self.lattice.pitch = (lattice_pitch, lattice_pitch)
-        # self.lattice.universes = np.zeros((n, n), dtype=openmc.UniverseBase)  # TODO why is this not working?
         lattice_builder = LatticeUnitVR1(self.materials)
         lattice_builder.load()
-        lattice_array: list[list[openmc.UniverseBase]] = []  # TODO Is there a better way?
-        z: int = 0
+        lattice_array: list[list[openmc.UniverseBase]] = []
+        universe_cache: dict[str, openmc.UniverseBase] = {}
         for i in range(n):
             _l: list[openmc.UniverseBase] = []
             for j in range(n):
-                _l.append(lattice_builder.get(self.lattice_str[i][j]))
+                lattice_code = self.lattice_str[i][j]
+                if lattice_code not in universe_cache:
+                    universe_cache[lattice_code] = lattice_builder.get(lattice_code)
+                _l.append(universe_cache[lattice_code])
             lattice_array.append(_l)
-
-            z += 1
         self.lattice.universes = lattice_array
         """ Lattice box """
         z0: float = plane_zs['H01.sc']
@@ -161,6 +195,7 @@ class Lattice(VR1core):
         self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])
 
     def SCRAM(self):
+        """Set all control-rod locations to inserted state."""
         for i in range(8):
             for j in range(8):
                 if any(x in self.lattice_str[i][j] for x in ['_','O']):
@@ -168,6 +203,7 @@ class Lattice(VR1core):
         self.build()
 
     def unSCRAM(self):
+        """Set all control-rod locations to withdrawn state."""
         for i in range(8):
             for j in range(8):
                 if any(x in self.lattice_str[i][j] for x in ['_','X']):

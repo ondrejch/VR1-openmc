@@ -1,7 +1,9 @@
 """ OpenMC model writer for VR1 """
 
-import openmc
 import os
+
+import openmc
+
 from vr1.core import VR1core
 from vr1.materials import vr1_materials
 from vr1.settings import VR1Settings
@@ -9,6 +11,7 @@ from vr1.settings import VR1Settings
 
 class WriterOpenMC:
     """ OpenMC writer for the VR1 models """
+
     def __init__(self, settings: VR1Settings, core: VR1core) -> None:
         """Initializes a class with settings and core parameters to set up the OpenMC model.
         Parameters:
@@ -19,33 +22,35 @@ class WriterOpenMC:
         self.output_dir: str = 'vr1'
         self.core: VR1core = core
         self.settings = settings
-        self.openmc_materials = vr1_materials.get_materials()
+        if hasattr(self.core, "materials"):
+            self.openmc_materials = self.core.materials.get_materials()
+        else:
+            self.openmc_materials = vr1_materials.get_materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
         self.openmc_model = openmc.Model()
 
     def set_settings(self) -> openmc.Settings:
-        """ Creates OpenMC settings object """
-        settings = openmc.Settings()
-        settings.batches = self.settings.parm['gen']
-        settings.particles = self.settings.parm['npg']
-        settings.generations_per_batch = self.settings.generations_per_batch
-        settings.inactive = self.settings.parm['nsk']
-        if 'sig' in self.settings.parm:
+        """Create OpenMC settings object for the current core."""
+        settings = self.settings.get_settings()
+        if "sig" in self.settings.parm:
             settings.keff_trigger = {
-            'type': 'std_dev',
-            'threshold': self.settings.parm['sig']  # Ensure k-effective converges to this precision
-        }
-        settings.temperature = {'method': 'interpolation'}
-        settings.source = openmc.IndependentSource(
-            space=openmc.stats.Box(self.core.source_lower_left, self.core.source_upper_right),
-            constraints={'fissionable': True}
-        )
+                "type": "std_dev",
+                "threshold": self.settings.parm["sig"],
+            }
+        settings.temperature = {"method": "interpolation"}
+        if settings.source is None:
+            settings.source = openmc.IndependentSource(
+                space=openmc.stats.Box(
+                    self.core.source_lower_left, self.core.source_upper_right
+                ),
+                constraints={"fissionable": True},
+            )
         return settings
 
-    def set_tallies(self) -> openmc.tallies:
-        """ Creates OpenMC tallies object """
+    def set_tallies(self) -> openmc.Tallies:
+        """Create OpenMC tallies object."""
         my_tallies: list = []
         if self.settings.tallies:
             for t in self.settings.tallies:
@@ -53,18 +58,18 @@ class WriterOpenMC:
         return openmc.Tallies(my_tallies)
 
     def set_plots(self) -> openmc.Plots:
+        """Create OpenMC plots object."""
         my_plots: list = []
         if self.settings.plots:
             for p in self.settings.plots:
                 my_plots.append(p)
         return openmc.Plots(my_plots)
 
-    def set_geometry(self) -> openmc.geometry:
-        """ Creates OpenMC geometry object """
+    def set_geometry(self) -> openmc.Geometry:
+        """Create OpenMC geometry object."""
         if self.core:
             return openmc.Geometry(root=self.core.model)
-        else:
-            raise ValueError(f'Cannot create geometry for {self.core}')
+        raise ValueError(f"Cannot create geometry for {self.core}")
 
     def write_openmc_XML(self) -> int:
         """ Generates self.openmc_model and writes OpenMC XML deck corresponding to the underlying model & settings """
@@ -78,8 +83,8 @@ class WriterOpenMC:
         self.openmc_tallies = self.set_tallies()
         self.openmc_geometry = self.set_geometry()
         self.openmc_geometry.merge_surfaces = True
-        self.openmc_materials.cross_section_library = self.settings.xs_lib
-        self.openmc_materials.cross_sections = self.settings.xs_xml
+        if self.settings.xs_xml:
+            self.openmc_materials.cross_sections = self.settings.xs_xml
 
         """ Build the model object """
         self.openmc_model.materials = self.openmc_materials
@@ -89,3 +94,7 @@ class WriterOpenMC:
         self.openmc_model.plots = self.set_plots()
         self.openmc_model.export_to_model_xml(self.output_dir)
         return 0
+
+    def write_openmc_xml(self) -> int:
+        """PEP-8 alias for :meth:`write_openmc_XML`."""
+        return self.write_openmc_XML()
