@@ -316,7 +316,7 @@ class LatticeUnitVR1:
             'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod
             'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod
             'G': Reflector(materials=self.materials,reflector_type=self.materials.graphite),
-            'B': Reflector(materials=self.materials,reflector_type=self.materials.berylium),
+            'B': Reflector(materials=self.materials,reflector_type=self.materials.beryllium),
         # 'R1': '6-tube FA with regulatory control rod 1',
         # 'R2': '6-tube FA with regulatory control rod 2',
         # 'E1': '6-tube FA with experimental shim rod 2',
