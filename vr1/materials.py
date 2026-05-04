@@ -50,7 +50,7 @@ abs_head_dict = {"C12": 0.613229215, "C13": 0.007187085, "Al27": 22.34264, "Si28
                  "Zn67": 2.300020e-04, "Zn68": 1.054640e-03, "Zn70": 3.365880e-05}
 grafit_dict = {"C12": 0.9893, "C13": 0.0107}  # not sure how to parse this from serpent
 aluminum_dict = {"Al27": 1.0}
-berylium_dict = {"Be9": 1.0}
+beryllium_dict = {"Be9": 1.0}
 algraflayer_dict = guide_tube_dict
 displacer_dict = {"Al27": 1.0}
 steelrc_dict = {"Fe54": 3.91068E-02, "Fe56": 6.13893E-01, "Fe57": 1.41775E-02, "Fe58": 1.88676E-03, "C12": 8.95626E-03,
@@ -234,11 +234,11 @@ class VR1Materials:
         self.aluminum.temperature = 293.15
         self.mats_list.append(self.aluminum)
 
-        self.berylium = openmc.Material(name='berylium')
-        self.berylium.add_components(berylium_dict,'ao')
-        self.berylium.set_density('g/cm3',1.9)
-        self.berylium.temperature = 293.15
-        self.mats_list.append(self.berylium)
+        self.beryllium = openmc.Material(name='beryllium')
+        self.beryllium.add_components(beryllium_dict,'ao')
+        self.beryllium.set_density('g/cm3',1.9)
+        self.beryllium.temperature = 293.15
+        self.mats_list.append(self.beryllium)
 
     def get_materials(self):
         """Return OpenMC materials collection without exporting XML."""
