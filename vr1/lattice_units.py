@@ -50,7 +50,10 @@ sqcs: dict = {
     "RT.1" : {"wh": 2.801, "corner_r": 0.825},
     "DMY.1": {"wh": 3.500, "corner_r": 1.750},  # outer dim. fuel dummy rounding
     "DMY.2": {"wh": 3.350, "corner_r": 1.600},  # inner dim. fuel dummy rounding
-    "ELE.1": {"wh": 3.575, "corner_r": 0.0},    # boundary 1 position
+    "ELE.1": {"wh": 3.575, "corner_r": 0.0  },  # boundary 1 position
+    "GRP.1": {"wh": 6.9656, "corner_r": 1.577},  #graphite block cladding
+    "GRP.2": {"wh": 6.4256, "corner_r": 1.307},  #graphite block air gap
+    "GRP.3": {"wh": 6.2116, "corner_r": 1.200},  #graphite center
 }
 
 cyl_ys: dict = {
@@ -255,6 +258,8 @@ lattice_unit_names: dict[str:str] = {
     '4': '4-tube FA',
     # 'O': '6-tube FA with a fully withdrawn control rod',
     'X': '6-tube FA with a fully inserted control rod',
+    'G': 'Graphite reflector',
+    'B': 'Berylium reflector',
     # 'R1': '6-tube FA with regulatory control rod 1',
     # 'R2': '6-tube FA with regulatory control rod 2',
     # 'E1': '6-tube FA with experimental shim rod 2',
@@ -306,11 +311,12 @@ class LatticeUnitVR1:
             'v90': VertChannel(materials=self.materials,diameter=90),
             'v56': VertChannel(materials=self.materials,diameter=56),
             'v30': VertChannel(materials=self.materials,diameter=30),
-            # 'v25': VertChannel(materials=self.materials,diameter=25),
             'v25': VertChannel(materials=self.materials,lattice_type='w',diameter=25),
             'v12': VertChannel(materials=self.materials,diameter=12),
             'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod
             'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod
+            'G': Reflector(materials=self.materials,reflector_type=self.materials.graphite),
+            'B': Reflector(materials=self.materials,reflector_type=self.materials.berylium),
         # 'R1': '6-tube FA with regulatory control rod 1',
         # 'R2': '6-tube FA with regulatory control rod 2',
         # 'E1': '6-tube FA with experimental shim rod 2',
@@ -432,6 +438,36 @@ class Water(LatticeUnitVR1):
         self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'])
 
         return openmc.Universe(name='water', cells=list(self.cells.values()))
+
+class Reflector(LatticeUnitVR1):
+    """
+    Graphite reflector lattice unit
+    """
+    def __init__(self, materials: VR1Materials, reflector_type: openmc.Material):
+        self.fillmat = reflector_type
+        super().__init__(materials)
+
+    def name(self) -> str:
+        return "Water filling the lattice"
+
+    def build(self) -> openmc.Universe:
+        """Builds an OpenMC Universe containing graphite reflector contained in aluminum.
+        Returns:
+            - openmc.Universe: A universe composed of graphite reflector."""
+        surfaces['boundary_XY'] = openmc.model.RectangularPrism(width=lattice_wh, height=lattice_wh)
+
+        self.cells['reflector_air_gap'] = openmc.Cell(name='graphite_air_gap', fill=self.materials.air, region = +surfaces['GRP.3'] & -surfaces['GRP.2'] & +surfaces['Gpz.4'] & -surfaces['Gpz.3'])
+        self.cells[self.fillmat.name] = openmc.Cell(name=self.fillmat.name, fill=self.fillmat, region=-surfaces['GRP.3'] & +surfaces['Gpz.4'] & -surfaces['Gpz.3'])
+
+        self.cells['aluminum_clad_reflector'] = openmc.Cell(name='aluminum_clad_reflector', fill=self.materials.aluminum, region = ~self.cells['reflector_air_gap'].region & ~self.cells[self.fillmat.name].region & -surfaces['GRP.1'] & +surfaces['Gpz.5'] & -surfaces['Gpz.1'])
+
+        self.cells['reflector_water'] = openmc.Cell(name='reflector_water', fill=self.materials.water, region=-surfaces['boundary_XY'] & ~self.cells['aluminum_clad_reflector'].region)
+
+        gridplate = GridPlate(self.materials)
+        grid_unit = gridplate.build()
+        self.cells['grid'] = openmc.Cell(name='grid',fill=grid_unit,region=-surfaces['1FT.1'] & -surfaces['FAZ.4'])
+
+        return openmc.Universe(name=f'{self.fillmat.name}_reflector', cells=list(self.cells.values()))
 
 class Dummy:
     """

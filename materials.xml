@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <materials>
   <cross_sections>/Users/macris/openmc_data/endfb-viii.0-hdf5/cross_sections.xml</cross_sections>
-  <material depletable="true" id="24" name="fuel meat" temperature="293.15">
+  <material depletable="true" id="27" name="fuel" temperature="293.15" volume="10000">
     <density units="g/cm3" value="5.53"/>
     <nuclide name="U235" wo="0.09976"/>
     <nuclide name="U238" wo="0.40724"/>
     <nuclide name="O16" wo="0.06832"/>
     <nuclide name="Al27" wo="0.42467"/>
   </material>
-  <material id="25" name="water in the pool" temperature="293.15">
+  <material id="28" name="water in the pool" temperature="293.15">
     <density units="g/cm3" value="0.9982"/>
     <nuclide ao="1.99968852" name="H1"/>
     <nuclide ao="0.00031148" name="H2"/>
@@ -16,7 +16,7 @@
     <nuclide ao="0.000379" name="O17"/>
     <sab name="c_H_in_H2O"/>
   </material>
-  <material id="26" name="fuel cladding" temperature="293.15">
+  <material id="29" name="fuel cladding" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide name="Al27" wo="0.9807392"/>
     <nuclide name="Mg24" wo="0.005259756"/>
@@ -34,7 +34,7 @@
     <nuclide name="B10" wo="2.19563e-07"/>
     <nuclide name="B11" wo="9.78493e-07"/>
   </material>
-  <material id="27" name="radialchannel" temperature="293.15">
+  <material id="30" name="radialchannel" temperature="293.15">
     <density units="g/cm3" value="2.65"/>
     <nuclide name="Al27" wo="0.9582268"/>
     <nuclide name="Mn55" wo="0.003000477"/>
@@ -62,7 +62,7 @@
     <nuclide name="Zn68" wo="0.00018799"/>
     <nuclide name="Zn70" wo="5.99969e-06"/>
   </material>
-  <material id="28" name="bottomnozzle" temperature="293.15">
+  <material id="31" name="bottomnozzle" temperature="293.15">
     <density units="g/cm3" value="2.65"/>
     <nuclide name="Al27" wo="0.9582268"/>
     <nuclide name="Mn55" wo="0.003000477"/>
@@ -90,7 +90,7 @@
     <nuclide name="Zn68" wo="0.00018799"/>
     <nuclide name="Zn70" wo="5.99969e-06"/>
   </material>
-  <material id="29" name="smallchannel" temperature="293.15">
+  <material id="32" name="smallchannel" temperature="293.15">
     <density units="g/cm3" value="2.65"/>
     <nuclide name="Al27" wo="0.9582268"/>
     <nuclide name="Mn55" wo="0.003000477"/>
@@ -118,7 +118,7 @@
     <nuclide name="Zn68" wo="0.00018799"/>
     <nuclide name="Zn70" wo="5.99969e-06"/>
   </material>
-  <material id="30" name="fuel dummy" temperature="293.15">
+  <material id="33" name="fuel dummy" temperature="293.15">
     <density units="g/cm3" value="2.65"/>
     <nuclide name="Al27" wo="0.9807392"/>
     <nuclide name="Mg24" wo="0.005259756"/>
@@ -136,7 +136,7 @@
     <nuclide name="B10" wo="2.19563e-07"/>
     <nuclide name="B11" wo="9.78493e-07"/>
   </material>
-  <material id="31" name="guidetube" temperature="293.15">
+  <material id="34" name="guidetube" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide name="Al27" wo="0.9952163"/>
     <nuclide name="Cu63" wo="0.000171273"/>
@@ -155,7 +155,7 @@
     <nuclide name="Zn68" wo="4.69974e-05"/>
     <nuclide name="Zn70" wo="1.49992e-06"/>
   </material>
-  <material id="32" name="abscenter" temperature="293.15">
+  <material id="35" name="abscenter" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide name="Al27" wo="0.9952163"/>
     <nuclide name="Cu63" wo="0.000171273"/>
@@ -174,7 +174,7 @@
     <nuclide name="Zn68" wo="4.69974e-05"/>
     <nuclide name="Zn70" wo="1.49992e-06"/>
   </material>
-  <material id="33" name="rabbittube" temperature="293.15">
+  <material id="36" name="rabbittube" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide name="Al27" wo="0.9952163"/>
     <nuclide name="Cu63" wo="0.000171273"/>
@@ -193,12 +193,12 @@
     <nuclide name="Zn68" wo="4.69974e-05"/>
     <nuclide name="Zn70" wo="1.49992e-06"/>
   </material>
-  <material id="34" name="air" temperature="293.15">
+  <material id="37" name="air" temperature="293.15">
     <density units="g/cm3" value="0.001161"/>
     <nuclide name="N14" wo="0.7551"/>
     <nuclide name="O16" wo="0.2449"/>
   </material>
-  <material id="35" name="grid" temperature="293.15">
+  <material id="38" name="grid" temperature="293.15">
     <density units="g/cm3" value="2.63"/>
     <nuclide name="Al27" wo="0.9353353"/>
     <nuclide name="Mn55" wo="0.002999189"/>
@@ -230,7 +230,7 @@
     <nuclide name="Ti49" wo="5.53035e-05"/>
     <nuclide name="Ti50" wo="5.4033e-05"/>
   </material>
-  <material id="36" name="bigchannel" temperature="293.15">
+  <material id="39" name="bigchannel" temperature="293.15">
     <density units="g/cm3" value="2.63"/>
     <nuclide name="Al27" wo="0.9353353"/>
     <nuclide name="Mn55" wo="0.002999189"/>
@@ -262,9 +262,10 @@
     <nuclide name="Ti49" wo="5.53035e-05"/>
     <nuclide name="Ti50" wo="5.4033e-05"/>
   </material>
-  <material id="37" name="abstube" temperature="293.15">
+  <material id="40" name="abstube" temperature="293.15">
     <density units="g/cm3" value="7.85"/>
-    <nuclide ao="0.586166" name="Fe54"/>
+    <nuclide ao="0.0373405" name="Fe54"/>
+    <nuclide ao="0.586166" name="Fe56"/>
     <nuclide ao="0.0135371" name="Fe57"/>
     <nuclide ao="0.00180154" name="Fe58"/>
     <nuclide ao="0.03501192" name="C12"/>
@@ -293,9 +294,10 @@
     <nuclide ao="0.00180156" name="Ti49"/>
     <nuclide ao="0.00172497" name="Ti50"/>
   </material>
-  <material id="38" name="damper" temperature="293.15">
+  <material id="41" name="damper" temperature="293.15">
     <density units="g/cm3" value="7.85"/>
-    <nuclide ao="0.586166" name="Fe54"/>
+    <nuclide ao="0.0373405" name="Fe54"/>
+    <nuclide ao="0.586166" name="Fe56"/>
     <nuclide ao="0.0135371" name="Fe57"/>
     <nuclide ao="0.00180154" name="Fe58"/>
     <nuclide ao="0.03501192" name="C12"/>
@@ -324,7 +326,7 @@
     <nuclide ao="0.00180156" name="Ti49"/>
     <nuclide ao="0.00172497" name="Ti50"/>
   </material>
-  <material id="39" name="cdlayer" temperature="293.15">
+  <material id="42" name="cdlayer" temperature="293.15">
     <density units="g/cm3" value="8.65"/>
     <nuclide ao="0.0125" name="Cd106"/>
     <nuclide ao="0.0089" name="Cd108"/>
@@ -335,7 +337,7 @@
     <nuclide ao="0.2873" name="Cd114"/>
     <nuclide ao="0.0749" name="Cd116"/>
   </material>
-  <material id="40" name="abshead" temperature="293.15">
+  <material id="43" name="abshead" temperature="293.15">
     <density units="g/cm3" value="5.497"/>
     <nuclide name="C12" wo="0.613229215"/>
     <nuclide name="C13" wo="0.007187085"/>
@@ -375,7 +377,7 @@
     <nuclide name="Zn68" wo="0.00105464"/>
     <nuclide name="Zn70" wo="3.36588e-05"/>
   </material>
-  <material id="41" name="algraflayer" temperature="293.15">
+  <material id="44" name="algraflayer" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide name="Al27" wo="0.9952163"/>
     <nuclide name="Cu63" wo="0.000171273"/>
@@ -394,91 +396,45 @@
     <nuclide name="Zn68" wo="4.69974e-05"/>
     <nuclide name="Zn70" wo="1.49992e-06"/>
   </material>
-  <material id="42" name="displacer" temperature="293.15">
+  <material id="45" name="displacer" temperature="293.15">
     <density units="g/cm3" value="2.7"/>
     <nuclide ao="1.0" name="Al27"/>
   </material>
-  <material id="43" name="steelrc" temperature="293.15">
+  <material id="46" name="steelrc" temperature="293.15">
     <density units="g/cm3" value="7.85"/>
-    <nuclide ao="0.613229215" name="C12"/>
-    <nuclide ao="0.007187085" name="C13"/>
-    <nuclide ao="22.34264" name="Al27"/>
-    <nuclide ao="0.5699801" name="Si28"/>
-    <nuclide ao="0.02997625" name="Si29"/>
-    <nuclide ao="0.02044071" name="Si30"/>
-    <nuclide ao="0.02714242" name="P31"/>
-    <nuclide ao="0.06318908" name="S32"/>
-    <nuclide ao="0.0005217" name="S33"/>
-    <nuclide ao="0.003033851" name="S34"/>
-    <nuclide ao="1.497626e-05" name="S36"/>
-    <nuclide ao="0.1842596" name="Ti46"/>
-    <nuclide ao="0.1697818" name="Ti47"/>
-    <nuclide ao="1.717988" name="Ti48"/>
-    <nuclide ao="0.1287059" name="Ti49"/>
-    <nuclide ao="0.1257434" name="Ti50"/>
-    <nuclide ao="0.5826037" name="Cr50"/>
-    <nuclide ao="11.68361" name="Cr52"/>
-    <nuclide ao="1.350332" name="Cr53"/>
-    <nuclide ao="0.3424647" name="Cr54"/>
-    <nuclide ao="0.1551" name="Mn55"/>
-    <nuclide ao="2.94223" name="Fe54"/>
-    <nuclide ao="47.89526" name="Fe56"/>
-    <nuclide ao="1.125895" name="Fe57"/>
-    <nuclide ao="0.152462" name="Fe58"/>
-    <nuclide ao="5.211166" name="Ni58"/>
-    <nuclide ao="2.076471" name="Ni60"/>
-    <nuclide ao="0.09176879" name="Ni61"/>
-    <nuclide ao="0.2973895" name="Ni62"/>
-    <nuclide ao="0.07818203" name="Ni64"/>
-    <nuclide ao="0.003843418" name="Cu63"/>
-    <nuclide ao="0.001767457" name="Cu65"/>
-    <nuclide ao="0.00272637" name="Zn64"/>
-    <nuclide ao="0.00156514" name="Zn66"/>
-    <nuclide ao="0.000230002" name="Zn67"/>
-    <nuclide ao="0.00105464" name="Zn68"/>
-    <nuclide ao="3.36588e-05" name="Zn70"/>
+    <nuclide ao="0.0391068" name="Fe54"/>
+    <nuclide ao="0.613893" name="Fe56"/>
+    <nuclide ao="0.0141775" name="Fe57"/>
+    <nuclide ao="0.00188676" name="Fe58"/>
+    <nuclide ao="0.00895626" name="C12"/>
+    <nuclide ao="9.68685e-05" name="C13"/>
+    <nuclide ao="0.0178536" name="Si28"/>
+    <nuclide ao="0.000906563" name="Si29"/>
+    <nuclide ao="0.000597613" name="Si30"/>
+    <nuclide ao="0.0197922" name="Mn55"/>
+    <nuclide ao="0.00078987" name="P31"/>
+    <nuclide ao="0.000482871" name="S32"/>
+    <nuclide ao="3.86581e-06" name="S33"/>
+    <nuclide ao="2.18215e-05" name="S34"/>
+    <nuclide ao="1.01732e-07" name="S36"/>
+    <nuclide ao="0.00840481" name="Cr50"/>
+    <nuclide ao="0.162078" name="Cr52"/>
+    <nuclide ao="0.0183784" name="Cr53"/>
+    <nuclide ao="0.00457477" name="Cr54"/>
+    <nuclide ao="0.0599062" name="Ni58"/>
+    <nuclide ao="0.0230757" name="Ni60"/>
+    <nuclide ao="0.00100309" name="Ni61"/>
+    <nuclide ao="0.00319828" name="Ni62"/>
+    <nuclide ao="0.000814507" name="Ni64"/>
   </material>
-  <material id="44" name="lead" temperature="293.15">
+  <material id="47" name="lead" temperature="293.15">
     <density units="g/cm3" value="11.3"/>
-    <nuclide ao="0.613229215" name="C12"/>
-    <nuclide ao="0.007187085" name="C13"/>
-    <nuclide ao="22.34264" name="Al27"/>
-    <nuclide ao="0.5699801" name="Si28"/>
-    <nuclide ao="0.02997625" name="Si29"/>
-    <nuclide ao="0.02044071" name="Si30"/>
-    <nuclide ao="0.02714242" name="P31"/>
-    <nuclide ao="0.06318908" name="S32"/>
-    <nuclide ao="0.0005217" name="S33"/>
-    <nuclide ao="0.003033851" name="S34"/>
-    <nuclide ao="1.497626e-05" name="S36"/>
-    <nuclide ao="0.1842596" name="Ti46"/>
-    <nuclide ao="0.1697818" name="Ti47"/>
-    <nuclide ao="1.717988" name="Ti48"/>
-    <nuclide ao="0.1287059" name="Ti49"/>
-    <nuclide ao="0.1257434" name="Ti50"/>
-    <nuclide ao="0.5826037" name="Cr50"/>
-    <nuclide ao="11.68361" name="Cr52"/>
-    <nuclide ao="1.350332" name="Cr53"/>
-    <nuclide ao="0.3424647" name="Cr54"/>
-    <nuclide ao="0.1551" name="Mn55"/>
-    <nuclide ao="2.94223" name="Fe54"/>
-    <nuclide ao="47.89526" name="Fe56"/>
-    <nuclide ao="1.125895" name="Fe57"/>
-    <nuclide ao="0.152462" name="Fe58"/>
-    <nuclide ao="5.211166" name="Ni58"/>
-    <nuclide ao="2.076471" name="Ni60"/>
-    <nuclide ao="0.09176879" name="Ni61"/>
-    <nuclide ao="0.2973895" name="Ni62"/>
-    <nuclide ao="0.07818203" name="Ni64"/>
-    <nuclide ao="0.003843418" name="Cu63"/>
-    <nuclide ao="0.001767457" name="Cu65"/>
-    <nuclide ao="0.00272637" name="Zn64"/>
-    <nuclide ao="0.00156514" name="Zn66"/>
-    <nuclide ao="0.000230002" name="Zn67"/>
-    <nuclide ao="0.00105464" name="Zn68"/>
-    <nuclide ao="3.36588e-05" name="Zn70"/>
+    <nuclide ao="0.014" name="Pb204"/>
+    <nuclide ao="0.241" name="Pb206"/>
+    <nuclide ao="0.221" name="Pb207"/>
+    <nuclide ao="0.524" name="Pb208"/>
   </material>
-  <material id="45" name="concrete" temperature="293.15">
+  <material id="48" name="concrete" temperature="293.15">
     <density units="g/cm3" value="2.3"/>
     <nuclide name="H1" wo="0.01"/>
     <nuclide name="O16" wo="0.532"/>
@@ -497,9 +453,10 @@
     <nuclide name="Fe57" wo="0.0002967"/>
     <nuclide name="Fe58" wo="3.948e-05"/>
   </material>
-  <material id="46" name="vessel" temperature="293.15">
+  <material id="49" name="vessel" temperature="293.15">
     <density units="g/cm3" value="7.85"/>
-    <nuclide ao="0.586166" name="Fe54"/>
+    <nuclide ao="0.0373405" name="Fe54"/>
+    <nuclide ao="0.586166" name="Fe56"/>
     <nuclide ao="0.0135371" name="Fe57"/>
     <nuclide ao="0.00180154" name="Fe58"/>
     <nuclide ao="0.03501192" name="C12"/>
@@ -527,5 +484,18 @@
     <nuclide ao="0.0245491" name="Ti48"/>
     <nuclide ao="0.00180156" name="Ti49"/>
     <nuclide ao="0.00172497" name="Ti50"/>
+  </material>
+  <material id="50" name="graphite" temperature="293.15">
+    <density units="g/cm3" value="1.735"/>
+    <nuclide ao="0.9893" name="C12"/>
+    <nuclide ao="0.0107" name="C13"/>
+  </material>
+  <material id="51" name="aluminum" temperature="293.15">
+    <density units="g/cm3" value="2.6989"/>
+    <nuclide ao="1.0" name="Al27"/>
+  </material>
+  <material id="52" name="berylium" temperature="293.15">
+    <density units="g/cm3" value="1.9"/>
+    <nuclide ao="1.0" name="Be9"/>
   </material>
 </materials>
