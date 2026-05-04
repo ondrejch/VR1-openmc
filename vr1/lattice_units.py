@@ -308,10 +308,10 @@ class LatticeUnitVR1:
             '8': IRT4M(fa_type='8',materials=self.materials),
             '6': IRT4M(fa_type='6',materials=self.materials),
             '4': IRT4M(fa_type='4',materials=self.materials),
-            'v90': VertChannel(materials=self.materials,diameter=90),
+            # 'v90': VertChannel(materials=self.materials,diameter=90),
             'v56': VertChannel(materials=self.materials,diameter=56),
             'v30': VertChannel(materials=self.materials,diameter=30),
-            'v25': VertChannel(materials=self.materials,lattice_type='w',diameter=25),
+            'v25': VertChannel(materials=self.materials,diameter=25),
             'v12': VertChannel(materials=self.materials,diameter=12),
             'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod
             'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod
@@ -345,6 +345,10 @@ class LatticeUnitVR1:
                 elif lattice_code.startswith('6'):
                     height = lattice_code[2:]
                     assembly = AbsRod(materials=self.materials,assembly_type='6',rod_height=float(height))
+                    return assembly.build()
+                elif lattice_code.startswith('4'):
+                    height = lattice_code[2:]
+                    assembly = AbsRod(materials=self.materials,assembly_type='4',rod_height=float(height))
                     return assembly.build()
             raise ValueError(f'Unknown lattice type "{lattice_code}"')
         
@@ -498,6 +502,7 @@ class Dummy:
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['DMY.1'] & -surfaces['FAZ.2'] & +surfaces['GRD.zt'])
 
         if self.RT is True:
+            print('uhh')
             water_region = -surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["GRD.zt"] & +surfaces['RT.1']
             self.cells["27.RT.1"] = openmc.Cell(name="27.RT.1", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.2"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
             self.cells["27.RT.2"] = openmc.Cell(name="27.RT.2", fill = self.materials.air,        region=-surfaces["RT.2"] & +surfaces["RT.3"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
@@ -549,10 +554,15 @@ class VertChannel(LatticeUnitVR1):
             self.cells['channel_air'] = openmc.Cell(name=f'channel_air{self.diameter}', fill=self.materials.air,region=-surfaces['inner_radius'] & +surfaces['channel_bottom_inner'])
 
             #only small channel can be inside an assembly
-            if self.lattice_type == '6':
-                assembly_object = IRT4M(materials=self.materials,fa_type=str(self.lattice_type))
-                assembly_uni = assembly_object.build()
-                self.cells['assembly_cell'] = openmc.Cell(fill=assembly_uni,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['channel_bottom'])
+            if self.lattice_type != 'water':
+                if self.lattice_type == 'd':
+                    assembly_object = Dummy(materials=self.materials)
+                    assembly_uni = assembly_object.build()
+                    self.cells['assembly_cell'] = openmc.Cell(fill=assembly_uni,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['channel_bottom'])
+                else:
+                    assembly_object = IRT4M(materials=self.materials,fa_type=str(self.lattice_type))
+                    assembly_uni = assembly_object.build()
+                    self.cells['assembly_cell'] = openmc.Cell(fill=assembly_uni,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['channel_bottom'])
             else:
                 self.cells[f'channel{self.diameter}_water1'] = openmc.Cell(name=f'channel{self.diameter}_water1',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['outer_radius'] & +surfaces['GRD.zt'])
                 self.cells[f'channel{self.diameter}_water2'] = openmc.Cell(name=f'channel{self.diameter}_water2',fill=self.materials.water,region=-surfaces['boundary_XY'] & +surfaces['1FT.1'] & -surfaces['GRD.zt'])
