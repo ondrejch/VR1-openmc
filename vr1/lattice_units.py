@@ -313,8 +313,10 @@ class LatticeUnitVR1:
             'v30': VertChannel(materials=self.materials,diameter=30),
             'v25': VertChannel(materials=self.materials,diameter=25),
             'v12': VertChannel(materials=self.materials,diameter=12),
-            'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod
-            'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod
+            'O': AbsRod(materials=self.materials, assembly_type='6',rod_height=84.7), #fully removed control rod 6
+            'X': AbsRod(materials=self.materials, assembly_type='6',rod_height=0), #fully inserted control rod 6
+            'X4': AbsRod(materials=self.materials, assembly_type='4',rod_height=0), #fully inserted control rod 4
+            'O4': AbsRod(materials=self.materials, assembly_type='4',rod_height=84.7), #fully removed control rod 4
             'G': Reflector(materials=self.materials,reflector_type=self.materials.graphite),
             'B': Reflector(materials=self.materials,reflector_type=self.materials.beryllium),
         # 'R1': '6-tube FA with regulatory control rod 1',
@@ -502,7 +504,6 @@ class Dummy:
         self.cells['out_top'] = openmc.Cell(name='out_top', fill=self.materials.water, region=-surfaces['boundary_XY'] & +surfaces['DMY.1'] & -surfaces['FAZ.2'] & +surfaces['GRD.zt'])
 
         if self.RT is True:
-            print('uhh')
             water_region = -surfaces["DMY.2"] & -surfaces["FAZ.2"] & +surfaces["GRD.zt"] & +surfaces['RT.1']
             self.cells["27.RT.1"] = openmc.Cell(name="27.RT.1", fill = self.materials.rabbittube, region=-surfaces["RT.1"] & +surfaces["RT.2"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
             self.cells["27.RT.2"] = openmc.Cell(name="27.RT.2", fill = self.materials.air,        region=-surfaces["RT.2"] & +surfaces["RT.3"] & +surfaces["RT.zt"] & -surfaces["FAZ.2"])
