@@ -20,7 +20,8 @@ my_settings.get_settings()
 openmc.Materials.cross_sections = "/Users/macris/openmc_data/endfb-viii.0-hdf5/cross_sections.xml" #must use viii.0 for C12
 chainfile = "/Users/macris/openmc_data/chainfile.xml"
 mats = VR1Materials()
-mats.get_materials() #generates materials.xml for plotting
+asdf = mats.get_materials() #generates materials obj
+asdf.export_to_xml()
 
 # absorption_rod = vlu.AbsRod(materials=mats)
 assembly = vlu.IRT4M(materials=mats,fa_type='8')
@@ -36,13 +37,19 @@ gridplate = vlu.GridPlate(materials=mats)
 #     ['8']*8,
 #     ['6']*8,
 # ]
-latticetest = [['6','6_10','8','d','v25']]
+latticetest = [['6','6_10','B','d','v25','G']]
 lattice_preset = vr1.core.core_designs['C12-C-2023']
+
+sreeguy =   [['w','w','w','w','w','w','w','w'],
+            ['w','w','8','8','8','8','w','w'],
+            ['w','w','d','8','X','6_34','v25','w'],
+            ['w','w','X','X','d','X','w','w']]
+
 dummy = vlu.Dummy(materials=mats,RT=True)
 
 rabbit = vlu.RabbitTube(materials=mats)
 
-lattice = Lattice(materials=mats,lattice_str=lattice_preset)
+lattice = Lattice(materials=mats,lattice_str=latticetest)
 # lattice.build()
 
 # lattice.SCRAM()
