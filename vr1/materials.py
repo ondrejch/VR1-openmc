@@ -79,7 +79,7 @@ class VR1Materials:
         Returns:
             - None: This method does not return a value. Initializes materials for further simulation use."""
         self.mats_list = []
-        self.fuel = openmc.Material(name='fuel meat')
+        self.fuel = openmc.Material(name='fuel')
         self.fuel.add_components(fuel_dict, 'wo')
         self.fuel.set_density('g/cm3', 5.53)
         self.fuel.temperature = 293.15

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<settings>
+  <run_mode>eigenvalue</run_mode>
+  <particles>5000</particles>
+  <batches>30</batches>
+  <inactive>15</inactive>
+  <source particle="neutron" strength="1.0" type="independent">
+    <space type="box">
+      <parameters>-28.6 -28.6 7.5975 28.6 28.6 66.4025</parameters>
+    </space>
+    <constraints>
+      <fissionable>true</fissionable>
+    </constraints>
+  </source>
+  <photon_transport>false</photon_transport>
+  <temperature_method>interpolation</temperature_method>
+  <temperature_range>293.15 923.15</temperature_range>
+</settings>

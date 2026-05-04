@@ -36,7 +36,7 @@ gridplate = vlu.GridPlate(materials=mats)
 #     ['8']*8,
 #     ['6']*8,
 # ]
-latticetest = [['6','6_10','6_20','6_30','6_40']]
+latticetest = [['6','6_10','8','d','v25']]
 lattice_preset = vr1.core.core_designs['C12-C-2023']
 dummy = vlu.Dummy(materials=mats,RT=True)
 
@@ -66,8 +66,8 @@ geo.export_to_xml()
 mod = openmc.Model()
 mod.geometry = geo
 # settings = 
-mod.settings = openmc.Settings.from_xml('./settings.xml')
-mod.materials = openmc.Materials.from_xml('./materials.xml')
+# mod.settings = openmc.Settings.from_xml('./settings.xml')
+# mod.materials = openmc.Materials.from_xml('./materials.xml')
 
 settings = openmc.Settings()
 settings.run_mode = 'eigenvalue'
@@ -81,11 +81,11 @@ settings.source = openmc.Source(space=source_area,constraints={'fissionable': Tr
 settings.export_to_xml()
 
 depletion_days = [1,1,1,1]
-op = openmc.deplete.CoupledOperator(model=mod, normalization_mode = "fission-q",chain_file=chainfile) # MAY NEED MSR CHAIN
+op = openmc.deplete.CoupledOperator(model=mod, normalization_mode = "fission-q",chain_file=chainfile)
 intguy = openmc.deplete.PredictorIntegrator(op, depletion_days, timestep_units='d', power=1E6)
 
 # intguy.integrate()
-# openmc.run()
+# openmc.run() 
 
 # plot=openmc.Plot()
 # plot.colors = {mats.air: 'pink', mats.water:'red', mats.abshead: 'lime', mats.abscenter: 'blue', mats.cdlayer: 'black',

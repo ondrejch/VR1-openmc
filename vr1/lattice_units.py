@@ -382,7 +382,7 @@ class GridPlate:
         self.cells['grid_cylinder_upper']    = openmc.Cell(name='grid_cylinder', fill=self.materials.grid,region=-surfaces['GRD.1']  & +surfaces['GRD.2'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
 
         self.cells['grid_longitude']    = openmc.Cell(name='grid_longitude', fill=self.materials.grid,region=-surfaces['GRD.xp'] & +surfaces['GRD.xn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
-        self.cells['grid_latitude']    = openmc.Cell(name='grid_latitude', fill=self.materials.grid,region=-surfaces['GRD.yp'] & +surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
+        self.cells['grid_latitude']     = openmc.Cell(name='grid_latitude',  fill=self.materials.grid,region=-surfaces['GRD.yp'] & +surfaces['GRD.yn'] & +surfaces['GRD.1'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
 
         self.cells['grid_center_water']    = openmc.Cell(name='grid_center_water', fill=self.materials.water,region=-surfaces['GRD.2'] & -surfaces['GRD.zt'] & +surfaces['FAZ.6'])
 
@@ -637,9 +637,9 @@ class IRT4M(LatticeUnitVR1):
             self.cells[f'0.8.75']    = openmc.Cell(name=f'0.8.75', fill=self.materials.cladding,region=-surfaces['8FT.1'] & +surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
             self.cells[f'0.8.76']    = openmc.Cell(name=f'0.8.76', fill=self.materials.water,   region=-surfaces['8FT.4'] & -surfaces['FAZ.4'] & +surfaces['FAZ.5'])
 
-            self.cells[f'0.8.78']    = openmc.Cell(name=f'0.8.78', fill=self.materials.water,   region=+surfaces['1FT.1'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'] & -surfaces['ELE.1'])
-            self.cells[f'0.8.79']    = openmc.Cell(name=f'0.8.79', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
-            self.cells[f'0.8.80']    = openmc.Cell(name=f'0.8.80', fill=self.materials.water,   region=-surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+        self.cells[f'0.8.78']    = openmc.Cell(name=f'0.8.78', fill=self.materials.water,   region=+surfaces['1FT.1'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'] & -surfaces['ELE.1'])
+        self.cells[f'0.8.79']    = openmc.Cell(name=f'0.8.79', fill=self.materials.cladding,region=-surfaces['1FT.1'] & +surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
+        self.cells[f'0.8.80']    = openmc.Cell(name=f'0.8.80', fill=self.materials.water,   region=-surfaces['1FT.4'] & -surfaces['FAZ.5'] & +surfaces['GRD.zt'])
 
         return openmc.Universe(name=f'lattice_{lattice_unit_names[self.fa_type]}', cells=list(self.cells.values()))
 
