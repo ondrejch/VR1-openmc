@@ -100,35 +100,3 @@ def replace_water_fill(universe: openmc.Universe, materials: VR1Materials, new_w
             # recurse into nested universes
             count += replace_water_fill(fill, materials, new_water)
     return count
-
-
-def apply_bubbly_water_to_dummy(materials: VR1Materials, density_multiplier: float = 1.0, name: Optional[str] = None) -> openmc.Universe:
-    """Create a bubbly-water material and apply it to a single `Dummy` universe.
-
-    Returns the modified universe (not exported).
-    """
-    from vr1.lattice_units import Dummy
-
-    water_bubbly = materials.create_water_with_bubbles(density_multiplier, name=name)
-    dummy = Dummy(materials=materials)
-    uni_dummy = dummy.build()
-    replace_water_fill(uni_dummy, materials, water_bubbly)
-    return uni_dummy
-
-
-def apply_bubbly_water_to_assembly(materials: VR1Materials, fa_type: str = '8', density_multiplier: float = 1.0, name: Optional[str] = None) -> openmc.Universe:
-    """Create a bubbly-water material and apply it to a single `IRT4M` assembly universe.
-
-    Returns the modified universe (not exported).
-    """
-    from vr1.lattice_units import IRT4M
-
-    water_bubbly = materials.create_water_with_bubbles(density_multiplier, name=name)
-    assembly = IRT4M(materials=materials, fa_type=fa_type)
-    uni_assembly = assembly.build()
-    replace_water_fill(uni_assembly, materials, water_bubbly)
-    return uni_assembly
-
-
-if __name__ == '__main__':
-    mat_s2open(my_mat)
