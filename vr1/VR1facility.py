@@ -52,9 +52,10 @@ class Facility:
         self.cells["HO1vsl2"]   = openmc.Cell(name="HO1vsl2",   fill = self.materials.air,           region=-self.surfaces["H01.3"] & +self.surfaces["H01.2"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & +self.surfaces["RCcy.1"])
         self.cells["SHIELD1"]   = openmc.Cell(name="SHIELD1",   fill = self.materials.concrete,      region=-self.surfaces["BOX.rec"] & +self.surfaces["H01.3"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & +self.surfaces["RCcy.14"] & +self.surfaces["RCcz.2"] & +self.surfaces["RCcz.4"])
         self.cells["SHIELD2"]   = openmc.Cell(name="SHIELD2",   fill = self.materials.concrete,      region=-self.surfaces["BOX.rec"] & +self.surfaces["H01.3"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"] & -self.surfaces["RCcy.14"] & +self.surfaces["RCky.1"] & +self.surfaces["RCcy.11"] & +self.surfaces["RCcz.2"] & +self.surfaces["RCcz.4"])
-        self.cells["OUT.1"]     = openmc.Cell(name="OUT.1",     fill = self.materials.air,           region=+self.surfaces["BOX.rec"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
-        self.cells["OUT.2"]     = openmc.Cell(name="OUT.2",     fill = self.materials.air,           region=+self.surfaces["H01.zt"])
-        self.cells["OUT.3"]     = openmc.Cell(name="OUT.3",     fill = self.materials.air,           region=-self.surfaces["H01.zd"])
+        self.surfaces["BOX.rec"].boundary_type = 'vacuum'
+        self.cells["OUT.1"]     = openmc.Cell(name="OUT.1",     fill = None,                        region=+self.surfaces["BOX.rec"] & -self.surfaces["H01.zt"] & +self.surfaces["H01.zd"])
+        self.cells["OUT.2"]     = openmc.Cell(name="OUT.2",     fill = None,                        region=+self.surfaces["H01.zt"])
+        self.cells["OUT.3"]     = openmc.Cell(name="OUT.3",     fill = None,                        region=-self.surfaces["H01.zd"])
         self.cells["V2.1"]      = openmc.Cell(name="V2.1",      fill = self.materials.air,           region=-self.surfaces["RCcy.2"] & +self.surfaces["RCcy.3"] & +self.surfaces["RCpy.9"])
         self.cells["V2.2"]      = openmc.Cell(name="V2.2",      fill = self.materials.radialchannel, region=-self.surfaces["RCcy.3"] & +self.surfaces["RCcy.4"] & +self.surfaces["RCcy.6"] & +self.surfaces["RCpy.5"])
         self.cells["V2.3"]      = openmc.Cell(name="V2.3",      fill = self.materials.water,         region=-self.surfaces["RCcy.4"] & +self.surfaces["RCcy.5"] & +self.surfaces["RCpy.5"])
