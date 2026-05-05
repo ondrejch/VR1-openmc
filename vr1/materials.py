@@ -245,5 +245,35 @@ class VR1Materials:
         mats = openmc.Materials(self.mats_list)
         return mats
 
+    def create_water_with_bubbles(self, density_multiplier: float = 1.0, name: str | None = None) -> openmc.Material:
+        """Create and register a water-like material with a density scaled by `density_multiplier`.
+
+        This returns a new OpenMC Material instance and appends it to the internal
+        `mats_list` so it's exported together with the others.
+
+        Parameters:
+            density_multiplier: Multiplies the base water density (default 1.0).
+            name: Optional material name. If None a name is generated.
+
+        Returns:
+            openmc.Material: The created water-variant material.
+        """
+        base_density_gcc = 0.9982
+        scaled_density = float(base_density_gcc) * float(density_multiplier)
+        mat_name = name if name is not None else f'water_bubbly_{density_multiplier}'
+        water_bubbly = openmc.Material(name=mat_name)
+        # reuse same composition as pool water
+        water_bubbly.add_components(water_dict, 'ao')
+        water_bubbly.set_density('g/cm3', scaled_density)
+        water_bubbly.temperature = 293.15
+        try:
+            water_bubbly.add_s_alpha_beta('c_H_in_H2O')
+        except Exception:
+            # guard: if S(α,β) not available in current OpenMC installation, continue
+            pass
+        # register so get_materials() will include it
+        self.mats_list.append(water_bubbly)
+        return water_bubbly
+
 
 vr1_materials = VR1Materials()
