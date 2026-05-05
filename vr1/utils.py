@@ -55,6 +55,9 @@ def mat_s2open(s2mat: str):
         print(f'"{ele}": {wo},')
 
 import subprocess
+import openmc
+from typing import Optional
+from vr1.materials import VR1Materials
 
 def plot_vr1():
     """Launch ``openmc-plotter`` and fail on non-zero exit status."""
@@ -79,6 +82,52 @@ def launch_lattice_builder():
         print("Make sure all required dependencies are installed.")
     except Exception as e:
         print(f"Error launching lattice builder: {e}")
+
+
+def replace_water_fill(universe: openmc.Universe, materials: VR1Materials, new_water: openmc.Material) -> int:
+    """Recursively replace cells filled with the default `materials.water` with `new_water`.
+
+    Returns the number of cells updated.
+    """
+    count = 0
+    # Iterate over cell objects in universe.cells dictionary values
+    for cell in universe.cells.values():
+        fill = getattr(cell, 'fill', None)
+        if fill is materials.water:
+            cell.fill = new_water
+            count += 1
+        elif isinstance(fill, openmc.Universe):
+            # recurse into nested universes
+            count += replace_water_fill(fill, materials, new_water)
+    return count
+
+
+def apply_bubbly_water_to_dummy(materials: VR1Materials, density_multiplier: float = 1.0, name: Optional[str] = None) -> openmc.Universe:
+    """Create a bubbly-water material and apply it to a single `Dummy` universe.
+
+    Returns the modified universe (not exported).
+    """
+    from vr1.lattice_units import Dummy
+
+    water_bubbly = materials.create_water_with_bubbles(density_multiplier, name=name)
+    dummy = Dummy(materials=materials)
+    uni_dummy = dummy.build()
+    replace_water_fill(uni_dummy, materials, water_bubbly)
+    return uni_dummy
+
+
+def apply_bubbly_water_to_assembly(materials: VR1Materials, fa_type: str = '8', density_multiplier: float = 1.0, name: Optional[str] = None) -> openmc.Universe:
+    """Create a bubbly-water material and apply it to a single `IRT4M` assembly universe.
+
+    Returns the modified universe (not exported).
+    """
+    from vr1.lattice_units import IRT4M
+
+    water_bubbly = materials.create_water_with_bubbles(density_multiplier, name=name)
+    assembly = IRT4M(materials=materials, fa_type=fa_type)
+    uni_assembly = assembly.build()
+    replace_water_fill(uni_assembly, materials, water_bubbly)
+    return uni_assembly
 
 
 if __name__ == '__main__':
