@@ -53,8 +53,8 @@ class VR1core:
     def __init__(self, materials: VR1Materials = vr1_materials):
         """Initialize shared core-level state."""
         self.materials = materials
-        self.source_lower_left:  list[float] = [0, 0, 0]  # Boundaries for source
-        self.source_upper_right: list[float] = [0, 0, 0]
+        self.source_lower_left:  list[float] = [-30, -30, 0]  # Boundaries for source
+        self.source_upper_right: list[float] = [30, 30, 75]
         self.model = openmc.Universe
 
 
