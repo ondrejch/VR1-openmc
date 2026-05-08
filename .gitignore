@@ -181,3 +181,4 @@ cython_debug/
 *.out
 *.xml
 *.vti
+*.pkl
