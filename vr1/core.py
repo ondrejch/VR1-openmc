@@ -138,6 +138,7 @@ class Lattice(VR1core):
         materials: VR1Materials = vr1_materials,
         lattice_str: list[list[str]] | None = None,
         preset: str | list[list[str]] | None = None,
+        lattice_file : str | None = None
     ):
         """Initializes an instance of a lattice-based geometry with specified or preset configurations.
         Parameters:
