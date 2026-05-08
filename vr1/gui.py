@@ -120,10 +120,12 @@ class VR1LatticeBuilder:
             ['w', 'w', 'd', '8', '8', '8', 'w', 'w'],
             ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
         ]
-        
+
+        self.saved_lattice = None   # add this
+        self.saved_filename = None  # add this
         self.current_lattice = copy.deepcopy(self.default_lattice)
-        self.buttons = []  # Will store button grid
-        
+        self.buttons = []   # store button grid
+        self.cell_vars = []    
         self.setup_ui()
         self.load_default_lattice()
         
@@ -148,19 +150,25 @@ class VR1LatticeBuilder:
         grid_frame.grid(row=2, column=0, columnspan=8, pady=(0, 10), sticky=(tk.W, tk.E))
         
         # Create 8x8 button grid
+        # Replace the existing loop that creates tk.Label widgets
         self.buttons = []
+        self.cell_vars = []
         for row in range(8):
             button_row = []
+            var_row = []
             for col in range(8):
-                btn = tk.Label(grid_frame,
-                            width=6, height=3,
-                            font=('Courier', 16, 'bold'),
-                            relief="solid",
-                            borderwidth=1,
-                            bg=self.get_cell_color('w'))
-                btn.bind("<Button-1>", lambda e, r=row, c=col: self.on_cell_click(r, c))
-                btn.grid(row=row, column=col, padx=1, pady=1)
-                button_row.append(btn)
+                var = tk.StringVar(value='w')
+                var.trace_add('write', lambda *args, r=row, c=col: self.on_cell_change(r, c))
+
+                entry = tk.Entry(grid_frame, textvariable=var,
+                                width=5, font=('Courier', 12, 'bold'),
+                                justify='center', relief='solid',
+                                bg=self.get_cell_color('w'))
+                entry.grid(row=row, column=col, padx=1, pady=1)
+
+                var_row.append(var)
+                button_row.append(entry)
+            self.cell_vars.append(var_row)
             self.buttons.append(button_row)
         
         # Status frame
@@ -192,10 +200,12 @@ class VR1LatticeBuilder:
                   command=self.load_default_lattice).grid(row=0, column=0, padx=5)
         ttk.Button(button_frame, text="Reset All to Water", 
                   command=self.reset_to_water).grid(row=0, column=1, padx=5)
-        ttk.Button(button_frame, text="Save Configuration", 
-                  command=self.save_configuration).grid(row=0, column=2, padx=5)
+        ttk.Button(button_frame, text="Export Configuration",
+                command=self.export_configuration).grid(row=0, column=2, padx=5)
+        ttk.Button(button_frame, text="Save Configuration",
+                command=self.save_configuration).grid(row=0, column=3, padx=5)
         ttk.Button(button_frame, text="Load Configuration", 
-                  command=self.load_configuration).grid(row=0, column=3, padx=5)
+                  command=self.load_configuration).grid(row=0, column=4, padx=5)
         
         # Configure grid weights for resizing
         self.root.columnconfigure(0, weight=1)
@@ -204,6 +214,8 @@ class VR1LatticeBuilder:
     
     def get_cell_color(self, component: str) -> str:
         """Get display color for component type"""
+        if component.startswith('6_'):
+            return '#D16413'
         color_map = {
             'w': '#E6F3FF',      # Light blue for water
             '8': '#96CEB4',      # Red for 8-tube FA
@@ -214,41 +226,35 @@ class VR1LatticeBuilder:
             'd': '#DDA0DD',      # Plum for dummy
             'rt': '#DDA0DD',     # Plum for rabbit tube dummy
             'wrc': '#F0F8FF',    # Alice blue for empty water
-            'v90': '#FFB347',    # Orange for large channel
-            'v56': '#FFCC99',    # Light orange for medium channel  
-            'v30': '#FFE5B4',    # Peach for smaller channel
-            'v25': '#FFF2CC',    # Light yellow for smaller channel
-            'v12': '#FFFACD',    # Lemon for smallest channel
+            'v90': '#780E74',    # Orange for large channel
+            'v56': '#780E74',    # Light orange for medium channel  
+            'v30': '#0E7825',    # Peach for smaller channel
+            'v25': '#0E7825',    # Light yellow for smaller channel
+            'v12': '#0E7825',    # Lemon for smallest channel
         }
         return color_map.get(component, '#FFFFFF')
     
     def update_button_display(self, row: int, col: int):
-        """Update button appearance for given cell"""
         component = self.current_lattice[row][col]
-        btn = self.buttons[row][col]
-        btn.config(text=component, bg=self.get_cell_color(component))
-        
-        # Add hover tooltip simulation
+        var = self.cell_vars[row][col]
+        if var.get() != component:
+            var.set(component)
+        self.buttons[row][col].config(bg=self.get_cell_color(component))
         description = self.component_descriptions.get(component, component)
         self.status_label.config(text=f"Cell [{row}][{col}]: {description}")
     
-    def on_cell_click(self, row: int, col: int):
-        """Handle cell button click - cycle through component types"""
-        current_component = self.current_lattice[row][col]
-        
-        # Find current component index
-        try:
-            current_index = self.component_types.index(current_component)
-        except ValueError:
-            current_index = 0  # Default to first component if not found
-        
-        # Cycle to next component
-        next_index = (current_index + 1) % len(self.component_types)
-        new_component = self.component_types[next_index]
-        
-        # Update lattice and display
-        self.current_lattice[row][col] = new_component
-        self.update_button_display(row, col)
+    def on_cell_change(self, row: int, col: int):
+        """Handle typed input change - validate against known components"""
+        new_component = self.cell_vars[row][col].get()
+        if new_component in self.component_types or new_component.startswith('6_'):
+            self.current_lattice[row][col] = new_component
+            self.buttons[row][col].config(bg=self.get_cell_color(new_component))
+            description = self.component_descriptions.get(new_component, new_component)
+            self.status_label.config(text=f"Cell [{row}][{col}]: {description}")
+        else:
+            # Invalid input - highlight red until corrected
+            self.buttons[row][col].config(bg='#FF9999')
+            self.status_label.config(text=f"Unknown component '{new_component}' — see legend below")
     
     def load_default_lattice(self):
         """Load the default lattice template"""
@@ -269,37 +275,36 @@ class VR1LatticeBuilder:
         for row in range(8):
             for col in range(8):
                 self.update_button_display(row, col)
-    
-    def save_configuration(self):
-        """Save current lattice configuration to custom_lattice.py"""
+                    
+    def export_configuration(self):
+        """Export current lattice configuration to a .lat file"""
         try:
             filename = filedialog.asksaveasfilename(
                 defaultextension=".lat",
                 filetypes=[("Lattice files", "*.lat"), ("All files", "*.*")],
                 initialfile="custom_lattice.lat"
             )
-            
+
             if filename:
                 with open(filename, 'w') as f:
-                    # f.write('"""Custom VR-1 reactor lattice configuration"""\n\n')
-                    # f.write('# Generated by VR-1 Lattice Builder GUI\n\n')
                     f.write('CUSTOM_LATTICE = [\n')
-                    
                     for row in self.current_lattice:
                         f.write(f'    {row},\n')
-                    
                     f.write(']\n\n')
-                    # f.write('# Usage example:\n')
-                    # f.write('# from vr1.core import Lattice\n')
-                    # f.write('# from custom_lattice import CUSTOM_LATTICE\n')
-                    # f.write('# my_core = Lattice(lattice_str=CUSTOM_LATTICE)\n')
-                
-                self.status_label.config(text=f"Configuration saved to {filename}")
-                messagebox.showinfo("Save Successful", f"Lattice configuration saved to:\n{filename}")
-        
+
+                self.status_label.config(text=f"Configuration exported to {filename}")
+                messagebox.showinfo("Export Successful", f"Lattice configuration exported to:\n{filename}")
+
         except Exception as e:
-            self.status_label.config(text=f"Error saving: {str(e)}")
-            messagebox.showerror("Save Error", f"Failed to save configuration:\n{str(e)}")
+            self.status_label.config(text=f"Error exporting: {str(e)}")
+            messagebox.showerror("Export Error", f"Failed to export configuration:\n{str(e)}")
+
+    def save_configuration(self):
+        """Save current lattice to memory and close the GUI"""
+        self.saved_lattice = copy.deepcopy(self.current_lattice)
+        self.root.destroy()
+
+
     
     def load_configuration(self):
         """Load lattice configuration from a Python file"""
@@ -327,6 +332,7 @@ class VR1LatticeBuilder:
     def run(self):
         """Start the GUI application"""
         self.root.mainloop()
+        return self.saved_lattice
 
 
 def main():
