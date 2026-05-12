@@ -720,7 +720,7 @@ class AbsRod(LatticeUnitVR1):
             surfaces['GRD.zt'].boundary_type = 'reflective'
 
         """ Building Absorber Rod """
-        cell_0Guidetube_1 = openmc.Cell(name='Guidetube1',fill=self.materials.water,    region= -surfaces['ABS.1'] & +surfaces['ABS.2'])
+        cell_0Guidetube_1 = openmc.Cell(name='Guidetube1',fill=self.materials.air,    region= -surfaces['ABS.1'] & +surfaces['ABS.2'])
         cell_0Guidetube_2 = openmc.Cell(name='Guidetub2e',fill=self.materials.guidetube, region=-surfaces['ABS.2'] & +surfaces['ABS.3'])
 
         universe_0Guidetube = openmc.Universe(cells=[cell_0Guidetube_1,cell_0Guidetube_2])
