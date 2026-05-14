@@ -59,6 +59,7 @@ def make_animation(
     rho_step: float = 0.003,
     interval_ms: int = 20,
     frame_stride: int = 20,
+    zoom_window: float = 0.005,
 ) -> None:
     """Create a GIF that shows the kinetics-driven power change over time."""
 
@@ -70,7 +71,7 @@ def make_animation(
     beta_total = float(np.sum(thermal_default_params["beta"]))
     prompt_jump_estimate = beta_total / max(beta_total - rho_step, 1e-12)
 
-    fig, (ax_curve, ax_text) = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={"width_ratios": [2.2, 1]})
+    fig, (ax_curve, ax_zoom) = plt.subplots(1, 2, figsize=(13, 5), gridspec_kw={"width_ratios": [2.1, 1.2]})
 
     ax_curve.set_title("Short-Time PRKE Response")
     ax_curve.set_xlabel("Time [s]")
@@ -90,29 +91,40 @@ def make_animation(
     prompt_line = ax_curve.axhline(prompt_jump_estimate, color="tab:green", ls="--", lw=1.5, label="Prompt jump estimate")
     ax_curve.legend(loc="best")
 
-    ax_text.axis("off")
-    text_box = ax_text.text(
-        0.0,
+    ax_zoom.set_title("Prompt-Jump Zoom")
+    ax_zoom.set_xlabel("Time [s]")
+    ax_zoom.set_ylabel("Relative neutron density / power")
+    ax_zoom.grid(True, which="both", alpha=0.3)
+    ax_zoom.set_xlim(0.0, max(zoom_window, dt))
+    ax_zoom.set_ylim(max(0.9, y_min), min(max(2.5, y_max), 5.0))
+    zoom_line, = ax_zoom.plot([], [], color="tab:orange", lw=2)
+    zoom_marker, = ax_zoom.plot([], [], marker="o", color="tab:red", ms=6)
+    zoom_prompt_line = ax_zoom.axhline(prompt_jump_estimate, color="tab:green", ls="--", lw=1.5)
+    ax_zoom.text(
+        0.02,
         0.95,
-        "",
+        "Prompt jump should appear here\nwithin the first few ms.",
+        transform=ax_zoom.transAxes,
         va="top",
         ha="left",
-        fontsize=11,
-        family="monospace",
+        fontsize=10,
+        bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.75},
     )
 
     def update(frame_number: int):
         sample_idx = int(frame_indices[frame_number])
         line.set_data(times[: sample_idx + 1], normalized_power[: sample_idx + 1])
         marker.set_data([times[sample_idx]], [normalized_power[sample_idx]])
-        text_box.set_text(
-            f"t = {times[sample_idx]:.6f} s\n"
-            f"P/P0 = {normalized_power[sample_idx]:.6f}\n"
-            f"rho_step = {rho_step:.6f}\n"
-            f"beta_total = {beta_total:.6f}\n"
-            f"prompt jump est. = {prompt_jump_estimate:.6f}"
-        )
-        return line, marker, prompt_line, text_box
+        zoom_mask = times <= zoom_window
+        zoom_line.set_data(times[zoom_mask], normalized_power[zoom_mask])
+        zoom_marker.set_data([times[sample_idx]], [normalized_power[sample_idx]])
+        return line, marker, prompt_line, zoom_line, zoom_marker, zoom_prompt_line
+
+    fig.suptitle(
+        f"Short-Time PRKE Response | t_final={t_final:.3f} s | rho_step={rho_step:.4f} | beta_total={beta_total:.5f}",
+        fontsize=12,
+    )
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
 
     ani = animation.FuncAnimation(fig, update, frames=len(frame_indices), interval=interval_ms, blit=True)
 
@@ -135,6 +147,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rho-step", type=float, default=0.003, help="Step reactivity insertion in delta-k/k.")
     parser.add_argument("--interval-ms", type=int, default=20, help="Frame interval in milliseconds.")
     parser.add_argument("--frame-stride", type=int, default=20, help="Plot every Nth integrated point in the GIF.")
+    parser.add_argument("--zoom-window", type=float, default=0.005, help="Early-time window in seconds for the prompt-jump zoom panel.")
     return parser.parse_args()
 
 
@@ -147,6 +160,7 @@ def main() -> None:
         rho_step=args.rho_step,
         interval_ms=args.interval_ms,
         frame_stride=args.frame_stride,
+        zoom_window=args.zoom_window,
     )
     print(f"Saved short kinetics animation to {args.out}")
 
