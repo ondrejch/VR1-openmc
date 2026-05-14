@@ -84,15 +84,15 @@ rabbit = vlu.RabbitTube(materials=mats)
 lattice = Lattice(materials=mats,lattice_str=lattice_default)
 
 
-# --- Replace one Dummy assembly at (row, col) e.g. (3,4) ---
+# --- Replace one Dummy assembly at (row, col) e.g. (5,4) ---
 dummy_uni = vlu.Dummy(materials=mats).build()
 replace_water_fill(dummy_uni, mats, dummy_water_material)
-lattice.lattice.universes[3][4] = dummy_uni   # put the modified universe into the lattice
+lattice.lattice.universes[5][4] = dummy_uni   # put the modified universe into the lattice
 
-# --- Replace one Fuel Assembly at (row, col) e.g. (5,4) ---
+# --- Replace one Fuel Assembly at (row, col) e.g. (3,4) ---
 assembly_uni = vlu.IRT4M(materials=mats, fa_type='8').build()
 replace_water_fill(assembly_uni, mats, fuel_assembly_water_material)
-lattice.lattice.universes[5][4] = assembly_uni
+lattice.lattice.universes[3][4] = assembly_uni
 
 
 uni_facility_lattice = facility.build(lattice)
@@ -108,10 +108,10 @@ tallies = openmc.Tallies()
 mesh = openmc.RegularMesh()
 mesh.lower_left = (-30.0, -30.0, 0.0)
 mesh.upper_right = (30.0, 30.0, 70.0)
-mesh.dimension = (60, 60, 70) 
+mesh.dimension = (120, 120, 70) 
 mesh_filter = openmc.MeshFilter(mesh)
 
-energy_bins = [0.0, 0.625, 20.0e6]
+energy_bins = [0.0, 1, 100e3, 20.0e6]
 energy_filter = openmc.EnergyFilter(energy_bins)
 
 mesh_tally = openmc.Tally(name='3D_Cartesian_Mesh_Tally')
@@ -125,16 +125,16 @@ tallies.export_to_xml()
 settings = openmc.Settings()
 settings.run_mode = 'eigenvalue'
 settings.temperature = {'method':'interpolation'}
-settings.batches = 1000
-settings.inactive = 800
-settings.particles = 10000
+settings.batches = 500
+settings.inactive = 20
+settings.particles = 100000
 settings.photon_transport = False
 source_area = openmc.stats.Box(lattice.source_lower_left,lattice.source_upper_right)
 
-settings.source_rejection_fraction = 0.01
+# settings.source_rejection_fraction = 0.01
 
-# settings.source = openmc.FileSource('statepoint.1000.h5')
-settings.source = openmc.IndependentSource(space=source_area, constraints={'fissionable': True})
+settings.source = openmc.FileSource('statepoint.1000copy.h5')
+# settings.source = openmc.IndependentSource(space=source_area, constraints={'fissionable': True})
 settings.export_to_xml()
 
 # Uncomment below to visualize with openmc-plotter (requires GUI environment)
