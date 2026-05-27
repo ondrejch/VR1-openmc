@@ -28,7 +28,7 @@ FEATURE_COLUMNS: tuple[str, ...] = (
     "fuel_assembly_water_density_multiplier",
 )
 
-MESH_SHAPE: tuple[int, int, int, int] = (70, 60, 60, 2)
+MESH_SHAPE: tuple[int, int, int, int] = (70, 120, 120, 2)
 THERMAL_FAST_FLUX_SIZE = int(np.prod(MESH_SHAPE))
 
 
