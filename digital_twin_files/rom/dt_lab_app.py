@@ -1,4 +1,5 @@
 # File to create a Streamlit app for the digital_twin_lab.py exercises. 
+# If there are issues running this, please run the notebook version first to ensure all dependencies are installed and data files are in place.
 # This app will have two main widgets: one for predicting k-effective and another for visualizing the reconstructed flux from the ROM. 
 # The app will load the training data, train the models, and allow users to input parameters to see predictions in real-time.
 
