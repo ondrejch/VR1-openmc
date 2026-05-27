@@ -19,6 +19,8 @@ This repository contains an **OpenMC model of the VR1 research reactor**. The VR
 ## Repository Structure
 
 - `/vr1`: Main source code for geometry, materials, tallies, plotting, and settings
+- `/digital_twin_files/rom`: ROM data, training scripts, and supporting OpenMC artifacts
+- `/digital_twin_files/coupled_rom_w_kinetics`: coupled ROM + PRKE driver, visualizers, and analysis notebooks
 - `/tests`: Automated tests for code correctness
 - `/pke`: Point kinetics solver
 - `/scratch`: Experimental or prototype scripts
