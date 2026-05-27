@@ -182,3 +182,5 @@ cython_debug/
 *.xml
 *.vti
 *.pkl
+*.gif
+*.zip
