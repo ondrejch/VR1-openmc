@@ -121,7 +121,7 @@ class VR1Materials:
         self.mats_list.append(self.smallchannel)
 
         self.dummy = openmc.Material(name='fuel dummy')
-        self.dummy.add_components(cladding_dict, 'wo')
+        self.dummy.add_components(fuel_dummy_dict, 'wo')
         self.dummy.set_density('g/cm3', 2.65)
         self.dummy.temperature = 293.15
         self.mats_list.append(self.dummy)

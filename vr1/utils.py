@@ -71,17 +71,11 @@ def launch_lattice_builder():
     VR-1 reactor lattice configurations using tkinter.
     
     Returns:
-        None
+        The lattice stored with "Save Configuration", or None if the window
+        was closed without saving.
     """
-    try:
-        from vr1.gui import VR1LatticeBuilder
-        app = VR1LatticeBuilder()
-        app.run()
-    except ImportError as e:
-        print(f"Error importing GUI module: {e}")
-        print("Make sure all required dependencies are installed.")
-    except Exception as e:
-        print(f"Error launching lattice builder: {e}")
+    from vr1.gui import VR1LatticeBuilder
+    return VR1LatticeBuilder().run()
 
 
 def replace_water_fill(universe: openmc.Universe, materials: VR1Materials, new_water: openmc.Material) -> int:
@@ -99,4 +93,10 @@ def replace_water_fill(universe: openmc.Universe, materials: VR1Materials, new_w
         elif isinstance(fill, openmc.Universe):
             # recurse into nested universes
             count += replace_water_fill(fill, materials, new_water)
+        elif isinstance(fill, openmc.RectLattice):
+            # recurse into each distinct lattice universe once
+            for lattice_universe in {u.id: u for u in fill.universes.flat}.values():
+                count += replace_water_fill(lattice_universe, materials, new_water)
+            if isinstance(fill.outer, openmc.Universe):
+                count += replace_water_fill(fill.outer, materials, new_water)
     return count

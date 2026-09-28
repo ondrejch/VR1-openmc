@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-PACKAGE_ROOT = HERE.parent.parent
+PACKAGE_ROOT = HERE.parents[2]  # repository root
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
@@ -153,7 +153,7 @@ Examples:
     parser.add_argument('--x', type=int, default=30, help='X mesh index (0-59)')
     parser.add_argument('--y', type=int, default=30, help='Y mesh index (0-59)')
     parser.add_argument('--z', type=int, default=35, help='Z mesh index (0-69)')
-    parser.add_argument('--results', type=Path, default=HERE / 'coupled_digital_twin_results.npz',
+    parser.add_argument('--results', type=Path, default=HERE.parent / 'coupled_digital_twin_results.npz',
                        help='Path to results file')
     parser.add_argument('--save', type=Path, default=None,
                        help='Save plot to this file (e.g., plot.png)')

@@ -34,7 +34,6 @@ def cli_demo():
         'd',      # Empty fuel dummy
         'rt',     # Dummy with rabbit tube
         'wrc',    # Empty water cell
-        'v90',    # Vertical channel 90mm
         'v56',    # Vertical channel 56mm
         'v30',    # Vertical channel 30mm
         'v25',    # Vertical channel 25mm
@@ -51,7 +50,6 @@ def cli_demo():
         'd': 'Empty fuel dummy',
         'rt': 'Dummy with rabbit tube',
         'wrc': 'Empty water cell',
-        'v90': 'Vertical channel (90mm)',
         'v56': 'Vertical channel (56mm)',
         'v30': 'Vertical channel (30mm)',
         'v25': 'Vertical channel (25mm)',
@@ -63,17 +61,8 @@ def cli_demo():
         desc = component_descriptions.get(comp, comp)
         print(f"  {i+1:2}. {comp:>4} - {desc}")
     
-    # Default lattice from VR1_EMPTY_LATTICE_TEMPLATE
-    default_lattice = [
-        ['0', '1', '2', '3', '4', '5', '6', '7'],
-        ['1', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['2', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['3', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['4', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['5', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['6', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-    ]
+    # Empty 8x8 lattice; row/column labels are added only when displaying
+    default_lattice = [['w'] * 8 for _ in range(8)]
     
     print(f"\nDefault lattice (8x8 grid):")
     display_lattice(default_lattice)
@@ -120,10 +109,10 @@ def cli_demo():
 
 def display_lattice(lattice):
     """Display lattice in a nice format"""
-    print("     " + "  ".join(lattice[0]))
-    print("   " + "-" * 32)  
-    for i, row in enumerate(lattice[1:], 1):
-        row_str = f" {i} | " + "  ".join(f"{cell:>2}" for cell in row[1:])
+    print("     " + " ".join(f"{j:>3}" for j in range(len(lattice[0]))))
+    print("   " + "-" * 34)
+    for i, row in enumerate(lattice):
+        row_str = f" {i} | " + " ".join(f"{cell:>3}" for cell in row)
         print(row_str)
 
 def save_lattice(lattice, filename):
@@ -144,12 +133,11 @@ def gui_demo():
     """Launch the GUI version"""
     print("Launching VR-1 Lattice Builder GUI...")
     try:
-        # Import and run the GUI  
-        import os
-        os.environ.setdefault('PYTHONPATH', '/home/runner/work/VR1-openmc/VR1-openmc')
-        
         from vr1.utils import launch_lattice_builder
-        launch_lattice_builder()
+        lattice = launch_lattice_builder()
+        if lattice is not None:
+            print("\nSaved configuration:")
+            display_lattice(lattice)
     except ImportError as e:
         print(f"GUI not available: {e}")
         print("This may be because tkinter is not installed.")

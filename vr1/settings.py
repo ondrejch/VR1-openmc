@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import numbers
 import os
 from typing import Any
 
@@ -91,8 +92,12 @@ class VR1Settings:
 
         for key in required:
             value = self.parm[key]
-            if not isinstance(value, int) or value <= 0:
-                raise ValueError(f'Parameter "{key}" must be a positive integer')
+            if not isinstance(value, numbers.Integral) or isinstance(value, bool):
+                raise ValueError(f'Parameter "{key}" must be an integer')
+            # OpenMC allows zero inactive batches
+            minimum = 0 if key == "inactive" else 1
+            if value < minimum:
+                raise ValueError(f'Parameter "{key}" must be >= {minimum}')
 
         if self.parm["inactive"] >= self.parm["batches"]:
             raise ValueError('"inactive" must be smaller than "batches"')
@@ -111,9 +116,9 @@ class VR1Settings:
         self.validate()
         settings = openmc.Settings()
         settings.run_mode = self.run_mode
-        settings.batches = self.parm["batches"]
-        settings.inactive = self.parm["inactive"]
-        settings.particles = self.parm["npg"]
+        settings.batches = int(self.parm["batches"])
+        settings.inactive = int(self.parm["inactive"])
+        settings.particles = int(self.parm["npg"])
         settings.generations_per_batch = self.generations_per_batch
         settings.photon_transport = self.photon_transport
         if self.ext_sources is not None:

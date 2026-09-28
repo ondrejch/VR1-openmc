@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import warnings
+
 import openmc
 from vr1.materials import VR1Materials, vr1_materials
 from vr1.lattice_units import (
     IRT4M,
+    AbsRod,
     LatticeUnitVR1,
     lattice_lower_left,
     lattice_pitch,
@@ -34,6 +37,18 @@ core_designs: dict[str, list[list[str]]] = {
     ['w','w','w','w','w','w','w','w'],
     ['v56','w','w','v56','w','w','w','w']]
 }
+
+# Fuel assembly codes with a control rod: (assembly type, rod height [cm]),
+# as built by LatticeUnitVR1
+rodded_fa_types: dict[str, tuple[str, float]] = {
+    'X': ('6', 0.0),
+    'O': ('6', 84.7),
+    'X4': ('4', 0.0),
+    'O4': ('4', 84.7),
+}
+
+# Bottom-row columns under the radial channel, which have no grid plate
+radial_channel_columns: range = range(2, 6)
 
 VR1_EMPTY_LATTICE_TEMPLATE: list[list[str]] = [
     ['0', '1', '2', '3', '4', '5', '6', '7'],
@@ -66,22 +81,33 @@ class FuelAssembly(VR1core):
     def __init__(self, fa_type, materials: VR1Materials = vr1_materials, boundaries='reflective'):
         """Initialize a new instance of a fuel assembly model with specified parameters.
         Parameters:
-            - fa_type (str): The type of fuel assembly, must be a known lattice unit type.
+            - fa_type (str): The type of fuel assembly: a fuel assembly lattice unit type,
+              or a rodded one from ``rodded_fa_types`` ('X', 'O', 'X4', 'O4').
             - materials (VR1Materials): The materials used in the fuel assembly, defaults to vr1_materials.
             - boundaries (str): The type of boundary condition, defaults to 'reflective'.
         Returns:
             - None"""
         super().__init__(materials)
-        if fa_type not in list(lattice_unit_names.keys()):
-            raise ValueError(f'{fa_type} is not a known lattice unit type!')
-        if 'FA' not in lattice_unit_names[fa_type]:
-            raise ValueError(f'{fa_type} is not a known fuel assembly type!')
+        if fa_type not in rodded_fa_types:
+            if fa_type not in lattice_unit_names:
+                raise ValueError(f'{fa_type} is not a known lattice unit type!')
+            if 'FA' not in lattice_unit_names[fa_type]:
+                raise ValueError(f'{fa_type} is not a known fuel assembly type!')
         self.fa_type = fa_type
-        self.model = IRT4M(
-            materials=self.materials,
-            fa_type=self.fa_type,
-            boundary=boundaries,
-        ).build()
+        if fa_type in rodded_fa_types:
+            assembly_type, rod_height = rodded_fa_types[fa_type]
+            self.model = AbsRod(
+                materials=self.materials,
+                assembly_type=assembly_type,
+                rod_height=rod_height,
+                boundary=boundaries,
+            ).build()
+        else:
+            self.model = IRT4M(
+                materials=self.materials,
+                fa_type=self.fa_type,
+                boundary=boundaries,
+            ).build()
         self.source_lower_left = lattice_lower_left
         self.source_upper_right = lattice_upper_right
 
@@ -129,8 +155,17 @@ class Lattice(VR1core):
                 n -= 1
         if len(new_lattice_str) != 8:
             raise ValueError('Reformatting failed unexpectedly')
-        for i in range(2, 6):
+        replaced = []
+        for i in radial_channel_columns:
+            if new_lattice_str[-1][i] not in ('w', 'wrc'):
+                replaced.append(f'[7][{i}]={new_lattice_str[-1][i]!r}')
             new_lattice_str[-1][i] = 'wrc'
+        if replaced:
+            warnings.warn(
+                'Lattice positions under the radial channel were replaced by water (wrc): '
+                + ', '.join(replaced),
+                stacklevel=3,
+            )
         return new_lattice_str
 
     def __init__(
@@ -197,18 +232,29 @@ class Lattice(VR1core):
         self.source_lower_left = (-xy_corner, -xy_corner, lattice_lower_left[2])
         self.source_upper_right = (xy_corner, xy_corner, lattice_upper_right[2])
 
-    def SCRAM(self):
-        """Set all control-rod locations to inserted state."""
+    @staticmethod
+    def control_rod_assembly_type(lattice_code: str) -> str | None:
+        """Return the FA type ('6' or '4') of a control-rod lattice code, or None."""
+        if lattice_code in rodded_fa_types:
+            return rodded_fa_types[lattice_code][0]
+        fa_type, sep, _ = lattice_code.partition('_')  # '6_<height>' or '4_<height>'
+        if sep and fa_type in ('6', '4'):
+            return fa_type
+        return None
+
+    def _set_control_rods(self, codes: dict[str, str]) -> None:
+        """Replace every control-rod location with codes[FA type]."""
         for i in range(8):
             for j in range(8):
-                if any(x in self.lattice_str[i][j] for x in ['_','O']):
-                    self.lattice_str[i][j] = 'X'
+                fa_type = self.control_rod_assembly_type(self.lattice_str[i][j])
+                if fa_type is not None:
+                    self.lattice_str[i][j] = codes[fa_type]
         self.build()
+
+    def SCRAM(self):
+        """Set all control-rod locations to inserted state."""
+        self._set_control_rods({'6': 'X', '4': 'X4'})
 
     def unSCRAM(self):
         """Set all control-rod locations to withdrawn state."""
-        for i in range(8):
-            for j in range(8):
-                if any(x in self.lattice_str[i][j] for x in ['_','X']):
-                    self.lattice_str[i][j] = 'O'
-        self.build()
+        self._set_control_rods({'6': 'O', '4': 'O4'})

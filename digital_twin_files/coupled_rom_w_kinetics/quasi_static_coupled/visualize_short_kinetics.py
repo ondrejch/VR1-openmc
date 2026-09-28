@@ -18,7 +18,7 @@ from matplotlib.ticker import ScalarFormatter
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PACKAGE_ROOT = HERE.parent.parent
+PACKAGE_ROOT = HERE.parents[2]  # repository root
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 

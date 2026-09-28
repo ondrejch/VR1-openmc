@@ -4,8 +4,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import ast
 import copy
-from typing import Iterable
+import re
+from typing import Callable, Iterable
 
+# Codes built by vr1.lattice_units.LatticeUnitVR1
 DEFAULT_COMPONENT_TYPES: list[str] = [
     'w',      # Water cell with grid
     '8',      # 8-tube FA
@@ -13,19 +15,31 @@ DEFAULT_COMPONENT_TYPES: list[str] = [
     '4',      # 4-tube FA
     'X',      # 6-tube FA with fully inserted control rod
     'O',      # 6-tube FA with fully removed control rod
+    'X4',     # 4-tube FA with fully inserted control rod
+    'O4',     # 4-tube FA with fully removed control rod
     'd',      # Empty fuel dummy
     'rt',     # Dummy with rabbit tube
     'wrc',    # Empty water cell
-    'v90',    # Vertical channel 90mm
+    'G',      # Graphite reflector
+    'B',      # Beryllium reflector
     'v56',    # Vertical channel 56mm
     'v30',    # Vertical channel 30mm
     'v25',    # Vertical channel 25mm
     'v12',    # Vertical channel 12mm
 ]
 
+# Parametrized codes: '6_<rod height>', '4_<rod height>', and a small channel
+# inside a dummy or fuel assembly, e.g. 'v12_6' or 'v12_d'
+PARAMETRIZED_COMPONENT_PATTERN = re.compile(r'[64]_\d+(\.\d*)?|v(12|25|30)_[864d]')
+
+
+def is_valid_component(component: str, component_types: Iterable[str] = DEFAULT_COMPONENT_TYPES) -> bool:
+    """Return True if ``component`` is a lattice code the lattice builder can build."""
+    return component in component_types or PARAMETRIZED_COMPONENT_PATTERN.fullmatch(component) is not None
+
 
 def parse_lattice_configuration(
-    content: str, allowed_components: Iterable[str] | None = None
+    content: str, is_allowed: Callable[[str], bool] | None = None
 ) -> list[list[str]]:
     """Parse lattice data from configuration text using safe literal parsing.
 
@@ -34,8 +48,8 @@ def parse_lattice_configuration(
     content : str
         File content containing either a ``*_LATTICE = [...]`` assignment or a
         bare list expression.
-    allowed_components : Iterable[str] | None, optional
-        Optional whitelist of valid cell codes.
+    is_allowed : Callable[[str], bool] | None, optional
+        Optional check of each cell code, e.g. ``is_valid_component``.
 
     Returns
     -------
@@ -63,7 +77,6 @@ def parse_lattice_configuration(
     if not isinstance(lattice, list) or len(lattice) != 8:
         raise ValueError("Invalid lattice dimensions - must be 8x8")
 
-    allowed = set(allowed_components) if allowed_components is not None else None
     normalized: list[list[str]] = []
     for row in lattice:
         if not isinstance(row, list) or len(row) != 8:
@@ -72,7 +85,7 @@ def parse_lattice_configuration(
         for cell in row:
             if not isinstance(cell, str):
                 raise ValueError("Lattice entries must be strings")
-            if allowed is not None and cell not in allowed:
+            if is_allowed is not None and not is_allowed(cell):
                 raise ValueError(f'Unknown lattice component "{cell}"')
             norm_row.append(cell)
         normalized.append(norm_row)
@@ -99,10 +112,13 @@ class VR1LatticeBuilder:
             '4': '4-tube Fuel Assembly',
             'X': '6-tube FA with inserted control rod',
             'O': '6-tube FA with removed control rod',
+            'X4': '4-tube FA with inserted control rod',
+            'O4': '4-tube FA with removed control rod',
             'd': 'Empty fuel dummy',
             'rt': 'Dummy with rabbit tube',
             'wrc': 'Empty water cell',
-            'v90': 'Vertical channel (90mm)',
+            'G': 'Graphite reflector',
+            'B': 'Beryllium reflector',
             'v56': 'Vertical channel (56mm)',
             'v30': 'Vertical channel (30mm)',
             'v25': 'Vertical channel (25mm)',
@@ -214,7 +230,7 @@ class VR1LatticeBuilder:
     
     def get_cell_color(self, component: str) -> str:
         """Get display color for component type"""
-        if component.startswith('6_'):
+        if component.startswith(('6_', '4_')):
             return '#D16413'
         color_map = {
             'w': '#E6F3FF',      # Light blue for water
@@ -223,10 +239,13 @@ class VR1LatticeBuilder:
             '4': '#45B7D1',      # Blue for 4-tube FA
             'X': '#FF6B6B',      # Green for inserted control rod
             'O': '#FECA57',      # Yellow for removed control rod
+            'X4': '#FF6B6B',     # Same as 'X'
+            'O4': '#FECA57',     # Same as 'O'
             'd': '#DDA0DD',      # Plum for dummy
             'rt': '#DDA0DD',     # Plum for rabbit tube dummy
             'wrc': '#F0F8FF',    # Alice blue for empty water
-            'v90': '#780E74',    # Orange for large channel
+            'G': '#A9A9A9',      # Gray for graphite reflector
+            'B': '#C0C0C0',      # Silver for beryllium reflector
             'v56': '#780E74',    # Light orange for medium channel  
             'v30': '#0E7825',    # Peach for smaller channel
             'v25': '#0E7825',    # Light yellow for smaller channel
@@ -246,7 +265,7 @@ class VR1LatticeBuilder:
     def on_cell_change(self, row: int, col: int):
         """Handle typed input change - validate against known components"""
         new_component = self.cell_vars[row][col].get()
-        if new_component in self.component_types or new_component.startswith('6_'):
+        if is_valid_component(new_component, self.component_types):
             self.current_lattice[row][col] = new_component
             self.buttons[row][col].config(bg=self.get_cell_color(new_component))
             description = self.component_descriptions.get(new_component, new_component)
@@ -318,7 +337,7 @@ class VR1LatticeBuilder:
                 with open(filename, 'r') as f:
                     content = f.read()
                 loaded_lattice = parse_lattice_configuration(
-                    content, allowed_components=self.component_types
+                    content, is_allowed=lambda cell: is_valid_component(cell, self.component_types)
                 )
                 self.current_lattice = loaded_lattice
                 self.refresh_display()

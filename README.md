@@ -86,8 +86,12 @@ Expected output files in `vr1_run/`:
 
 ### Run GUI lattice builder
 ```python
+from vr1.core import Lattice
 from vr1.utils import launch_lattice_builder
-launch_lattice_builder()
+
+lattice_str = launch_lattice_builder()  # None if closed without "Save Configuration"
+if lattice_str is not None:
+    core = Lattice(lattice_str=lattice_str)
 ```
 
 ## Visualization Using OpenMC-Plotter

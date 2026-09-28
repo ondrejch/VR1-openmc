@@ -30,6 +30,7 @@ from pke.solver import PointKineticsEquationSolver
 from pke.solver import thermal_default_params
 
 
+# (z, x, y) mesh indices; the flux field is laid out as (z, y, x, group)
 POINTS_OF_INTEREST: dict[str, tuple[int, int, int]] = {
     "Fuel": (35, 60, 60),
     "Near Control Rod": (35, 65, 82),
@@ -61,7 +62,7 @@ def build_reactivity_function(
 
 
 def _validate_points() -> None:
-    z_max, x_max, y_max, groups = MESH_SHAPE
+    z_max, y_max, x_max, groups = MESH_SHAPE
     for label, (z_index, x_index, y_index) in POINTS_OF_INTEREST.items():
         if not (0 <= z_index < z_max and 0 <= x_index < x_max and 0 <= y_index < y_max):
             raise ValueError(f"{label} is out of bounds for mesh shape {MESH_SHAPE}.")
@@ -86,8 +87,8 @@ def _compute_nominal_shape_factors() -> dict[str, np.ndarray]:
 
         shape_factors[point_name] = np.array(
             [
-                float(field[z_index, x_index, y_index, THERMAL_GROUP] / thermal_norm),
-                float(field[z_index, x_index, y_index, FAST_GROUP] / fast_norm),
+                float(field[z_index, y_index, x_index, THERMAL_GROUP] / thermal_norm),
+                float(field[z_index, y_index, x_index, FAST_GROUP] / fast_norm),
             ],
             dtype=float,
         )
@@ -173,7 +174,7 @@ def plot_local_fluxes(
     axes[0].set_yscale("log")
     axes[0].grid(True, alpha=0.3)
     axes[0].legend(loc="best")
-    thermal_rho_axis.set_ylabel(r"Reactivity $\rho$ [\$]")
+    thermal_rho_axis.set_ylabel(r"Reactivity $\rho$ [$\Delta k/k$]")
     thermal_rho_axis.tick_params(axis="y", labelcolor="black")
 
     axes[1].set_title(f"Fast Local Flux Evolution | {transient.capitalize()} transient")
@@ -182,7 +183,7 @@ def plot_local_fluxes(
     axes[1].set_yscale("log")
     axes[1].grid(True, alpha=0.3)
     axes[1].legend(loc="best")
-    fast_rho_axis.set_ylabel(r"Reactivity $\rho$ [\$]")
+    fast_rho_axis.set_ylabel(r"Reactivity $\rho$ [$\Delta k/k$]")
     fast_rho_axis.tick_params(axis="y", labelcolor="black")
 
     fig.tight_layout()

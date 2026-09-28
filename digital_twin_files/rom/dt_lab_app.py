@@ -3,80 +3,49 @@
 # This app will have two main widgets: one for predicting k-effective and another for visualizing the reconstructed flux from the ROM. 
 # The app will load the training data, train the models, and allow users to input parameters to see predictions in real-time.
 
+import sys
+from pathlib import Path
+
 import streamlit as st
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import glob, re
 from sklearn.metrics import mean_squared_error
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import PolynomialFeatures
-import sklearn.ensemble as ensemble
-from sklearn.linear_model import LinearRegression
-import sklearn.neural_network as nn
 
-NX, NY, NZ, NG = 120, 120, 70, 2
+HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-@st.cache_data
-def load_flux_data(file_path):
-    with np.load(file_path) as data:
-        thermal = data['thermal_flux']
-        fast = data['fast_flux']
-        thermal_3d = thermal.reshape((NZ, NY, NX))
-        fast_3d = fast.reshape((NZ, NY, NX))
-        return np.stack([thermal_3d, fast_3d], axis=-1)
+from digital_twin_files.rom.digital_twin import (
+    FEATURE_COLUMNS,
+    MESH_SHAPE,
+    default_test_csv,
+    extract_keff,
+    fit_digital_twin,
+    load_parameter_frame,
+)
 
-@st.cache_data
-def extract_keff(df, folder):
-    vals = []
-    for case in df['case_id']:
-        path = f"{folder}/results_case_{int(case)}.npz"
-        with np.load(path) as d:
-            vals.append(float(d['keff']))
-    return np.array(vals)
-
-@st.cache_data
-def prepare_data(train_folder='VR1_DT_Lab_Training_Data', test_folder='VR1_DT_Lab_Test_Data'):
-    train_df = pd.read_csv(f"{train_folder}/training_set.csv")
-    test_df = pd.read_csv(f"{test_folder}/test_set.csv")
-    features = [
-        'cr1_height', 'cr2_height',
-        'dummy_water_density_multiplier', 'fuel_assembly_water_density_multiplier'
-    ]
-    X_train = train_df[features].values
-    X_test = test_df[features].values
-    y_train_keff = extract_keff(train_df, train_folder)
-    y_test_keff = extract_keff(test_df, test_folder)
-    return train_df, test_df, X_train, X_test, y_train_keff, y_test_keff
+N_MODES = 11
 
 @st.cache_resource
-def train_models(X_train, y_train_keff, train_folder='VR1_DT_Lab_Training_Data'):
-    # keff model
-    keff_model = ensemble.RandomForestRegressor(n_estimators=100, random_state=42)
-    keff_model.fit(X_train, y_train_keff)
+def train_models():
+    # Data folders are next to this file, whatever directory streamlit starts in.
+    # Snapshots are assembled in training_set.csv case_id order, matching the feature rows.
+    return fit_digital_twin(data_root=HERE, n_modes=N_MODES)
 
-    # Build snapshot matrix and SVD for flux ROM
-    train_files = glob.glob(f'{train_folder}/results_case_*.npz')
-    train_files.sort(key=lambda f: int(re.search(r'case_(\d+)', f).group(1)))
-    S = []
-    for f in train_files:
-        flux = load_flux_data(f)
-        S.append(flux.flatten())
-    S = np.column_stack(S)
-    U, Sigma, VT = np.linalg.svd(S, full_matrices=False)
-    r = 11
-    U_r = U[:, :r]
-    C_train = np.dot(U_r.T, S)
-    Y_train = C_train.T
-    surrogate_model = ensemble.RandomForestRegressor(n_estimators=100, random_state=42)
-    surrogate_model.fit(X_train, Y_train)
-    return keff_model, surrogate_model, U_r
+@st.cache_data
+def prepare_test_data():
+    test_csv = default_test_csv(HERE)
+    test_df = load_parameter_frame(test_csv)
+    X_test = test_df[list(FEATURE_COLUMNS)].to_numpy(dtype=float)
+    y_test_keff = extract_keff(test_df, test_csv.parent)
+    return X_test, y_test_keff
 
 st.title('Digital Twin (Standalone widgets)')
 st.write('This app recreates the k-eff and digital-twin widgets from the notebook.')
 
-train_df, test_df, X_train, X_test, y_train_keff, y_test_keff = prepare_data()
-keff_model, surrogate_model, U_r = train_models(X_train, y_train_keff)
+bundle = train_models()
+keff_model, surrogate_model, U_r = bundle.keff_model, bundle.flux_model, bundle.pod_basis
 
 st.sidebar.header('Input Parameters')
 cr1 = st.sidebar.slider('CR 1 (cm)', 0.0, 84.7, 42.35, 0.1)
@@ -91,6 +60,7 @@ st.write(f'Estimated k-effective: {pred_keff:.5f}')
 
 # Show test-set performance
 if st.checkbox('Show k-eff test performance'):
+    X_test, y_test_keff = prepare_test_data()
     preds = keff_model.predict(X_test)
     rmse = np.sqrt(mean_squared_error(y_test_keff, preds))
     mae = np.mean(np.abs(y_test_keff - preds))
@@ -105,12 +75,12 @@ if st.checkbox('Show k-eff test performance'):
     st.pyplot(fig)
 
 st.header('Digital Twin: Predict flux from ROM')
-z_index = st.slider('Z slice', 0, 69, 35)
+z_index = st.slider('Z slice', 0, MESH_SHAPE[0] - 1, 35)
 
 # Predict modal coefficients and reconstruct
 pred_coeffs = surrogate_model.predict(input_state).T
 reconstructed_flat = np.dot(U_r, pred_coeffs).flatten()
-reconstructed_3d = reconstructed_flat.reshape((NZ, NY, NX, NG))
+reconstructed_3d = reconstructed_flat.reshape(MESH_SHAPE)
 therm_mid = reconstructed_3d[z_index, :, :, 0]
 
 fig, ax = plt.subplots(figsize=(6,5))

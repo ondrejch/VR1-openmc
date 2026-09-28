@@ -22,14 +22,17 @@ class WriterOpenMC:
         self.output_dir: str = 'vr1'
         self.core: VR1core = core
         self.settings = settings
-        if hasattr(self.core, "materials"):
-            self.openmc_materials = self.core.materials.get_materials()
-        else:
-            self.openmc_materials = vr1_materials.get_materials()
+        self.openmc_materials = self._get_materials()
         self.openmc_geometry = openmc.Geometry()
         self.openmc_settings = openmc.Settings()
         self.openmc_tallies = openmc.Tallies()
         self.openmc_model = openmc.Model()
+
+    def _get_materials(self) -> openmc.Materials:
+        """Collect the current materials, including ones registered after __init__."""
+        if hasattr(self.core, "materials"):
+            return self.core.materials.get_materials()
+        return vr1_materials.get_materials()
 
     def set_settings(self) -> openmc.Settings:
         """Create OpenMC settings object for the current core."""
@@ -40,7 +43,8 @@ class WriterOpenMC:
                 "threshold": self.settings.parm["sig"],
             }
         settings.temperature = {"method": "interpolation"}
-        if settings.source is None:
+        # openmc.Settings.source defaults to an empty list, never None
+        if not settings.source:
             settings.source = openmc.IndependentSource(
                 space=openmc.stats.Box(
                     self.core.source_lower_left, self.core.source_upper_right
@@ -83,6 +87,7 @@ class WriterOpenMC:
         self.openmc_tallies = self.set_tallies()
         self.openmc_geometry = self.set_geometry()
         self.openmc_geometry.merge_surfaces = True
+        self.openmc_materials = self._get_materials()
         if self.settings.xs_xml:
             self.openmc_materials.cross_sections = self.settings.xs_xml
 

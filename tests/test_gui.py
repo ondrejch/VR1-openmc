@@ -1,73 +1,61 @@
-"""Test the VR1 Lattice Builder GUI functionality"""
+"""Tests for the VR1 Lattice Builder GUI helpers (no display needed)."""
 
-def test_gui_components():
-    """Test that GUI components can be imported and basic functionality works"""
-    # Test without GUI - core functionality
-    import copy
-    
-    # Test component types definition
-    component_types = [
-        'w', '8', '6', '4', 'X', 'O', 'd', 'rt', 'wrc', 
-        'v90', 'v56', 'v30', 'v25', 'v12'
-    ]
-    
-    # Test default lattice 
-    default_lattice = [
-        ['0', '1', '2', '3', '4', '5', '6', '7'],
-        ['1', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['2', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['3', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['4', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['5', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['6', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-        ['7', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-    ]
-    
-    # Test lattice operations
-    test_lattice = copy.deepcopy(default_lattice)
-    
-    # Simulate component cycling
-    current_component = test_lattice[1][1]  # Should be 'w'
-    current_index = component_types.index(current_component)
-    next_index = (current_index + 1) % len(component_types)
-    new_component = component_types[next_index]
-    test_lattice[1][1] = new_component
-    
-    assert test_lattice[1][1] == '8', f"Component cycling failed: expected '8', got {test_lattice[1][1]}"
-    
-    # Test save functionality
-    import tempfile
-    import os
-    
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-        f.write('"""Custom VR-1 reactor lattice configuration"""\n\n')
-        f.write('CUSTOM_LATTICE = [\n')
-        for row in test_lattice:
-            f.write(f'    {row},\n')
-        f.write(']\n')
-        temp_filename = f.name
-    
-    # Verify file was created and contains expected content
-    with open(temp_filename, 'r') as f:
-        content = f.read()
-        assert 'CUSTOM_LATTICE' in content
-        assert "['1', '8'," in content  # Our modified cell
-    
-    # Clean up
-    os.unlink(temp_filename)
-    
-    print("✓ All GUI functionality tests passed")
+from __future__ import annotations
+
+import pytest
+
+pytest.importorskip("tkinter")
+
+from vr1.gui import DEFAULT_COMPONENT_TYPES, is_valid_component, parse_lattice_configuration
 
 
-def test_utils_integration():
-    """Test that the utils integration works"""
+def _export(lattice: list[list[str]]) -> str:
+    """Same text as VR1LatticeBuilder.export_configuration writes."""
+    return "CUSTOM_LATTICE = [\n" + "".join(f"    {row},\n" for row in lattice) + "]\n\n"
+
+
+def test_exported_configuration_can_be_loaded_back() -> None:
+    """Codes the GUI accepts when typed must also load from an exported file."""
+    lattice = [["w"] * 8 for _ in range(8)]
+    lattice[2][2:6] = ["6_42.5", "4_10", "v12_6", "X4"]
+    loaded = parse_lattice_configuration(_export(lattice))
+    assert loaded == lattice
+    assert all(is_valid_component(cell) for row in loaded for cell in row)
+
+
+def test_preset_layouts_are_valid_components() -> None:
+    """The shipped core designs only use codes the GUI accepts."""
+    pytest.importorskip("openmc")
+    from vr1.core import core_designs
+
+    for lattice in core_designs.values():
+        assert all(is_valid_component(cell) for row in lattice for cell in row)
+
+
+def test_unknown_components_are_rejected() -> None:
+    for code in ("v90", "6_", "v56_6", "0", "abc"):
+        assert not is_valid_component(code)
+    lattice = [["w"] * 8 for _ in range(8)]
+    lattice[3][3] = "v90"
+    with pytest.raises(ValueError, match='Unknown lattice component "v90"'):
+        parse_lattice_configuration(_export(lattice), is_allowed=is_valid_component)
+
+
+def test_gui_components_can_be_built() -> None:
+    """Every code offered by the GUI is known to the lattice builder."""
+    pytest.importorskip("openmc")
+    from vr1.lattice_units import LatticeUnitVR1
+    from vr1.materials import VR1Materials
+
+    builder = LatticeUnitVR1(VR1Materials())
+    builder.load()
+    for code in DEFAULT_COMPONENT_TYPES + ["6_42.5", "4_10", "v12_6", "v25_d"]:
+        builder.get(code)
+
+
+def test_utils_integration() -> None:
+    """launch_lattice_builder is exposed by vr1.utils."""
+    pytest.importorskip("openmc")
     from vr1.utils import launch_lattice_builder
-    # Just test that function exists and is callable
-    assert callable(launch_lattice_builder), "launch_lattice_builder is not callable"
-    print("✓ Utils integration test passed")
 
-
-if __name__ == "__main__":
-    test_gui_components()
-    test_utils_integration()
-    print("✓ All tests completed successfully!")
+    assert callable(launch_lattice_builder)

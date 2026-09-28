@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-PACKAGE_ROOT = HERE.parent.parent
+PACKAGE_ROOT = HERE.parents[2]  # repository root
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
@@ -73,8 +73,10 @@ def find_rod_events(reactivity, time, threshold=0.0001):
 
 def extract_rod_location(localized_power):
     """
-    Estimate control rod center location from power depression.
-    Finds the (x, y, z) with minimum average power (approximate).
+    Estimate the location of the moving control rod.
+    Finds where the normalized thermal power shape changes most between the
+    first and last frames, since the moving rod reshapes the flux around it.
+    (The global flux minimum is not used: it lies in the water outside the core.)
     
     Parameters
     ----------
@@ -84,21 +86,19 @@ def extract_rod_location(localized_power):
     Returns
     -------
     x, y, z : int
-        Approximate rod center (mesh indices)
+        Approximate rod location (mesh indices); (0, 0, 0) if the shape does not change
     """
-    # Use first frame to estimate rod location
-    field = reshape_flux_vector(localized_power[0])
-    thermal = field[:, :, :, 0]
+    first = reshape_flux_vector(localized_power[0])[:, :, :, 0]
+    last = reshape_flux_vector(localized_power[-1])[:, :, :, 0]
+    first_shape = first / (np.sum(np.abs(first)) or 1.0)
+    last_shape = last / (np.sum(np.abs(last)) or 1.0)
+    shape_change = np.abs(last_shape - first_shape)  # (z, y, x)
     
-    # Average over z (axial) to find x-y center
-    xy_avg = np.mean(thermal, axis=0)
-    y_min, x_min = np.unravel_index(np.argmin(xy_avg), xy_avg.shape)
+    # Column with the largest axially integrated change, then the z of largest change in it
+    y_rod, x_rod = np.unravel_index(np.argmax(shape_change.sum(axis=0)), shape_change.shape[1:])
+    z_rod = np.argmax(shape_change[:, y_rod, x_rod])
     
-    # Find z with maximum power suppression
-    xz_slice = thermal[:, y_min, x_min]
-    z_center = np.argmax(xz_slice)  # Peak suppression
-    
-    return int(x_min), int(y_min), int(z_center)
+    return int(x_rod), int(y_rod), int(z_rod)
 
 
 def extract_power_timeseries(localized_power, x: int, y: int, z: int):
@@ -135,7 +135,7 @@ def plot_rod_events(time, reactivity, neutron_density, localized_power, save_pat
     ax1.plot(time, reactivity, 'b-', linewidth=2, label='Reactivity ρ(t)')
     if len(event_frames) > 0:
         ax1.plot(time[event_frames], reactivity[event_frames], 'ro', markersize=8, label='Rod events')
-    ax1.set_ylabel('Reactivity (1/$)', fontsize=11)
+    ax1.set_ylabel('Reactivity (Δk/k)', fontsize=11)
     ax1.set_title('Control Rod Movement Events: Reactivity, Neutron Density, and Power Response', 
                   fontsize=13, fontweight='bold')
     ax1.grid(True, alpha=0.3)
@@ -167,7 +167,7 @@ def plot_rod_events(time, reactivity, neutron_density, localized_power, save_pat
         ax4.plot(time[event_frames], drho_dt[event_frames], 'ro', markersize=8)
     ax4.axhline(y=0, color='k', linestyle='--', alpha=0.3)
     ax4.set_xlabel('Time (s)', fontsize=11)
-    ax4.set_ylabel('Reactivity Rate (1/s²)', fontsize=11)
+    ax4.set_ylabel('Reactivity Rate (1/s)', fontsize=11)
     ax4.grid(True, alpha=0.3)
     ax4.legend(fontsize=10)
     
@@ -191,8 +191,8 @@ def print_summary(time, reactivity, neutron_density, localized_power):
     print(f"Macro time step: {time[1] - time[0]:.4f} s")
     
     print(f"\nReactivity Statistics:")
-    print(f"  Range:  {np.min(reactivity):.6f} to {np.max(reactivity):.6f} $")
-    print(f"  Change: {reactivity[-1] - reactivity[0]:.6f} $ (Δρ)")
+    print(f"  Range:  {np.min(reactivity):.6f} to {np.max(reactivity):.6f} Δk/k")
+    print(f"  Change: {reactivity[-1] - reactivity[0]:.6f} Δk/k (Δρ)")
     
     print(f"\nNeutron Density Statistics:")
     print(f"  Min:    {np.min(neutron_density):.4e}")
@@ -202,7 +202,7 @@ def print_summary(time, reactivity, neutron_density, localized_power):
     print(f"\nRod Events (|dρ/dt| > 0.0001 1/s):")
     if len(event_frames) > 0:
         print(f"  Count:  {len(event_frames)} events")
-        print(f"  Max rate: {np.max(np.abs(event_rates)):.6f} 1/s²")
+        print(f"  Max rate: {np.max(np.abs(event_rates)):.6f} 1/s")
         print(f"  Event times: {event_times}")
     else:
         print(f"  No significant rod movement detected")
@@ -214,7 +214,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Analyze and visualize control rod insertion/ejection events and neutron kinetics response."
     )
-    parser.add_argument('--results', type=Path, default=HERE / 'coupled_digital_twin_results.npz',
+    parser.add_argument('--results', type=Path, default=HERE.parent / 'coupled_digital_twin_results.npz',
                        help='Path to results file')
     parser.add_argument('--save', type=Path, default=None,
                        help='Save plot to this file (e.g., rod_events.png)')

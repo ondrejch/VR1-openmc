@@ -7,6 +7,8 @@ This wrapper couples:
 At each macro step, the ROM updates reactivity and flux shape.
 Inside each macro interval, the PRKE state is advanced with micro steps using
 linearly interpolated reactivity between consecutive ROM macro points.
+The PRKE starts from steady state, so it is driven by the reactivity change
+relative to the initial state, rho(t) - rho(0).
 """
 
 from __future__ import annotations
@@ -131,6 +133,8 @@ def run_coupled_digital_twin(
         A dictionary with arrays:
         - time: Macro-grid time points.
         - reactivity_macro: ROM reactivity at macro points.
+        - reactivity_inserted: reactivity_macro - reactivity_macro[0], which
+          drives the PRKE.
         - neutron_density: P(t) at macro points.
         - flux_vectors: ROM flux vectors at macro points.
         - localized_power: P(t) * flux_vector at macro points.
@@ -147,6 +151,9 @@ def run_coupled_digital_twin(
     reactivity_macro, flux_vectors = predict_reactivity_and_flux(parameter_schedule, bundle=bundle)
     reactivity_macro = np.asarray(reactivity_macro, dtype=float)
     flux_vectors = np.asarray(flux_vectors, dtype=float)
+    # The steady-state initial condition assumes rho = 0 at t=0, so the ROM's
+    # absolute reactivity (including its k-eff bias) must not drive the PRKE.
+    reactivity_inserted = reactivity_macro - reactivity_macro[0]
 
     n_macro_points = parameter_schedule.shape[0]
     macro_times = np.arange(n_macro_points, dtype=float) * dt_macro
@@ -160,8 +167,8 @@ def run_coupled_digital_twin(
     localized_power_macro[0] = neutron_density_macro[0] * flux_vectors[0]
 
     for macro_idx in range(n_macro_points - 1):
-        rho_start = float(reactivity_macro[macro_idx])
-        rho_end = float(reactivity_macro[macro_idx + 1])
+        rho_start = float(reactivity_inserted[macro_idx])
+        rho_end = float(reactivity_inserted[macro_idx + 1])
         rho_of_tau = _linear_reactivity_profile(rho_start, rho_end, dt_macro)
 
         tau = 0.0
@@ -176,6 +183,7 @@ def run_coupled_digital_twin(
     return {
         "time": macro_times,
         "reactivity_macro": reactivity_macro,
+        "reactivity_inserted": reactivity_inserted,
         "neutron_density": neutron_density_macro,
         "flux_vectors": flux_vectors,
         "localized_power": localized_power_macro,

@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PACKAGE_ROOT = HERE.parent.parent
+PACKAGE_ROOT = HERE.parents[2]  # repository root
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
@@ -61,6 +61,30 @@ def _example_reactivity_profile(
     if transient == "sinusoidal":
         return lambda t: float(sinusoidal_amplitude_fraction * beta_total * np.sin(np.pi * t / sinusoidal_period))
     raise ValueError(f"Unsupported transient mode: {transient}")
+
+
+def _rod_insertion_reactivity_profile(
+    transient: str,
+    beta_total: float,
+    step_onset: float,
+    step_fraction: float,
+    ramp_start: float,
+    ramp_slope_fraction: float,
+    sinusoidal_amplitude_fraction: float,
+    sinusoidal_period: float,
+) -> Callable[[float], float]:
+    """Example-style profile with a negative sign: inserting the rod removes reactivity."""
+    profile = _example_reactivity_profile(
+        transient,
+        beta_total,
+        step_onset,
+        step_fraction,
+        ramp_start,
+        ramp_slope_fraction,
+        sinusoidal_amplitude_fraction,
+        sinusoidal_period,
+    )
+    return lambda t: -profile(t)
 
 
 def _example_insertion_fraction(
@@ -113,46 +137,6 @@ def _selected_control_rod_height(control_rod: str, moving_height: float, fixed_h
     raise ValueError("control_rod must be either 'CR1' or 'CR2'.")
 
 
-def _rod_height_at_time(
-    time_value: float,
-    rod_start_height: float,
-    rod_insertion_cm: float,
-    insertion_duration: float,
-) -> float:
-    if insertion_duration <= 0.0:
-        return float(rod_start_height - rod_insertion_cm)
-
-    if time_value <= insertion_duration:
-        fraction = time_value / insertion_duration
-        height = rod_start_height - rod_insertion_cm * fraction
-    else:
-        height = rod_start_height - rod_insertion_cm
-
-    return float(np.clip(height, *ROD_HEIGHT_LIMITS))
-
-
-def _build_parameter_vector(
-    time_value: float,
-    rod_start_height: float,
-    rod_insertion_cm: float,
-    insertion_duration: float,
-    fixed_cr2_height: float,
-    dummy_water_density_multiplier: float,
-    fuel_assembly_water_density_multiplier: float,
-) -> np.ndarray:
-    cr1_height = _rod_height_at_time(time_value, rod_start_height, rod_insertion_cm, insertion_duration)
-    cr2_height = float(np.clip(fixed_cr2_height, *ROD_HEIGHT_LIMITS))
-    return np.array(
-        [
-            cr1_height,
-            cr2_height,
-            float(dummy_water_density_multiplier),
-            float(fuel_assembly_water_density_multiplier),
-        ],
-        dtype=float,
-    )
-
-
 def _shape_factor_at_point(field: np.ndarray, point: tuple[int, int, int], group: int) -> float:
     z_index, x_index, y_index = point
     group_field = np.asarray(field[:, :, :, group], dtype=float)
@@ -163,7 +147,7 @@ def _shape_factor_at_point(field: np.ndarray, point: tuple[int, int, int], group
 
 
 def _validate_points(points: dict[str, tuple[int, int, int]]) -> None:
-    z_max, x_max, y_max, group_count = MESH_SHAPE
+    z_max, y_max, x_max, group_count = MESH_SHAPE
     for label, (z_index, x_index, y_index) in points.items():
         if not (0 <= z_index < z_max):
             raise ValueError(f"{label} z-index {z_index} is out of bounds for mesh depth {z_max}.")
@@ -182,7 +166,6 @@ def _precompute_macro_profiles(
     control_rod: str,
     rod_start_height: float,
     rod_insertion_cm: float,
-    insertion_duration: float,
     fixed_cr2_height: float,
     dummy_water_density_multiplier: float,
     fuel_assembly_water_density_multiplier: float,
@@ -199,7 +182,7 @@ def _precompute_macro_profiles(
         bundle = load_default_bundle()
 
     beta_total = float(np.sum(thermal_default_params["beta"]))
-    rho_profile = _example_reactivity_profile(
+    rho_profile = _rod_insertion_reactivity_profile(
         transient,
         beta_total,
         step_onset,
@@ -262,7 +245,6 @@ def simulate_point_kinetics(
     control_rod: str,
     rod_start_height: float,
     rod_insertion_cm: float,
-    insertion_duration: float,
     fixed_cr2_height: float,
     dummy_water_density_multiplier: float,
     fuel_assembly_water_density_multiplier: float,
@@ -302,7 +284,6 @@ def simulate_point_kinetics(
         control_rod,
         rod_start_height,
         rod_insertion_cm,
-        insertion_duration,
         fixed_cr2_height,
         dummy_water_density_multiplier,
         fuel_assembly_water_density_multiplier,
@@ -320,7 +301,7 @@ def simulate_point_kinetics(
     n_points = len(point_names)
 
     beta_total = float(np.sum(kinetics_params["beta"]))
-    rho_schedule = _example_reactivity_profile(
+    rho_schedule = _rod_insertion_reactivity_profile(
         transient,
         beta_total,
         step_onset,
@@ -450,14 +431,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dt-micro", type=float, default=0.001, help="Micro step size in seconds.")
     parser.add_argument("--rod-start-height", type=float, default=50.0, help="Starting control rod height in cm.")
     parser.add_argument("--rod-insertion-cm", type=float, default=5.0, help="Total rod insertion distance in cm.")
-    parser.add_argument(
-        "--rod-insertion-duration",
-        type=float,
-        default=2.0,
-        help="Duration of the rod insertion ramp in seconds.",
-    )
     parser.add_argument("--step-onset", type=float, default=2.0, help="Step transient onset time in seconds.")
-    parser.add_argument("--step-fraction", type=float, default=0.1, help="Step transient amplitude as a fraction of beta_total.")
+    parser.add_argument("--step-fraction", type=float, default=0.1, help="Step transient amplitude as a fraction of beta_total (inserted as negative reactivity).")
     parser.add_argument("--ramp-start", type=float, default=2.0, help="Ramp transient start time in seconds.")
     parser.add_argument(
         "--ramp-slope-fraction",
@@ -519,7 +494,6 @@ def main() -> None:
         control_rod=args.control_rod,
         rod_start_height=args.rod_start_height,
         rod_insertion_cm=args.rod_insertion_cm,
-        insertion_duration=args.rod_insertion_duration,
         fixed_cr2_height=fixed_cr2_height,
         dummy_water_density_multiplier=args.dummy_water_density_multiplier,
         fuel_assembly_water_density_multiplier=args.fuel_assembly_water_density_multiplier,

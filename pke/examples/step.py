@@ -20,5 +20,5 @@ t, n, C = solver.solve(t_span=(0, 400))
 
 # Generate plots
 plt = solver.plot()
+plt.savefig('my_reactivity.png')  # save before show(), which clears the figure
 plt.show()
-plt.savefig('my_reactivity.png')
